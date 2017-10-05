@@ -23,8 +23,8 @@
  }
 }(this, function (exports) {
  'use strict';
- var pdfjsVersion = '1.6.52';
- var pdfjsBuild = 'a44040b';
+ var pdfjsVersion = '1.6.426';
+ var pdfjsBuild = '5e53df05';
  var pdfjsFilePath = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src : null;
  var pdfjsLibs = {};
  (function pdfjsWrapper() {
@@ -2716,6 +2716,7 @@
     var defaultMultilineFontSize = '12';
     var genericClosureOverrides = {};
     var idClosureOverrides = {};
+    var idValueGetOverrides = {};
     var postCreationTweak = false;
     var formFields = {};
     var postRenderHook = false;
@@ -2734,11 +2735,6 @@
      if (closure.length != 2) {
       throw 'Passed function must accept two arguments: itemProperties and viewport';
      }
-     var args = closure.toString().match(/^\s*function\s+(?:\w*\s*)?\((.*?)\)/);
-     args = args ? args[1] ? args[1].trim().split(/\s*,\s*/) : [] : null;
-     if (args[0] != 'itemProperties' || args[1] != 'viewport') {
-      throw 'Passed function must accept two arguments: itemProperties and viewport';
-     }
     }
     function assertValidControlTweak(closure) {
      if (typeof closure != 'function') {
@@ -2747,10 +2743,13 @@
      if (closure.length != 3) {
       throw 'Passed function must accept three arguments: fieldType, elementId and element';
      }
-     var args = closure.toString().match(/^\s*function\s+(?:\w*\s*)?\((.*?)\)/);
-     args = args ? args[1] ? args[1].trim().split(/\s*,\s*/) : [] : null;
-     if (args[0] != 'fieldType' || args[1] != 'elementId' || args[2] != 'element') {
-      throw 'Passed function must accept three arguments: fieldType, elementId and element';
+    }
+    function assertValidIdValueClosure(closure) {
+     if (typeof closure != 'function') {
+      throw "Passed item is not a function";
+     }
+     if (closure.length != 1) {
+      throw 'Passed function must accept one arguments: element';
      }
     }
     function _isSelectMultiple(element) {
@@ -2836,6 +2835,7 @@
      };
      if (item.fullName.indexOf('.`') != -1) {
       prop.correctedId = item.fullName.substring(0, item.fullName.indexOf('.`'));
+      prop.groupingId = item.fullName.substring(item.fullName.indexOf('.`') + 2);
       prop.isGroupMember = true;
      } else {
       prop.correctedId = item.fullName;
@@ -2989,6 +2989,8 @@
      var control = document.createElement('input');
      control.type = 'checkbox';
      control.value = itemProperties.options[1];
+     control.id = itemProperties.id;
+     control.name = itemProperties.id;
      control.style.padding = '0';
      control.style.margin = '0';
      control.style.marginLeft = itemProperties.width / 2 - Math.ceil(4 * viewport.scale) + 'px';
@@ -3002,6 +3004,7 @@
      var control = document.createElement('input');
      control.type = 'radio';
      control.value = itemProperties.options[1];
+     control.id = itemProperties.correctedId + '.' + itemProperties.groupingId;
      control.name = itemProperties.correctedId;
      control.style.padding = '0';
      control.style.margin = '0';
@@ -3059,6 +3062,8 @@
       control.style.cursor = "not-allowed";
      }
      control.value = itemProperties.value;
+     control.id = itemProperties.id;
+     control.name = itemProperties.id;
      return control;
     };
     defaultCreationRoutines[fieldTypes.DROP_DOWN] = function (itemProperties, viewport) {
@@ -3068,6 +3073,8 @@
      control.style.width = Math.floor(itemProperties.width - 3) + 'px';
      control.style.height = Math.floor(itemProperties.height) + 'px';
      control.style.textAlign = itemProperties.textAlignment;
+     control.id = itemProperties.id;
+     control.name = itemProperties.id;
      if (Math.floor(itemProperties.fontSizeControl) >= Math.floor(itemProperties.height - 2)) {
       control.style.fontSize = Math.floor(itemProperties.height - 3) + 'px';
      } else {
@@ -3181,6 +3188,9 @@
      clearControlRendersByType: function () {
       genericClosureOverrides = {};
      },
+     clearIdValueOverride: function () {
+      idValueGetOverrides = {};
+     },
      setPostRenderHook: function (hook) {
       postRenderHook = hook;
      },
@@ -3214,6 +3224,17 @@
        assertValidControlTweak(postCallback);
       postCreationTweak = postCallback;
      },
+     setIdValueOverride: function (closure, id) {
+      if (!closure) {
+       try {
+        delete idValueGetOverrides[id];
+       } catch (e) {
+       }
+      } else {
+       assertValidIdValueClosure(closure);
+       idValueGetOverrides[id] = closure;
+      }
+     },
      getFormValues: function () {
       var values = {};
       var visitElements = function (set, action) {
@@ -3225,30 +3246,46 @@
        });
       };
       visitElements(formFields[fieldTypes.CHECK_BOX], function (elementId, element) {
-       values[elementId] = element.checked ? true : false;
+       if (typeof idValueGetOverrides[elementId] != 'undefined') {
+        values[elementId] = idValueGetOverrides[elementId](element);
+       } else {
+        values[elementId] = element.checked ? true : false;
+       }
       });
       visitElements(formFields[fieldTypes.TEXT], function (elementId, element) {
-       values[elementId] = element.value;
+       if (typeof idValueGetOverrides[elementId] != 'undefined') {
+        values[elementId] = idValueGetOverrides[elementId](element);
+       } else {
+        values[elementId] = element.value;
+       }
       });
       visitElements(formFields[fieldTypes.DROP_DOWN], function (elementId, element) {
-       if (_isSelectMultiple(element)) {
-        var valueObject = {};
-        for (var i = 0; i < element.length; i++) {
-         if (element[i].selected) {
-          valueObject[element[i].value] = element[i].value;
-         }
-        }
-        values[elementId] = valueObject;
+       if (typeof idValueGetOverrides[elementId] != 'undefined') {
+        values[elementId] = idValueGetOverrides[elementId](element);
        } else {
-        values[elementId] = element.options[element.selectedIndex].value;
+        if (_isSelectMultiple(element)) {
+         var valueObject = {};
+         for (var i = 0; i < element.length; i++) {
+          if (element[i].selected) {
+           valueObject[element[i].value] = element[i].value;
+          }
+         }
+         values[elementId] = valueObject;
+        } else {
+         values[elementId] = element.options[element.selectedIndex].value;
+        }
        }
       });
       visitElements(formFields[fieldTypes.RADIO_BUTTON], function (elementId, element) {
-       element.some(function (r) {
-        if (r.checked)
-         values[elementId] = r.value;
-        return r.checked;
-       });
+       if (typeof idValueGetOverrides[elementId] != 'undefined') {
+        values[elementId] = idValueGetOverrides[elementId](element);
+       } else {
+        element.some(function (r) {
+         if (r.checked)
+          values[elementId] = r.value;
+         return r.checked;
+        });
+       }
       });
       return values;
      },

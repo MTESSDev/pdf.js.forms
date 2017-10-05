@@ -25,6 +25,7 @@ var FormFunctionality = (function FormFunctionalityClosure() {
 
     var genericClosureOverrides = {}; // closures that render the controls. Can be used to render all DROP_DOWNS one way, for example
     var idClosureOverrides = {}; // closure that overrides any controls id (specifically the correctedId). For radio buttons, all that are part of one group will go to same closure. Grouping ID is not respected
+    var idValueGetOverrides = {}; // closure that overrides getting data
 	var postCreationTweak = false;
 
     var formFields = {};
@@ -47,11 +48,11 @@ var FormFunctionality = (function FormFunctionalityClosure() {
         if (closure.length!=2) {
             throw 'Passed function must accept two arguments: itemProperties and viewport';
         }
-        var args = closure.toString ().match (/^\s*function\s+(?:\w*\s*)?\((.*?)\)/);
-        args = args ? (args[1] ? args[1].trim ().split (/\s*,\s*/) : []) : null;
-        if (args[0]!='itemProperties' || args[1]!='viewport') {
-            throw 'Passed function must accept two arguments: itemProperties and viewport';
-        }
+        //var args = closure.toString ().match (/^\s*function\s+(?:\w*\s*)?\((.*?)\)/);
+        //args = args ? (args[1] ? args[1].trim ().split (/\s*,\s*/) : []) : null;
+        //if (args[0]!='itemProperties' || args[1]!='viewport') {
+        //    throw 'Passed function must accept two arguments: itemProperties and viewport';
+        //}
     }
 
 	function assertValidControlTweak(closure) {
@@ -61,12 +62,26 @@ var FormFunctionality = (function FormFunctionalityClosure() {
 		if (closure.length!=3) {
 			throw 'Passed function must accept three arguments: fieldType, elementId and element';
 		}
-		var args = closure.toString ().match (/^\s*function\s+(?:\w*\s*)?\((.*?)\)/);
-		args = args ? (args[1] ? args[1].trim ().split (/\s*,\s*/) : []) : null;
-		if (args[0]!='fieldType' || args[1]!='elementId' || args[2]!='element') {
-			throw 'Passed function must accept three arguments: fieldType, elementId and element';
-		}
+		//var args = closure.toString ().match (/^\s*function\s+(?:\w*\s*)?\((.*?)\)/);
+		//args = args ? (args[1] ? args[1].trim ().split (/\s*,\s*/) : []) : null;
+		//if (args[0]!='fieldType' || args[1]!='elementId' || args[2]!='element') {
+		//	throw 'Passed function must accept three arguments: fieldType, elementId and element';
+		//}
 	}
+
+    function assertValidIdValueClosure(closure) {
+        if (typeof closure != 'function') {
+            throw "Passed item is not a function";
+        }
+        if (closure.length != 1) {
+            throw 'Passed function must accept one arguments: element';
+        }
+        //var args = closure.toString().match(/^\s*function\s+(?:\w*\s*)?\((.*?)\)/);
+        //args = args ? args[1] ? args[1].trim().split(/\s*,\s*/) : [] : null;
+        //if (args[0] != 'fieldType' || args[1] != 'elementId' || args[2] != 'element') {
+        // throw 'Passed function must accept three arguments: fieldType, elementId and element';
+        //}
+    }
 
     function _isSelectMultiple(element) {
         for (var i=0, l = element.attributes.length; i<l; i++) {
@@ -568,6 +583,10 @@ var FormFunctionality = (function FormFunctionalityClosure() {
             genericClosureOverrides = {};
         },
 
+        clearIdValueOverride: function () {
+            idValueGetOverrides = {};
+        },
+
         setPostRenderHook: function(hook) {
             postRenderHook = hook;
         },
@@ -619,6 +638,23 @@ var FormFunctionality = (function FormFunctionalityClosure() {
 		},
 
         /**
+         * A function that will allow overriding of getting values from form. Useful when fully overriding element rendering
+         * from one type to another (checkbox to say drop down)
+         * @param {function} closure A function with parameters 'element' that will return the value of the dom form element
+         * @param {string} id The id of the form element we wish to render in the closure
+         */
+        setIdValueOverride: function(closure, id) {
+            if (!closure) {
+                try {
+                    delete idValueGetOverrides[id];
+                } catch (e) {}
+            } else {
+                assertValidIdValueClosure(closure);
+                idValueGetOverrides[id] = closure;
+            }
+        },
+
+        /**
          * @return {array} An array of values of the form elements in format [elementId]=value
          */
         getFormValues: function() {
@@ -635,36 +671,56 @@ var FormFunctionality = (function FormFunctionalityClosure() {
 
 			// Visit each checkbox
 			visitElements(formFields[fieldTypes.CHECK_BOX],function(elementId,element) {
-				values[elementId] = element.checked ? true : false;
+                if (typeof(idValueGetOverrides[elementId])!='undefined') {
+                    values[elementId]=idValueGetOverrides[elementId](element);
+                }
+                else {
+                    values[elementId] = element.checked ? true : false;
+                }
 			});
 
 			// Visit each text field
 			visitElements(formFields[fieldTypes.TEXT],function(elementId,element) {
-				values[elementId] = element.value;
+                if (typeof(idValueGetOverrides[elementId])!='undefined') {
+                    values[elementId]=idValueGetOverrides[elementId](element);
+                }
+                else {
+                    values[elementId] = element.value;
+                }
 			});
 
 			// Visit each text drop down
 			visitElements(formFields[fieldTypes.DROP_DOWN],function(elementId,element) {
-				if (_isSelectMultiple(element)) {
-					var valueObject = {};
-					for (var i=0; i<element.length; i++) {
-						if (element[i].selected) {
-							valueObject[element[i].value] = element[i].value;
-						}
-					}
-					values[elementId] = valueObject;
-				}
-				else {
-					values[elementId] = element.options[element.selectedIndex].value;
-				}
+                if (typeof(idValueGetOverrides[elementId])!='undefined') {
+                    values[elementId]=idValueGetOverrides[elementId](element);
+                }
+                else {
+                    if (_isSelectMultiple(element)) {
+                        var valueObject = {};
+                        for (var i = 0; i < element.length; i++) {
+                            if (element[i].selected) {
+                                valueObject[element[i].value] = element[i].value;
+                            }
+                        }
+                        values[elementId] = valueObject;
+                    } else {
+                        values[elementId] = element.options[element.selectedIndex].value;
+                    }
+                }
 			});
 
 			// Visit each radio button
 			visitElements(formFields[fieldTypes.RADIO_BUTTON],function(elementId,element) {
-				element.some(function(r){
-					if (r.checked) values[elementId] = r.value;
-					return r.checked;
-				});
+                if (typeof(idValueGetOverrides[elementId])!='undefined') {
+                    values[elementId]=idValueGetOverrides[elementId](element);
+                }
+                else {
+                    element.some(function (r) {
+                        if (r.checked)
+                            values[elementId] = r.value;
+                        return r.checked;
+                    });
+                }
 			});
 
 			// Done!
