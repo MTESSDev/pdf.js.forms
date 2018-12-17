@@ -524,7 +524,7 @@ var FormFunctionality = function FormFunctionalityClosure() {
         if (closure.length != 2) {
             throw 'Passed function must accept two arguments: itemProperties and viewport';
         }
-        var args = closure.toString().match(/^\s*function\s+(?:\w*\s*)?\((.*?)\)/);
+        var args = closure.toString().match(/^\s*function\s*(?:\w*\s*)?\((.*?)\)/);
         args = args ? args[1] ? args[1].trim().split(/\s*,\s*/) : [] : null;
         if (args[0] != 'itemProperties' || args[1] != 'viewport') {
             throw 'Passed function must accept two arguments: itemProperties and viewport';
@@ -537,7 +537,7 @@ var FormFunctionality = function FormFunctionalityClosure() {
         if (closure.length != 3) {
             throw 'Passed function must accept three arguments: fieldType, elementId and element';
         }
-        var args = closure.toString().match(/^\s*function\s+(?:\w*\s*)?\((.*?)\)/);
+        var args = closure.toString().match(/^\s*function\s*(?:\w*\s*)?\((.*?)\)/);
         args = args ? args[1] ? args[1].trim().split(/\s*,\s*/) : [] : null;
         if (args[0] != 'fieldType' || args[1] != 'elementId' || args[2] != 'element') {
             throw 'Passed function must accept three arguments: fieldType, elementId and element';
