@@ -13,25 +13,7 @@
  * limitations under the License.
  */
 
-'use strict';
-
-(function (root, factory) {
-  if (typeof define === 'function' && define.amd) {
-    define('pdfjs/display/pattern_helper', ['exports', 'pdfjs/shared/util',
-      'pdfjs/display/webgl'], factory);
-  } else if (typeof exports !== 'undefined') {
-    factory(exports, require('../shared/util.js'), require('./webgl.js'));
-  } else {
-    factory((root.pdfjsDisplayPatternHelper = {}), root.pdfjsSharedUtil,
-      root.pdfjsDisplayWebGL);
-  }
-}(this, function (exports, sharedUtil, displayWebGL) {
-
-var Util = sharedUtil.Util;
-var info = sharedUtil.info;
-var isArray = sharedUtil.isArray;
-var error = sharedUtil.error;
-var WebGLUtils = displayWebGL.WebGLUtils;
+import { FormatError, info, Util } from '../shared/util';
 
 var ShadingIRs = {};
 
@@ -58,9 +40,9 @@ ShadingIRs.RadialAxial = {
           grad.addColorStop(c[0], c[1]);
         }
         return grad;
-      }
+      },
     };
-  }
+  },
 };
 
 var createMeshCanvas = (function createMeshCanvasClosure() {
@@ -157,13 +139,12 @@ var createMeshCanvas = (function createMeshCanvasClosure() {
         }
         break;
       default:
-        error('illigal figure');
-        break;
+        throw new Error('illegal figure');
     }
   }
 
   function createMeshCanvas(bounds, combinesScale, coords, colors, figures,
-                            backgroundColor, cachedCanvases) {
+                            backgroundColor, cachedCanvases, webGLContext) {
     // we will increase scale on some weird factor to let antialiasing take
     // care of "rough" edges
     var EXPECTED_SCALE = 1.1;
@@ -186,22 +167,26 @@ var createMeshCanvas = (function createMeshCanvasClosure() {
     var scaleY = boundsHeight / height;
 
     var context = {
-      coords: coords,
-      colors: colors,
+      coords,
+      colors,
       offsetX: -offsetX,
       offsetY: -offsetY,
       scaleX: 1 / scaleX,
-      scaleY: 1 / scaleY
+      scaleY: 1 / scaleY,
     };
 
     var paddedWidth = width + BORDER_SIZE * 2;
     var paddedHeight = height + BORDER_SIZE * 2;
 
     var canvas, tmpCanvas, i, ii;
-    if (WebGLUtils.isEnabled) {
-      canvas = WebGLUtils.drawFigures(width, height, backgroundColor,
-                                      figures, context);
-
+    if (webGLContext.isEnabled) {
+      canvas = webGLContext.drawFigures({
+        width,
+        height,
+        backgroundColor,
+        figures,
+        context,
+      });
       // https://bugzilla.mozilla.org/show_bug.cgi?id=972126
       tmpCanvas = cachedCanvases.getCanvas('mesh', paddedWidth, paddedHeight,
                                            false);
@@ -229,23 +214,26 @@ var createMeshCanvas = (function createMeshCanvasClosure() {
       canvas = tmpCanvas.canvas;
     }
 
-    return {canvas: canvas,
-            offsetX: offsetX - BORDER_SIZE * scaleX,
-            offsetY: offsetY - BORDER_SIZE * scaleY,
-            scaleX: scaleX, scaleY: scaleY};
+    return {
+      canvas,
+      offsetX: offsetX - BORDER_SIZE * scaleX,
+      offsetY: offsetY - BORDER_SIZE * scaleY,
+      scaleX,
+      scaleY,
+    };
   }
   return createMeshCanvas;
 })();
 
 ShadingIRs.Mesh = {
   fromIR: function Mesh_fromIR(raw) {
-    //var type = raw[1];
+    // var type = raw[1];
     var coords = raw[2];
     var colors = raw[3];
     var figures = raw[4];
     var bounds = raw[5];
     var matrix = raw[6];
-    //var bbox = raw[7];
+    // var bbox = raw[7];
     var background = raw[8];
     return {
       type: 'Pattern',
@@ -263,12 +251,11 @@ ShadingIRs.Mesh = {
           }
         }
 
-
         // Rasterizing on the main thread since sending/queue large canvases
         // might cause OOM.
         var temporaryPatternCanvas = createMeshCanvas(bounds, scale, coords,
           colors, figures, shadingFill ? null : background,
-          owner.cachedCanvases);
+          owner.cachedCanvases, owner.webGLContext);
 
         if (!shadingFill) {
           ctx.setTransform.apply(ctx, owner.baseTransform);
@@ -283,9 +270,9 @@ ShadingIRs.Mesh = {
                   temporaryPatternCanvas.scaleY);
 
         return ctx.createPattern(temporaryPatternCanvas.canvas, 'no-repeat');
-      }
+      },
     };
-  }
+  },
 };
 
 ShadingIRs.Dummy = {
@@ -294,15 +281,15 @@ ShadingIRs.Dummy = {
       type: 'Pattern',
       getPattern: function Dummy_fromIR_getPattern() {
         return 'hotpink';
-      }
+      },
     };
-  }
+  },
 };
 
 function getShadingPatternFromIR(raw) {
   var shadingIR = ShadingIRs[raw[0]];
   if (!shadingIR) {
-    error('Unknown IR type: ' + raw[0]);
+    throw new Error(`Unknown IR type: ${raw[0]}`);
   }
   return shadingIR.fromIR(raw);
 }
@@ -310,7 +297,7 @@ function getShadingPatternFromIR(raw) {
 var TilingPattern = (function TilingPatternClosure() {
   var PaintType = {
     COLORED: 1,
-    UNCOLORED: 2
+    UNCOLORED: 2,
   };
 
   var MAX_PATTERN_SIZE = 3000; // 10in @ 300dpi shall be enough
@@ -343,14 +330,27 @@ var TilingPattern = (function TilingPatternClosure() {
 
       info('TilingType: ' + tilingType);
 
+      // A tiling pattern as defined by PDF spec 8.7.2 is a cell whose size is
+      // described by bbox, and may repeat regularly by shifting the cell by
+      // xstep and ystep.
+      // Because the HTML5 canvas API does not support pattern repetition with
+      // gaps in between, we use the xstep/ystep instead of the bbox's size.
+      //
+      // This has the following consequences (similarly for ystep):
+      //
+      // - If xstep is the same as bbox, then there is no observable difference.
+      //
+      // - If xstep is larger than bbox, then the pattern canvas is partially
+      //   empty: the area bounded by bbox is painted, the outside area is void.
+      //
+      // - If xstep is smaller than bbox, then the pixels between xstep and the
+      //   bbox boundary will be missing. This is INCORRECT behavior.
+      //   "Figures on adjacent tiles should not overlap" (PDF spec 8.7.3.1),
+      //   but overlapping cells without common pixels are still valid.
+      //   TODO: Fix the implementation, to allow this scenario to be painted
+      //   correctly.
+
       var x0 = bbox[0], y0 = bbox[1], x1 = bbox[2], y1 = bbox[3];
-
-      var topLeft = [x0, y0];
-      // we want the canvas to be as large as the step size
-      var botRight = [x0 + xstep, y0 + ystep];
-
-      var width = botRight[0] - topLeft[0];
-      var height = botRight[1] - topLeft[1];
 
       // Obtain scale from matrix and current transformation matrix.
       var matrixScale = Util.singularValueDecompose2dScale(this.matrix);
@@ -359,54 +359,59 @@ var TilingPattern = (function TilingPatternClosure() {
       var combinedScale = [matrixScale[0] * curMatrixScale[0],
         matrixScale[1] * curMatrixScale[1]];
 
-      // MAX_PATTERN_SIZE is used to avoid OOM situation.
       // Use width and height values that are as close as possible to the end
       // result when the pattern is used. Too low value makes the pattern look
       // blurry. Too large value makes it look too crispy.
-      width = Math.min(Math.ceil(Math.abs(width * combinedScale[0])),
-        MAX_PATTERN_SIZE);
-
-      height = Math.min(Math.ceil(Math.abs(height * combinedScale[1])),
-        MAX_PATTERN_SIZE);
+      var dimx = this.getSizeAndScale(xstep, this.ctx.canvas.width,
+        combinedScale[0]);
+      var dimy = this.getSizeAndScale(ystep, this.ctx.canvas.height,
+        combinedScale[1]);
 
       var tmpCanvas = owner.cachedCanvases.getCanvas('pattern',
-        width, height, true);
+        dimx.size, dimy.size, true);
       var tmpCtx = tmpCanvas.context;
       var graphics = canvasGraphicsFactory.createCanvasGraphics(tmpCtx);
       graphics.groupLevel = owner.groupLevel;
 
-      this.setFillAndStrokeStyleToContext(tmpCtx, paintType, color);
+      this.setFillAndStrokeStyleToContext(graphics, paintType, color);
 
-      this.setScale(width, height, xstep, ystep);
-      this.transformToScale(graphics);
+      graphics.transform(dimx.scale, 0, 0, dimy.scale, 0, 0);
 
       // transform coordinates to pattern space
-      var tmpTranslate = [1, 0, 0, 1, -topLeft[0], -topLeft[1]];
-      graphics.transform.apply(graphics, tmpTranslate);
+      graphics.transform(1, 0, 0, 1, -x0, -y0);
 
       this.clipBbox(graphics, bbox, x0, y0, x1, y1);
 
       graphics.executeOperatorList(operatorList);
+
+      this.ctx.transform(1, 0, 0, 1, x0, y0);
+
+      // Rescale canvas so that the ctx.createPattern call generates a pattern
+      // with the desired size.
+      this.ctx.scale(1 / dimx.scale, 1 / dimy.scale);
       return tmpCanvas.canvas;
     },
 
-    setScale: function TilingPattern_setScale(width, height, xstep, ystep) {
-      this.scale = [width / xstep, height / ystep];
-    },
-
-    transformToScale: function TilingPattern_transformToScale(graphics) {
-      var scale = this.scale;
-      var tmpScale = [scale[0], 0, 0, scale[1], 0, 0];
-      graphics.transform.apply(graphics, tmpScale);
-    },
-
-    scaleToContext: function TilingPattern_scaleToContext() {
-      var scale = this.scale;
-      this.ctx.scale(1 / scale[0], 1 / scale[1]);
+    getSizeAndScale:
+        function TilingPattern_getSizeAndScale(step, realOutputSize, scale) {
+      // xstep / ystep may be negative -- normalize.
+      step = Math.abs(step);
+      // MAX_PATTERN_SIZE is used to avoid OOM situation.
+      // Use the destination canvas's size if it is bigger than the hard-coded
+      // limit of MAX_PATTERN_SIZE to avoid clipping patterns that cover the
+      // whole canvas.
+      var maxSize = Math.max(MAX_PATTERN_SIZE, realOutputSize);
+      var size = Math.ceil(step * scale);
+      if (size >= maxSize) {
+        size = maxSize;
+      } else {
+        scale = size / step;
+      }
+      return { scale, size, };
     },
 
     clipBbox: function clipBbox(graphics, bbox, x0, y0, x1, y1) {
-      if (bbox && isArray(bbox) && bbox.length === 4) {
+      if (Array.isArray(bbox) && bbox.length === 4) {
         var bboxWidth = x1 - x0;
         var bboxHeight = y1 - y0;
         graphics.ctx.rect(x0, y0, bboxWidth, bboxHeight);
@@ -416,38 +421,45 @@ var TilingPattern = (function TilingPatternClosure() {
     },
 
     setFillAndStrokeStyleToContext:
-      function setFillAndStrokeStyleToContext(context, paintType, color) {
+      function setFillAndStrokeStyleToContext(graphics, paintType, color) {
+        let context = graphics.ctx, current = graphics.current;
         switch (paintType) {
           case PaintType.COLORED:
             var ctx = this.ctx;
             context.fillStyle = ctx.fillStyle;
             context.strokeStyle = ctx.strokeStyle;
+            current.fillColor = ctx.fillStyle;
+            current.strokeColor = ctx.strokeStyle;
             break;
           case PaintType.UNCOLORED:
             var cssColor = Util.makeCssRgb(color[0], color[1], color[2]);
             context.fillStyle = cssColor;
             context.strokeStyle = cssColor;
+            // Set color needed by image masks (fixes issues 3226 and 8741).
+            current.fillColor = cssColor;
+            current.strokeColor = cssColor;
             break;
           default:
-            error('Unsupported paint type: ' + paintType);
+            throw new FormatError(`Unsupported paint type: ${paintType}`);
         }
       },
 
     getPattern: function TilingPattern_getPattern(ctx, owner) {
-      var temporaryPatternCanvas = this.createPatternCanvas(owner);
-
       ctx = this.ctx;
+      // PDF spec 8.7.2 NOTE 1: pattern's matrix is relative to initial matrix.
       ctx.setTransform.apply(ctx, this.baseTransform);
       ctx.transform.apply(ctx, this.matrix);
-      this.scaleToContext();
+
+      var temporaryPatternCanvas = this.createPatternCanvas(owner);
 
       return ctx.createPattern(temporaryPatternCanvas, 'repeat');
-    }
+    },
   };
 
   return TilingPattern;
 })();
 
-exports.getShadingPatternFromIR = getShadingPatternFromIR;
-exports.TilingPattern = TilingPattern;
-}));
+export {
+  getShadingPatternFromIR,
+  TilingPattern,
+};

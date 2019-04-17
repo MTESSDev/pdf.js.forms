@@ -1,28 +1,17 @@
 function f1() {
-  /* head */
-  "1";
-  /* mid */
-  "2";
+ "1";
+ "2";
 }
-/* tail */
 function f2() {
-  // head
-  "1";
-  // mid
-  "2";
+ "1";
+ "2";
 }
-// tail
-function f2() {
-  if ("1") {
-    // begin block
-    "1";
-  }
-  "2";
-  // trailing
-  if (/* s */
-    "3")
-    /*e*/
-    {
-      "4";
-    }
+function f3() {
+ if ("1") {
+  "1";
+ }
+ "2";
+ if ("3") {
+  "4";
+ }
 }

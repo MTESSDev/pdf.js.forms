@@ -12,20 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* eslint no-var: error */
 
-'use strict';
-
-(function (root, factory) {
-  if (typeof define === 'function' && define.amd) {
-    define('pdfjs/core/charsets', ['exports'], factory);
-  } else if (typeof exports !== 'undefined') {
-    factory(exports);
-  } else {
-    factory((root.pdfjsCoreCharsets = {}));
-  }
-}(this, function (exports) {
-
-var ISOAdobeCharset = [
+const ISOAdobeCharset = [
   '.notdef', 'space', 'exclam', 'quotedbl', 'numbersign', 'dollar',
   'percent', 'ampersand', 'quoteright', 'parenleft', 'parenright',
   'asterisk', 'plus', 'comma', 'hyphen', 'period', 'slash', 'zero',
@@ -62,7 +51,7 @@ var ISOAdobeCharset = [
   'ugrave', 'yacute', 'ydieresis', 'zcaron'
 ];
 
-var ExpertCharset = [
+const ExpertCharset = [
   '.notdef', 'space', 'exclamsmall', 'Hungarumlautsmall', 'dollaroldstyle',
   'dollarsuperior', 'ampersandsmall', 'Acutesmall', 'parenleftsuperior',
   'parenrightsuperior', 'twodotenleader', 'onedotenleader', 'comma',
@@ -102,7 +91,7 @@ var ExpertCharset = [
   'Ydieresissmall'
 ];
 
-var ExpertSubsetCharset = [
+const ExpertSubsetCharset = [
   '.notdef', 'space', 'dollaroldstyle', 'dollarsuperior',
   'parenleftsuperior', 'parenrightsuperior', 'twodotenleader',
   'onedotenleader', 'comma', 'hyphen', 'period', 'fraction',
@@ -125,7 +114,8 @@ var ExpertSubsetCharset = [
   'periodinferior', 'commainferior'
 ];
 
-exports.ISOAdobeCharset = ISOAdobeCharset;
-exports.ExpertCharset = ExpertCharset;
-exports.ExpertSubsetCharset = ExpertSubsetCharset;
-}));
+export {
+  ISOAdobeCharset,
+  ExpertCharset,
+  ExpertSubsetCharset,
+};

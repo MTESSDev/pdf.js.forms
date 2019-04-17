@@ -12,72 +12,108 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* jshint globalstrict: false */
-/* umdutils ignore */
+/* eslint-disable no-unused-vars */
 
-(function (root, factory) {
-  'use strict';
-  if (typeof define === 'function' && define.amd) {
-    define(PDFJSDev.eval('BUNDLE_AMD_NAME'), ['exports'], factory);
-  } else if (typeof exports !== 'undefined') {
-    factory(exports);
+'use strict';
+
+var pdfjsVersion =
+  typeof PDFJSDev !== 'undefined' ? PDFJSDev.eval('BUNDLE_VERSION') : void 0;
+var pdfjsBuild =
+  typeof PDFJSDev !== 'undefined' ? PDFJSDev.eval('BUNDLE_BUILD') : void 0;
+
+var pdfjsSharedUtil = require('./shared/util.js');
+var pdfjsDisplayAPI = require('./display/api.js');
+var pdfjsDisplayTextLayer = require('./display/text_layer.js');
+var pdfjsDisplayAnnotationLayer = require('./display/annotation_layer.js');
+var pdfjsDisplayDisplayUtils = require('./display/display_utils.js');
+var pdfjsDisplaySVG = require('./display/svg.js');
+let pdfjsDisplayWorkerOptions = require('./display/worker_options.js');
+let pdfjsDisplayAPICompatibility = require('./display/api_compatibility.js');
+
+if (typeof PDFJSDev === 'undefined' || PDFJSDev.test('GENERIC')) {
+  const isNodeJS = require('./shared/is_node.js');
+  if (isNodeJS()) {
+    let PDFNodeStream = require('./display/node_stream.js').PDFNodeStream;
+    pdfjsDisplayAPI.setPDFNetworkStreamFactory((params) => {
+      return new PDFNodeStream(params);
+    });
   } else {
-    factory((root[PDFJSDev.eval('BUNDLE_JS_NAME')] = {}));
+    let PDFNetworkStream = require('./display/network.js').PDFNetworkStream;
+    let PDFFetchStream;
+    if (pdfjsDisplayDisplayUtils.isFetchSupported()) {
+      PDFFetchStream = require('./display/fetch_stream.js').PDFFetchStream;
+    }
+    pdfjsDisplayAPI.setPDFNetworkStreamFactory((params) => {
+      if (PDFFetchStream &&
+          pdfjsDisplayDisplayUtils.isValidFetchUrl(params.url)) {
+        return new PDFFetchStream(params);
+      }
+      return new PDFNetworkStream(params);
+    });
   }
-}(this, function (exports) {
-  // Use strict in our context only - users might not want it
-  'use strict';
-
-  var pdfjsVersion = PDFJSDev.eval('BUNDLE_VERSION');
-  var pdfjsBuild = PDFJSDev.eval('BUNDLE_BUILD');
-
-  var pdfjsFilePath =
-    typeof document !== 'undefined' && document.currentScript ?
-      document.currentScript.src : null;
-
-  var pdfjsLibs = {};
-
-  (function pdfjsWrapper() {
-
-//#expand __BUNDLE__
-
-  }).call(pdfjsLibs);
-
-  if (PDFJSDev.test('MAIN_FILE')) {
-    exports.PDFJS = pdfjsLibs.pdfjsDisplayGlobal.PDFJS;
-    exports.build = pdfjsLibs.pdfjsDisplayAPI.build;
-    exports.version = pdfjsLibs.pdfjsDisplayAPI.version;
-    exports.getDocument = pdfjsLibs.pdfjsDisplayAPI.getDocument;
-    exports.PDFDataRangeTransport =
-      pdfjsLibs.pdfjsDisplayAPI.PDFDataRangeTransport;
-    exports.PDFWorker = pdfjsLibs.pdfjsDisplayAPI.PDFWorker;
-    exports.renderTextLayer = pdfjsLibs.pdfjsDisplayTextLayer.renderTextLayer;
-    exports.AnnotationLayer =
-      pdfjsLibs.pdfjsDisplayAnnotationLayer.AnnotationLayer;
-    exports.CustomStyle = pdfjsLibs.pdfjsDisplayDOMUtils.CustomStyle;
-    exports.PasswordResponses = pdfjsLibs.pdfjsSharedUtil.PasswordResponses;
-    exports.InvalidPDFException = pdfjsLibs.pdfjsSharedUtil.InvalidPDFException;
-    exports.MissingPDFException = pdfjsLibs.pdfjsSharedUtil.MissingPDFException;
-    exports.SVGGraphics = pdfjsLibs.pdfjsDisplaySVG.SVGGraphics;
-    exports.UnexpectedResponseException =
-      pdfjsLibs.pdfjsSharedUtil.UnexpectedResponseException;
-    exports.OPS = pdfjsLibs.pdfjsSharedUtil.OPS;
-    exports.UNSUPPORTED_FEATURES =
-      pdfjsLibs.pdfjsSharedUtil.UNSUPPORTED_FEATURES;
-    exports.isValidUrl = pdfjsLibs.pdfjsDisplayDOMUtils.isValidUrl;
-    exports.createValidAbsoluteUrl =
-      pdfjsLibs.pdfjsSharedUtil.createValidAbsoluteUrl;
-    exports.createObjectURL = pdfjsLibs.pdfjsSharedUtil.createObjectURL;
-    exports.removeNullCharacters =
-      pdfjsLibs.pdfjsSharedUtil.removeNullCharacters;
-    exports.shadow = pdfjsLibs.pdfjsSharedUtil.shadow;
-    exports.createBlob = pdfjsLibs.pdfjsSharedUtil.createBlob;
-    exports.getFilenameFromUrl =
-      pdfjsLibs.pdfjsDisplayDOMUtils.getFilenameFromUrl;
-    exports.addLinkAttributes =
-      pdfjsLibs.pdfjsDisplayDOMUtils.addLinkAttributes;
-  } else {
-    exports.WorkerMessageHandler =
-      pdfjsLibs.pdfjsCoreWorker.WorkerMessageHandler;
+} else if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('CHROME')) {
+  let PDFNetworkStream = require('./display/network.js').PDFNetworkStream;
+  let PDFFetchStream;
+  let isChromeWithFetchCredentials = function() {
+    // fetch does not include credentials until Chrome 61.0.3138.0 and later.
+    // https://chromium.googlesource.com/chromium/src/+/2e231cf052ca5e68e22baf0008ac9e5e29121707
+    try {
+      // Indexed properties on window are read-only in Chrome 61.0.3151.0+
+      // https://chromium.googlesource.com/chromium/src.git/+/58ab4a971b06dec13e4edf9de8382ca6847f6190
+      window[999] = 123; // should throw. Note: JS strict mode MUST be enabled.
+      delete window[999];
+      return false;
+    } catch (e) {
+      return true;
+    }
+  };
+  if (pdfjsDisplayDisplayUtils.isFetchSupported() &&
+      isChromeWithFetchCredentials()) {
+    PDFFetchStream = require('./display/fetch_stream.js').PDFFetchStream;
   }
-}));
+  pdfjsDisplayAPI.setPDFNetworkStreamFactory((params) => {
+    if (PDFFetchStream &&
+        pdfjsDisplayDisplayUtils.isValidFetchUrl(params.url)) {
+      return new PDFFetchStream(params);
+    }
+    return new PDFNetworkStream(params);
+  });
+}
+
+exports.build = pdfjsDisplayAPI.build;
+exports.version = pdfjsDisplayAPI.version;
+exports.getDocument = pdfjsDisplayAPI.getDocument;
+exports.LoopbackPort = pdfjsDisplayAPI.LoopbackPort;
+exports.PDFDataRangeTransport = pdfjsDisplayAPI.PDFDataRangeTransport;
+exports.PDFWorker = pdfjsDisplayAPI.PDFWorker;
+exports.renderTextLayer = pdfjsDisplayTextLayer.renderTextLayer;
+exports.AnnotationLayer = pdfjsDisplayAnnotationLayer.AnnotationLayer;
+exports.createPromiseCapability = pdfjsSharedUtil.createPromiseCapability;
+exports.PasswordResponses = pdfjsSharedUtil.PasswordResponses;
+exports.InvalidPDFException = pdfjsSharedUtil.InvalidPDFException;
+exports.MissingPDFException = pdfjsSharedUtil.MissingPDFException;
+exports.SVGGraphics = pdfjsDisplaySVG.SVGGraphics;
+exports.NativeImageDecoding = pdfjsSharedUtil.NativeImageDecoding;
+exports.CMapCompressionType = pdfjsSharedUtil.CMapCompressionType;
+exports.PermissionFlag = pdfjsSharedUtil.PermissionFlag;
+exports.UnexpectedResponseException =
+  pdfjsSharedUtil.UnexpectedResponseException;
+exports.OPS = pdfjsSharedUtil.OPS;
+exports.VerbosityLevel = pdfjsSharedUtil.VerbosityLevel;
+exports.UNSUPPORTED_FEATURES = pdfjsSharedUtil.UNSUPPORTED_FEATURES;
+exports.createValidAbsoluteUrl = pdfjsSharedUtil.createValidAbsoluteUrl;
+exports.createObjectURL = pdfjsSharedUtil.createObjectURL;
+exports.removeNullCharacters = pdfjsSharedUtil.removeNullCharacters;
+exports.shadow = pdfjsSharedUtil.shadow;
+exports.Util = pdfjsSharedUtil.Util;
+exports.ReadableStream = pdfjsSharedUtil.ReadableStream;
+exports.URL = pdfjsSharedUtil.URL;
+exports.RenderingCancelledException =
+  pdfjsDisplayDisplayUtils.RenderingCancelledException;
+exports.getFilenameFromUrl = pdfjsDisplayDisplayUtils.getFilenameFromUrl;
+exports.LinkTarget = pdfjsDisplayDisplayUtils.LinkTarget;
+exports.addLinkAttributes = pdfjsDisplayDisplayUtils.addLinkAttributes;
+exports.loadScript = pdfjsDisplayDisplayUtils.loadScript;
+exports.GlobalWorkerOptions = pdfjsDisplayWorkerOptions.GlobalWorkerOptions;
+exports.apiCompatibilityParams =
+  pdfjsDisplayAPICompatibility.apiCompatibilityParams;

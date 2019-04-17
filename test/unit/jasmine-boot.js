@@ -1,4 +1,4 @@
-/* Copyright 2016 Mozilla Foundation
+/* Copyright 2017 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,73 +34,80 @@
  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/*globals jasmineRequire, jasmine, TestReporter */
+/* globals jasmineRequire, TestReporter */
 
 // Modified jasmine's boot.js file to load PDF.js libraries async.
 
 'use strict';
 
-var pdfjsLibs;
-
 function initializePDFJS(callback) {
-  require.config({paths: {'pdfjs': '../../src', 'pdfjs-web': '../../web'}});
-  require(['pdfjs/shared/util', 'pdfjs/display/global', 'pdfjs/core/primitives',
-      'pdfjs/core/annotation', 'pdfjs/core/crypto', 'pdfjs/core/stream',
-      'pdfjs/core/fonts', 'pdfjs/core/ps_parser', 'pdfjs/core/function',
-      'pdfjs/core/parser', 'pdfjs/core/evaluator', 'pdfjs/core/cmap',
-      'pdfjs/core/worker', 'pdfjs/core/network', 'pdfjs/core/type1_parser',
-      'pdfjs/core/cff_parser', 'pdfjs/core/murmurhash3', 'pdfjs/display/api',
-      'pdfjs/display/metadata', 'pdfjs/display/dom_utils', 'pdfjs-web/ui_utils',
-      'pdfjs/core/unicode', 'pdfjs/core/glyphlist'],
-    function (sharedUtil, displayGlobal, corePrimitives, coreAnnotation,
-              coreCrypto, coreStream, coreFonts, corePsParser, coreFunction,
-              coreParser, coreEvaluator, coreCMap, coreWorker, coreNetwork,
-              coreType1Parser, coreCFFParser, coreMurmurHash3, displayAPI,
-              displayMetadata, displayDOMUtils, webUIUtils, coreUnicode,
-              coreGlyphList) {
+  Promise.all([
+    'pdfjs/display/api',
+    'pdfjs/display/worker_options',
+    'pdfjs/display/network',
+    'pdfjs/display/fetch_stream',
+    'pdfjs/shared/is_node',
+    'pdfjs-test/unit/annotation_spec',
+    'pdfjs-test/unit/api_spec',
+    'pdfjs-test/unit/bidi_spec',
+    'pdfjs-test/unit/cff_parser_spec',
+    'pdfjs-test/unit/cmap_spec',
+    'pdfjs-test/unit/colorspace_spec',
+    'pdfjs-test/unit/core_utils_spec',
+    'pdfjs-test/unit/crypto_spec',
+    'pdfjs-test/unit/custom_spec',
+    'pdfjs-test/unit/display_svg_spec',
+    'pdfjs-test/unit/display_utils_spec',
+    'pdfjs-test/unit/document_spec',
+    'pdfjs-test/unit/encodings_spec',
+    'pdfjs-test/unit/evaluator_spec',
+    'pdfjs-test/unit/function_spec',
+    'pdfjs-test/unit/fetch_stream_spec',
+    'pdfjs-test/unit/message_handler_spec',
+    'pdfjs-test/unit/metadata_spec',
+    'pdfjs-test/unit/murmurhash3_spec',
+    'pdfjs-test/unit/network_spec',
+    'pdfjs-test/unit/network_utils_spec',
+    'pdfjs-test/unit/parser_spec',
+    'pdfjs-test/unit/pdf_find_controller_spec',
+    'pdfjs-test/unit/pdf_find_utils_spec',
+    'pdfjs-test/unit/pdf_history_spec',
+    'pdfjs-test/unit/primitives_spec',
+    'pdfjs-test/unit/stream_spec',
+    'pdfjs-test/unit/type1_parser_spec',
+    'pdfjs-test/unit/ui_utils_spec',
+    'pdfjs-test/unit/unicode_spec',
+    'pdfjs-test/unit/util_spec',
+  ].map(function (moduleName) {
+    return SystemJS.import(moduleName);
+  })).then(function(modules) {
+    var displayApi = modules[0];
+    const GlobalWorkerOptions = modules[1].GlobalWorkerOptions;
+    var PDFNetworkStream = modules[2].PDFNetworkStream;
+    var PDFFetchStream = modules[3].PDFFetchStream;
+    const isNodeJS = modules[4];
 
-      pdfjsLibs = {
-        sharedUtil: sharedUtil,
-        displayGlobal: displayGlobal,
-        corePrimitives: corePrimitives,
-        coreAnnotation: coreAnnotation,
-        coreCrypto: coreCrypto,
-        coreStream: coreStream,
-        coreFonts: coreFonts,
-        corePsParser: corePsParser,
-        coreFunction: coreFunction,
-        coreParser: coreParser,
-        coreEvaluator: coreEvaluator,
-        coreCMap: coreCMap,
-        coreWorker: coreWorker,
-        coreNetwork: coreNetwork,
-        coreType1Parser: coreType1Parser,
-        coreCFFParser: coreCFFParser,
-        coreMurmurHash3: coreMurmurHash3,
-        displayAPI: displayAPI,
-        displayMetadata: displayMetadata,
-        displayDOMUtils: displayDOMUtils,
-        webUIUtils: webUIUtils,
-        coreUnicode: coreUnicode,
-        coreGlyphList: coreGlyphList,
-      };
-
-      // Expose all loaded internal exported members to global scope.
-      Object.keys(pdfjsLibs).forEach(function (libName) {
-        var lib = pdfjsLibs[libName];
-        Object.keys(lib).forEach(function (name) {
-          if (Object.getOwnPropertyDescriptor(window, name)) {
-            return; // ignoring if already set
-          }
-          window[name] = lib[name];
-        });
+    if (isNodeJS()) {
+      throw new Error('The `gulp unittest` command cannot be used in ' +
+                      'Node.js environments.');
+    }
+    // Set the network stream factory for unit-tests.
+    if (typeof Response !== 'undefined' && 'body' in Response.prototype &&
+        typeof ReadableStream !== 'undefined') {
+      displayApi.setPDFNetworkStreamFactory(function(params) {
+        return new PDFFetchStream(params);
       });
+    } else {
+      displayApi.setPDFNetworkStreamFactory(function(params) {
+        return new PDFNetworkStream(params);
+      });
+    }
 
-      // Configure the worker.
-      displayGlobal.PDFJS.workerSrc = '../../src/worker_loader.js';
+    // Configure the worker.
+    GlobalWorkerOptions.workerSrc = '../../build/generic/build/pdf.worker.js';
 
-      callback();
-    });
+    callback();
+  });
 }
 
 (function() {
@@ -115,48 +122,46 @@ function initializePDFJS(callback) {
 
   // Runner Parameters
   var queryString = new jasmine.QueryString({
-    getWindowLocation: function() { return window.location; }
+    getWindowLocation() {
+      return window.location;
+    },
   });
 
-  var catchingExceptions = queryString.getParam('catch');
-  env.catchExceptions(typeof catchingExceptions === 'undefined' ?
-                      true : catchingExceptions);
-
-  var throwingExpectationFailures = queryString.getParam('throwFailures');
-  env.throwOnExpectationFailure(throwingExpectationFailures);
+  var config = {
+    failFast: queryString.getParam('failFast'),
+    oneFailurePerSpec: queryString.getParam('oneFailurePerSpec'),
+    hideDisabled: queryString.getParam('hideDisabled'),
+  };
 
   var random = queryString.getParam('random');
-  env.randomizeTests(random);
+  if (random !== undefined && random !== '') {
+    config.random = random;
+  }
 
   var seed = queryString.getParam('seed');
   if (seed) {
-    env.seed(seed);
+    config.seed = seed;
   }
 
   // Reporters
   var htmlReporter = new jasmine.HtmlReporter({
-    env: env,
-    onRaiseExceptionsClick: function() {
-      queryString.navigateWithNewParam('catch', !env.catchingExceptions());
+    env,
+    navigateWithNewParam(key, value) {
+      return queryString.navigateWithNewParam(key, value);
     },
-    onThrowExpectationsClick: function() {
-      queryString.navigateWithNewParam('throwFailures',
-                                       !env.throwingExpectationFailures());
-    },
-    onRandomClick: function() {
-      queryString.navigateWithNewParam('random', !env.randomTests());
-    },
-    addToExistingQueryString: function(key, value) {
+    addToExistingQueryString(key, value) {
       return queryString.fullStringWithNewParam(key, value);
     },
-    getContainer: function() { return document.body; },
-    createElement: function() {
+    getContainer() {
+      return document.body;
+    },
+    createElement() {
       return document.createElement.apply(document, arguments);
     },
-    createTextNode: function() {
+    createTextNode() {
       return document.createTextNode.apply(document, arguments);
     },
-    timer: new jasmine.Timer()
+    timer: new jasmine.Timer(),
   });
 
   env.addReporter(htmlReporter);
@@ -170,12 +175,16 @@ function initializePDFJS(callback) {
   // Filter which specs will be run by matching the start of the full name
   // against the `spec` query param.
   var specFilter = new jasmine.HtmlSpecFilter({
-    filterString: function() { return queryString.getParam('spec'); }
+    filterString() {
+      return queryString.getParam('spec');
+    },
   });
 
-  env.specFilter = function(spec) {
+  config.specFilter = function(spec) {
     return specFilter.matches(spec.getFullName());
   };
+
+  env.configure(config);
 
   // Sets longer timeout.
   jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
@@ -203,4 +212,3 @@ function initializePDFJS(callback) {
     return destination;
   }
 }());
-

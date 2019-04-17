@@ -12,39 +12,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* globals WeakMap */
 
-'use strict';
-
-(function (root, factory) {
-  if (typeof define === 'function' && define.amd) {
-    define('pdfjs/display/text_layer', ['exports', 'pdfjs/shared/util',
-      'pdfjs/display/dom_utils'], factory);
-  } else if (typeof exports !== 'undefined') {
-    factory(exports, require('../shared/util.js'), require('./dom_utils.js'));
-  } else {
-    factory((root.pdfjsDisplayTextLayer = {}), root.pdfjsSharedUtil,
-      root.pdfjsDisplayDOMUtils);
-  }
-}(this, function (exports, sharedUtil, displayDOMUtils) {
-
-var Util = sharedUtil.Util;
-var createPromiseCapability = sharedUtil.createPromiseCapability;
-var CustomStyle = displayDOMUtils.CustomStyle;
-var getDefaultSetting = displayDOMUtils.getDefaultSetting;
+import { AbortException, createPromiseCapability, Util } from '../shared/util';
+import globalScope from '../shared/global_scope';
 
 /**
  * Text layer render parameters.
  *
  * @typedef {Object} TextLayerRenderParameters
- * @property {TextContent} textContent - Text content to render (the object is
- *   returned by the page's getTextContent() method).
+ * @property {TextContent} textContent - (optional) Text content to render
+ *   (the object is returned by the page's getTextContent() method).
+ * @property {ReadableStream} textContentStream - (optional) Text content
+ *   stream to render (the stream is returned by the page's
+ *   streamTextContent() method).
  * @property {HTMLElement} container - HTML element that will contain text runs.
  * @property {PageViewport} viewport - The target viewport to properly
  *   layout the text runs.
  * @property {Array} textDivs - (optional) HTML elements that are correspond
  *   the text items of the textContent input. This is output and shall be
  *   initially be set to empty array.
+ * @property {Array} textContentItemsStr - (optional) Strings that correspond
+ *   the `str` property of the text items of textContent input. This is output
+ *   and shall be initially be set to empty array.
  * @property {number} timeout - (optional) Delay in milliseconds before
  *   rendering of the text  runs occurs.
  * @property {boolean} enhanceTextSelection - (optional) Whether to turn on the
@@ -59,14 +48,14 @@ var renderTextLayer = (function renderTextLayerClosure() {
     return !NonWhitespaceRegexp.test(str);
   }
 
-  // Text layers may contain many thousand div's, and using `styleBuf` avoids
+  // Text layers may contain many thousands of divs, and using `styleBuf` avoids
   // creating many intermediate strings when building their 'style' properties.
   var styleBuf = ['left: ', 0, 'px; top: ', 0, 'px; font-size: ', 0,
                   'px; font-family: ', '', ';'];
 
   function appendText(task, geom, styles) {
     // Initialize all used properties to keep the caches monomorphic.
-    var textDiv = document.createElement('div');
+    var textDiv = document.createElement('span');
     var textDivProperties = {
       style: null,
       angle: 0,
@@ -118,11 +107,9 @@ var renderTextLayer = (function renderTextLayerClosure() {
     textDiv.setAttribute('style', textDivProperties.style);
 
     textDiv.textContent = geom.str;
-    // |fontName| is only used by the Font Inspector. This test will succeed
-    // when e.g. the Font Inspector is off but the Stepper is on, but it's
-    // not worth the effort to do a more accurate test. We only use `dataset`
-    // here to make the font name available for the debugger.
-    if (getDefaultSetting('pdfBug')) {
+    // `fontName` is only used by the FontInspector, and we only use `dataset`
+    // here to make the font name available in the debugger.
+    if (task._fontInspectorEnabled) {
       textDiv.dataset.fontName = geom.fontName;
     }
     if (angle !== 0) {
@@ -139,6 +126,9 @@ var renderTextLayer = (function renderTextLayerClosure() {
       }
     }
     task._textDivProperties.set(textDiv, textDivProperties);
+    if (task._textContentStream) {
+      task._layoutText(textDiv);
+    }
 
     if (task._enhanceTextSelection) {
       var angleCos = 1, angleSin = 0;
@@ -165,7 +155,7 @@ var renderTextLayer = (function renderTextLayerClosure() {
         bottom: b[3],
         div: textDiv,
         size: [divWidth, divHeight],
-        m: m
+        m,
       });
     }
   }
@@ -174,7 +164,6 @@ var renderTextLayer = (function renderTextLayerClosure() {
     if (task._canceled) {
       return;
     }
-    var textLayerFrag = task._container;
     var textDivs = task._textDivs;
     var capability = task._capability;
     var textDivsLength = textDivs.length;
@@ -187,49 +176,12 @@ var renderTextLayer = (function renderTextLayerClosure() {
       return;
     }
 
-    var canvas = document.createElement('canvas');
-    if (typeof PDFJSDev === 'undefined' ||
-        PDFJSDev.test('FIREFOX || MOZCENTRAL || GENERIC')) {
-       canvas.mozOpaque = true;
+    if (!task._textContentStream) {
+      for (var i = 0; i < textDivsLength; i++) {
+        task._layoutText(textDivs[i]);
+      }
     }
-    var ctx = canvas.getContext('2d', {alpha: false});
 
-    var lastFontSize;
-    var lastFontFamily;
-    for (var i = 0; i < textDivsLength; i++) {
-      var textDiv = textDivs[i];
-      var textDivProperties = task._textDivProperties.get(textDiv);
-      if (textDivProperties.isWhitespace) {
-        continue;
-      }
-
-      var fontSize = textDiv.style.fontSize;
-      var fontFamily = textDiv.style.fontFamily;
-
-      // Only build font string and set to context if different from last.
-      if (fontSize !== lastFontSize || fontFamily !== lastFontFamily) {
-        ctx.font = fontSize + ' ' + fontFamily;
-        lastFontSize = fontSize;
-        lastFontFamily = fontFamily;
-      }
-
-      var width = ctx.measureText(textDiv.textContent).width;
-      textLayerFrag.appendChild(textDiv);
-
-      var transform = '';
-      if (textDivProperties.canvasWidth !== 0 && width > 0) {
-        textDivProperties.scale = textDivProperties.canvasWidth / width;
-        transform = 'scaleX(' + textDivProperties.scale + ')';
-      }
-      if (textDivProperties.angle !== 0) {
-        transform = 'rotate(' + textDivProperties.angle + 'deg) ' + transform;
-      }
-      if (transform !== '') {
-        textDivProperties.originalTransform = transform;
-        CustomStyle.setProp('transform', textDiv, transform);
-      }
-      task._textDivProperties.set(textDiv, textDivProperties);
-    }
     task._renderingDone = true;
     capability.resolve();
   }
@@ -309,7 +261,7 @@ var renderTextLayer = (function renderTextLayerClosure() {
         y2: box.bottom,
         index: i,
         x1New: undefined,
-        x2New: undefined
+        x2New: undefined,
       };
     });
     expandBoundsLTR(width, bounds);
@@ -320,7 +272,7 @@ var renderTextLayer = (function renderTextLayerClosure() {
         left: b.x1New,
         top: 0,
         right: b.x2New,
-        bottom: 0
+        bottom: 0,
       };
     });
 
@@ -348,7 +300,9 @@ var renderTextLayer = (function renderTextLayerClosure() {
 
   function expandBoundsLTR(width, bounds) {
     // Sorting by x1 coordinate and walk by the bounds in the same order.
-    bounds.sort(function (a, b) { return a.x1 - b.x1 || a.index - b.index; });
+    bounds.sort(function (a, b) {
+      return a.x1 - b.x1 || a.index - b.index;
+    });
 
     // First we see on the horizon is a fake boundary.
     var fakeBoundary = {
@@ -358,12 +312,12 @@ var renderTextLayer = (function renderTextLayerClosure() {
       y2: Infinity,
       index: -1,
       x1New: 0,
-      x2New: 0
+      x2New: 0,
     };
     var horizon = [{
       start: -Infinity,
       end: Infinity,
-      boundary: fakeBoundary
+      boundary: fakeBoundary,
     }];
 
     bounds.forEach(function (boundary) {
@@ -374,7 +328,7 @@ var renderTextLayer = (function renderTextLayerClosure() {
         i++;
       }
       var j = horizon.length - 1;
-      while(j >= 0 && horizon[j].start >= boundary.y2) {
+      while (j >= 0 && horizon[j].start >= boundary.y2) {
         j--;
       }
 
@@ -386,7 +340,7 @@ var renderTextLayer = (function renderTextLayerClosure() {
         var xNew;
         if (affectedBoundary.x2 > boundary.x1) {
           // In the middle of the previous element, new x shall be at the
-          // boundary start. Extending if further if the affected bondary
+          // boundary start. Extending if further if the affected boundary
           // placed on top of the current one.
           xNew = affectedBoundary.index > boundary.index ?
             affectedBoundary.x1New : boundary.x1;
@@ -442,7 +396,7 @@ var renderTextLayer = (function renderTextLayerClosure() {
           changedHorizon.push({
             start: horizonPart.start,
             end: horizonPart.end,
-            boundary: useBoundary
+            boundary: useBoundary,
           });
           lastBoundary = useBoundary;
         }
@@ -452,7 +406,7 @@ var renderTextLayer = (function renderTextLayerClosure() {
         changedHorizon.unshift({
           start: horizon[i].start,
           end: boundary.y1,
-          boundary: horizon[i].boundary
+          boundary: horizon[i].boundary,
         });
       }
       if (boundary.y2 < horizon[j].end) {
@@ -460,7 +414,7 @@ var renderTextLayer = (function renderTextLayerClosure() {
         changedHorizon.push({
           start: boundary.y2,
           end: horizon[j].end,
-          boundary: horizon[j].boundary
+          boundary: horizon[j].boundary,
         });
       }
 
@@ -513,19 +467,40 @@ var renderTextLayer = (function renderTextLayerClosure() {
    * @param {boolean} enhanceTextSelection
    * @private
    */
-  function TextLayerRenderTask(textContent, container, viewport, textDivs,
-                               enhanceTextSelection) {
+  function TextLayerRenderTask({ textContent, textContentStream, container,
+                                 viewport, textDivs, textContentItemsStr,
+                                 enhanceTextSelection, }) {
     this._textContent = textContent;
+    this._textContentStream = textContentStream;
     this._container = container;
     this._viewport = viewport;
     this._textDivs = textDivs || [];
+    this._textContentItemsStr = textContentItemsStr || [];
+    this._enhanceTextSelection = !!enhanceTextSelection;
+    this._fontInspectorEnabled = !!(globalScope.FontInspector &&
+                                    globalScope.FontInspector.enabled);
+
+    this._reader = null;
+    this._layoutTextLastFontSize = null;
+    this._layoutTextLastFontFamily = null;
+    this._layoutTextCtx = null;
     this._textDivProperties = new WeakMap();
     this._renderingDone = false;
     this._canceled = false;
     this._capability = createPromiseCapability();
     this._renderTimer = null;
     this._bounds = [];
-    this._enhanceTextSelection = !!enhanceTextSelection;
+
+    // Always clean-up the temporary canvas once rendering is no longer pending.
+    this._capability.promise.finally(() => {
+      if (this._layoutTextCtx) {
+        // Zeroing the width and height cause Firefox to release graphics
+        // resources immediately, which can greatly reduce memory consumption.
+        this._layoutTextCtx.canvas.width = 0;
+        this._layoutTextCtx.canvas.height = 0;
+        this._layoutTextCtx = null;
+      }
+    });
   }
   TextLayerRenderTask.prototype = {
     get promise() {
@@ -534,29 +509,110 @@ var renderTextLayer = (function renderTextLayerClosure() {
 
     cancel: function TextLayer_cancel() {
       this._canceled = true;
+      if (this._reader) {
+        this._reader.cancel(new AbortException('TextLayer task cancelled.'));
+        this._reader = null;
+      }
       if (this._renderTimer !== null) {
         clearTimeout(this._renderTimer);
         this._renderTimer = null;
       }
-      this._capability.reject('canceled');
+      this._capability.reject(new Error('TextLayer task cancelled.'));
+    },
+
+    _processItems(items, styleCache) {
+      for (let i = 0, len = items.length; i < len; i++) {
+        this._textContentItemsStr.push(items[i].str);
+        appendText(this, items[i], styleCache);
+      }
+    },
+
+    _layoutText(textDiv) {
+      let textLayerFrag = this._container;
+
+      let textDivProperties = this._textDivProperties.get(textDiv);
+      if (textDivProperties.isWhitespace) {
+        return;
+      }
+
+      let fontSize = textDiv.style.fontSize;
+      let fontFamily = textDiv.style.fontFamily;
+
+      // Only build font string and set to context if different from last.
+      if (fontSize !== this._layoutTextLastFontSize ||
+          fontFamily !== this._layoutTextLastFontFamily) {
+        this._layoutTextCtx.font = fontSize + ' ' + fontFamily;
+        this._layoutTextLastFontSize = fontSize;
+        this._layoutTextLastFontFamily = fontFamily;
+      }
+
+      let width = this._layoutTextCtx.measureText(textDiv.textContent).width;
+
+      let transform = '';
+      if (textDivProperties.canvasWidth !== 0 && width > 0) {
+        textDivProperties.scale = textDivProperties.canvasWidth / width;
+        transform = `scaleX(${textDivProperties.scale})`;
+      }
+      if (textDivProperties.angle !== 0) {
+        transform = `rotate(${textDivProperties.angle}deg) ${transform}`;
+      }
+      if (transform.length > 0) {
+        textDivProperties.originalTransform = transform;
+        textDiv.style.transform = transform;
+      }
+      this._textDivProperties.set(textDiv, textDivProperties);
+      textLayerFrag.appendChild(textDiv);
     },
 
     _render: function TextLayer_render(timeout) {
-      var textItems = this._textContent.items;
-      var textStyles = this._textContent.styles;
-      for (var i = 0, len = textItems.length; i < len; i++) {
-        appendText(this, textItems[i], textStyles);
+      let capability = createPromiseCapability();
+      let styleCache = Object.create(null);
+
+      // The temporary canvas is used to measure text length in the DOM.
+      let canvas = document.createElement('canvas');
+      if (typeof PDFJSDev === 'undefined' ||
+          PDFJSDev.test('FIREFOX || MOZCENTRAL || GENERIC')) {
+         canvas.mozOpaque = true;
+      }
+      this._layoutTextCtx = canvas.getContext('2d', { alpha: false, });
+
+      if (this._textContent) {
+        let textItems = this._textContent.items;
+        let textStyles = this._textContent.styles;
+        this._processItems(textItems, textStyles);
+        capability.resolve();
+      } else if (this._textContentStream) {
+        let pump = () => {
+          this._reader.read().then(({ value, done, }) => {
+            if (done) {
+              capability.resolve();
+              return;
+            }
+
+            Object.assign(styleCache, value.styles);
+            this._processItems(value.items, styleCache);
+            pump();
+          }, capability.reject);
+        };
+
+        this._reader = this._textContentStream.getReader();
+        pump();
+      } else {
+        throw new Error('Neither "textContent" nor "textContentStream"' +
+          ' parameters specified.');
       }
 
-      if (!timeout) { // Render right away
-        render(this);
-      } else { // Schedule
-        var self = this;
-        this._renderTimer = setTimeout(function() {
-          render(self);
-          self._renderTimer = null;
-        }, timeout);
-      }
+      capability.promise.then(() => {
+        styleCache = null;
+        if (!timeout) { // Render right away
+          render(this);
+        } else { // Schedule
+          this._renderTimer = setTimeout(() => {
+            render(this);
+            this._renderTimer = null;
+          }, timeout);
+        }
+      }, this._capability.reject);
     },
 
     expandTextDivs: function TextLayer_expandTextDivs(expandDivs) {
@@ -607,12 +663,11 @@ var renderTextLayer = (function renderTextLayerClosure() {
             div.setAttribute('style', divProperties.style + padding);
           }
           if (transform !== '') {
-            CustomStyle.setProp('transform', div, transform);
+            div.style.transform = transform;
           }
         } else {
           div.style.padding = 0;
-          CustomStyle.setProp('transform', div,
-                              divProperties.originalTransform || '');
+          div.style.transform = divProperties.originalTransform || '';
         }
       }
     },
@@ -625,11 +680,15 @@ var renderTextLayer = (function renderTextLayerClosure() {
    * @returns {TextLayerRenderTask}
    */
   function renderTextLayer(renderParameters) {
-    var task = new TextLayerRenderTask(renderParameters.textContent,
-                                       renderParameters.container,
-                                       renderParameters.viewport,
-                                       renderParameters.textDivs,
-                                       renderParameters.enhanceTextSelection);
+    var task = new TextLayerRenderTask({
+      textContent: renderParameters.textContent,
+      textContentStream: renderParameters.textContentStream,
+      container: renderParameters.container,
+      viewport: renderParameters.viewport,
+      textDivs: renderParameters.textDivs,
+      textContentItemsStr: renderParameters.textContentItemsStr,
+      enhanceTextSelection: renderParameters.enhanceTextSelection,
+    });
     task._render(renderParameters.timeout);
     return task;
   }
@@ -637,5 +696,6 @@ var renderTextLayer = (function renderTextLayerClosure() {
   return renderTextLayer;
 })();
 
-exports.renderTextLayer = renderTextLayer;
-}));
+export {
+  renderTextLayer,
+};
