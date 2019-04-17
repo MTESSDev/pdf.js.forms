@@ -105,6 +105,7 @@ class PDFPageView {
 
     let div = document.createElement('div');
     div.className = 'page';
+    div.style.position = 'relative';
     div.style.width = Math.floor(this.viewport.width) + 'px';
     div.style.height = Math.floor(this.viewport.height) + 'px';
     div.setAttribute('data-page-number', this.id);

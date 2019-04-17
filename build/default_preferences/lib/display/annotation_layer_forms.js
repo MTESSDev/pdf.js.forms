@@ -1,0 +1,1327 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.AnnotationLayer = void 0;
+
+var _display_utils = require("./display_utils");
+
+var _util = require("../shared/util");
+
+var _forms = require("./forms");
+
+let _tabIndex = 1;
+let _formValues = [];
+let _formFields = {
+  'CHECK_BOX': {},
+  'TEXT': {},
+  'RADIO_BUTTON': {},
+  'DROP_DOWN': {}
+};
+let fieldTypes = {
+  UNSUPPORTED: false,
+  CHECK_BOX: 'CHECK_BOX',
+  DROP_DOWN: 'DROP_DOWN',
+  PUSH_BUTTON: 'PUSH_BUTTON',
+  RADIO_BUTTON: 'RADIO_BUTTON',
+  TEXT: 'TEXT'
+};
+let genericClosureOverrides = {};
+let idClosureOverrides = {};
+let _postCreationTweak = false;
+
+class AnnotationElementFactory {
+  static correctProps(annotation) {
+    annotation.tabindex = _tabIndex++;
+    annotation.id = annotation.fullName;
+
+    if (annotation.fullName.indexOf('.`') != -1) {
+      annotation.correctedId = annotation.fullName.substring(0, annotation.fullName.indexOf('.`'));
+      annotation.groupingId = annotation.fullName.substring(annotation.fullName.indexOf('.`') + 2);
+      annotation.isGroupMember = true;
+    } else {
+      annotation.correctedId = annotation.fullName;
+      annotation.isGroupMember = false;
+      annotation.groupingId = 0;
+    }
+
+    return annotation;
+  }
+
+  static create(parameters) {
+    let subtype = parameters.data.annotationType;
+
+    switch (subtype) {
+      case _util.AnnotationType.LINK:
+        return new LinkAnnotationElement(parameters);
+
+      case _util.AnnotationType.TEXT:
+        return new TextAnnotationElement(parameters);
+
+      case _util.AnnotationType.WIDGET:
+        let fieldType = parameters.data.fieldType;
+        parameters.data = AnnotationElementFactory.correctProps(parameters.data);
+
+        switch (fieldType) {
+          case 'Tx':
+            return new TextWidgetAnnotationElement(parameters);
+
+          case 'Btn':
+            if (parameters.data.radioButton) {
+              return new RadioButtonWidgetAnnotationElement(parameters);
+            } else if (parameters.data.checkBox) {
+              return new CheckboxWidgetAnnotationElement(parameters);
+            }
+
+            return new PushButtonWidgetAnnotationElement(parameters);
+
+          case 'Ch':
+            return new ChoiceWidgetAnnotationElement(parameters);
+        }
+
+        return new WidgetAnnotationElement(parameters);
+
+      case _util.AnnotationType.POPUP:
+        return new PopupAnnotationElement(parameters);
+
+      case _util.AnnotationType.LINE:
+        return new LineAnnotationElement(parameters);
+
+      case _util.AnnotationType.SQUARE:
+        return new SquareAnnotationElement(parameters);
+
+      case _util.AnnotationType.CIRCLE:
+        return new CircleAnnotationElement(parameters);
+
+      case _util.AnnotationType.POLYLINE:
+        return new PolylineAnnotationElement(parameters);
+
+      case _util.AnnotationType.INK:
+        return new InkAnnotationElement(parameters);
+
+      case _util.AnnotationType.POLYGON:
+        return new PolygonAnnotationElement(parameters);
+
+      case _util.AnnotationType.HIGHLIGHT:
+        return new HighlightAnnotationElement(parameters);
+
+      case _util.AnnotationType.UNDERLINE:
+        return new UnderlineAnnotationElement(parameters);
+
+      case _util.AnnotationType.SQUIGGLY:
+        return new SquigglyAnnotationElement(parameters);
+
+      case _util.AnnotationType.STRIKEOUT:
+        return new StrikeOutAnnotationElement(parameters);
+
+      case _util.AnnotationType.STAMP:
+        return new StampAnnotationElement(parameters);
+
+      case _util.AnnotationType.FILEATTACHMENT:
+        return new FileAttachmentAnnotationElement(parameters);
+
+      default:
+        return new AnnotationElement(parameters);
+    }
+  }
+
+}
+
+class AnnotationElement {
+  constructor(parameters, isRenderable = false, ignoreBorder = false) {
+    this.isRenderable = isRenderable;
+    this.data = parameters.data;
+    this.layer = parameters.layer;
+    this.page = parameters.page;
+    this.viewport = parameters.viewport;
+    this.linkService = parameters.linkService;
+    this.downloadManager = parameters.downloadManager;
+    this.imageResourcesPath = parameters.imageResourcesPath;
+    this.renderInteractiveForms = parameters.renderInteractiveForms;
+    this.svgFactory = parameters.svgFactory;
+
+    if (isRenderable) {
+      this.container = this._createContainer(ignoreBorder);
+    }
+  }
+
+  _createContainer(ignoreBorder = false) {
+    let data = this.data,
+        page = this.page,
+        viewport = this.viewport;
+    let container = document.createElement('section');
+    let width = data.rect[2] - data.rect[0];
+    let height = data.rect[3] - data.rect[1];
+    container.setAttribute('data-annotation-id', data.id);
+
+    let rect = _util.Util.normalizeRect([data.rect[0], page.view[3] - data.rect[1] + page.view[1], data.rect[2], page.view[3] - data.rect[3] + page.view[1]]);
+
+    container.style.transform = 'matrix(' + viewport.transform.join(',') + ')';
+    container.style.transformOrigin = -rect[0] + 'px ' + -rect[1] + 'px';
+
+    if (!ignoreBorder && data.borderStyle.width > 0) {
+      container.style.borderWidth = data.borderStyle.width + 'px';
+
+      if (data.borderStyle.style !== _util.AnnotationBorderStyleType.UNDERLINE) {
+        width = width - 2 * data.borderStyle.width;
+        height = height - 2 * data.borderStyle.width;
+      }
+
+      let horizontalRadius = data.borderStyle.horizontalCornerRadius;
+      let verticalRadius = data.borderStyle.verticalCornerRadius;
+
+      if (horizontalRadius > 0 || verticalRadius > 0) {
+        let radius = horizontalRadius + 'px / ' + verticalRadius + 'px';
+        container.style.borderRadius = radius;
+      }
+
+      switch (data.borderStyle.style) {
+        case _util.AnnotationBorderStyleType.SOLID:
+          container.style.borderStyle = 'solid';
+          break;
+
+        case _util.AnnotationBorderStyleType.DASHED:
+          container.style.borderStyle = 'dashed';
+          break;
+
+        case _util.AnnotationBorderStyleType.BEVELED:
+          (0, _util.warn)('Unimplemented border style: beveled');
+          break;
+
+        case _util.AnnotationBorderStyleType.INSET:
+          (0, _util.warn)('Unimplemented border style: inset');
+          break;
+
+        case _util.AnnotationBorderStyleType.UNDERLINE:
+          container.style.borderBottomStyle = 'solid';
+          break;
+
+        default:
+          break;
+      }
+
+      if (data.color) {
+        container.style.borderColor = _util.Util.makeCssRgb(data.color[0] | 0, data.color[1] | 0, data.color[2] | 0);
+      } else {
+        container.style.borderWidth = 0;
+      }
+    }
+
+    container.style.left = rect[0] + 'px';
+    container.style.top = rect[1] + 'px';
+    container.style.width = width + 'px';
+    container.style.height = height + 'px';
+    return container;
+  }
+
+  _createPopup(container, trigger, data) {
+    if (!trigger) {
+      trigger = document.createElement('div');
+      trigger.style.height = container.style.height;
+      trigger.style.width = container.style.width;
+      container.appendChild(trigger);
+    }
+
+    let popupElement = new PopupElement({
+      container,
+      trigger,
+      color: data.color,
+      title: data.title,
+      contents: data.contents,
+      hideWrapper: true
+    });
+    let popup = popupElement.render();
+    popup.style.left = container.style.width;
+    container.appendChild(popup);
+  }
+
+  getCorrectedId() {
+    return this.data.correctedId;
+  }
+
+  getGroupingId() {
+    return this.data.groupingId;
+  }
+
+  render() {
+    (0, _util.unreachable)('Abstract method `AnnotationElement.render` called');
+  }
+
+}
+
+class LinkAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    let isRenderable = !!(parameters.data.url || parameters.data.dest || parameters.data.action);
+    super(parameters, isRenderable);
+  }
+
+  render() {
+    this.container.className = 'linkAnnotation';
+    let {
+      data,
+      linkService
+    } = this;
+    let link = document.createElement('a');
+    (0, _display_utils.addLinkAttributes)(link, {
+      url: data.url,
+      target: data.newWindow ? _display_utils.LinkTarget.BLANK : linkService.externalLinkTarget,
+      rel: linkService.externalLinkRel
+    });
+
+    if (!data.url) {
+      if (data.action) {
+        this._bindNamedAction(link, data.action);
+      } else {
+        this._bindLink(link, data.dest);
+      }
+    }
+
+    this.container.appendChild(link);
+    return this.container;
+  }
+
+  _bindLink(link, destination) {
+    link.href = this.linkService.getDestinationHash(destination);
+
+    link.onclick = () => {
+      if (destination) {
+        this.linkService.navigateTo(destination);
+      }
+
+      return false;
+    };
+
+    if (destination) {
+      link.className = 'internalLink';
+    }
+  }
+
+  _bindNamedAction(link, action) {
+    link.href = this.linkService.getAnchorUrl('');
+
+    link.onclick = () => {
+      this.linkService.executeNamedAction(action);
+      return false;
+    };
+
+    link.className = 'internalLink';
+  }
+
+}
+
+class TextAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    super(parameters, isRenderable);
+  }
+
+  render() {
+    this.container.className = 'textAnnotation';
+    let image = document.createElement('img');
+    image.style.height = this.container.style.height;
+    image.style.width = this.container.style.width;
+    image.src = this.imageResourcesPath + 'annotation-' + this.data.name.toLowerCase() + '.svg';
+    image.alt = '[{{type}} Annotation]';
+    image.dataset.l10nId = 'text_annotation_type';
+    image.dataset.l10nArgs = JSON.stringify({
+      type: this.data.name
+    });
+
+    if (!this.data.hasPopup) {
+      this._createPopup(this.container, image, this.data);
+    }
+
+    this.container.appendChild(image);
+    return this.container;
+  }
+
+}
+
+class WidgetAnnotationElement extends AnnotationElement {
+  render() {
+    return this.container;
+  }
+
+}
+
+class TextWidgetAnnotationElement extends WidgetAnnotationElement {
+  constructor(parameters) {
+    let isRenderable = parameters.renderInteractiveForms || !parameters.data.hasAppearance && !!parameters.data.fieldValue;
+    super(parameters, isRenderable);
+  }
+
+  render() {
+    const TEXT_ALIGNMENT = ['left', 'center', 'right'];
+    this.container.className = 'textWidgetAnnotation';
+    let element = null;
+
+    if (this.renderInteractiveForms) {
+      let creationRoutine = idClosureOverrides[this.data.correctedId] || genericClosureOverrides[fieldTypes.TEXT] || false;
+
+      if (creationRoutine != false) {
+        element = creationRoutine(this);
+      } else {
+        let value = this.data.fieldValue;
+
+        if (this.data.correctedId in _formValues) {
+          value = _formValues[this.data.correctedId];
+        } else if (this.data.fullName in _formValues) {
+          value = _formValues[this.data.fullName];
+        }
+
+        this.data.value = value;
+
+        if (this.data.isGroupMember && this.data.groupingId != 0) {
+          this.data.readOnly = true;
+        }
+
+        if (this.data.multiLine) {
+          element = document.createElement('textarea');
+          element.textContent = value;
+          element.style.resize = "none";
+        } else {
+          element = document.createElement('input');
+
+          if (this.data.fileUpload) {
+            element.type = 'file';
+          } else if (this.data.password) {
+            element.type = 'password';
+          } else {
+            element.type = 'text';
+          }
+
+          element.setAttribute('value', this.data.value);
+        }
+
+        if (this.data.isGroupMember) {
+          element.setAttribute('data-group', this.data.correctedId);
+          element.setAttribute('data-group-slave', this.data.groupingId != "0" ? 1 : 0);
+        }
+
+        element.disabled = this.data.readOnly;
+
+        if (this.data.readOnly) {
+          element.style.cursor = "not-allowed";
+        }
+
+        if (this.data.maxLen !== null) {
+          element.maxLength = this.data.maxLen;
+        }
+
+        element.id = !this.data.isGroupMember || this.data.groupingId == 0 ? this.data.correctedId : this.data.id;
+        element.name = this.data.correctedId;
+
+        if (this.data.comb) {
+          let fieldWidth = this.data.rect[2] - this.data.rect[0];
+          let combWidth = fieldWidth / this.data.maxLen;
+          element.classList.add('comb');
+          element.style.letterSpacing = 'calc(' + combWidth + 'px - 1ch)';
+        }
+
+        if (_postCreationTweak) {
+          _postCreationTweak(fieldTypes.TEXT, this.data.correctedId, element);
+        }
+      }
+    } else {
+      element = document.createElement('div');
+      element.textContent = this.data.fieldValue;
+      element.style.verticalAlign = 'middle';
+      element.style.display = 'table-cell';
+      let font = null;
+
+      if (this.data.fontRefName && this.page.commonObjs.has(this.data.fontRefName)) {
+        font = this.page.commonObjs.get(this.data.fontRefName);
+      }
+
+      this._setTextStyle(element, font);
+    }
+
+    if (this.data.textAlignment !== null) {
+      element.style.textAlign = TEXT_ALIGNMENT[this.data.textAlignment];
+    }
+
+    this.container.appendChild(element);
+    return this.container;
+  }
+
+  _setTextStyle(element, font) {
+    let style = element.style;
+    style.fontSize = this.data.fontSize + 'px';
+    style.direction = this.data.fontDirection < 0 ? 'rtl' : 'ltr';
+
+    if (!font) {
+      return;
+    }
+
+    style.fontWeight = font.black ? font.bold ? '900' : 'bold' : font.bold ? 'bold' : 'normal';
+    style.fontStyle = font.italic ? 'italic' : 'normal';
+    let fontFamily = font.loadedName ? '"' + font.loadedName + '", ' : '';
+    let fallbackName = font.fallbackName || 'Helvetica, sans-serif';
+    style.fontFamily = fontFamily + fallbackName;
+  }
+
+}
+
+class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
+  constructor(parameters) {
+    super(parameters, parameters.renderInteractiveForms);
+  }
+
+  render() {
+    this.container.className = 'buttonWidgetAnnotation checkBox';
+    let creationRoutine = idClosureOverrides[this.data.correctedId] || genericClosureOverrides[fieldTypes.TEXT] || false;
+    let element = null;
+
+    if (creationRoutine != false) {
+      element = creationRoutine(this);
+    } else {
+      element = document.createElement('input');
+      element.disabled = this.data.readOnly;
+      element.type = 'checkbox';
+      let selected = false;
+
+      if (this.data.fieldValue && this.data.fieldValue !== 'Off') {
+        selected = true;
+      }
+
+      let v = _formValues[this.data.id];
+
+      switch (typeof v) {
+        case 'string':
+          {
+            selected = item.options.indexOf(v) > 0;
+            break;
+          }
+
+        case 'boolean':
+          {
+            selected = v;
+            break;
+          }
+      }
+
+      if (selected) {
+        element.setAttribute('checked', true);
+      }
+
+      element.id = 'correctedId' in this.data ? this.data.correctedId : this.data.id;
+      element.name = 'correctedId' in this.data ? this.data.correctedId : this.data.id;
+      element.value = this.data.exportValue;
+
+      if (_postCreationTweak) {
+        _postCreationTweak(fieldTypes.CHECK_BOX, this.data.correctedId, element);
+      }
+    }
+
+    this.container.appendChild(element);
+    return this.container;
+  }
+
+}
+
+class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement {
+  constructor(parameters) {
+    super(parameters, parameters.renderInteractiveForms);
+  }
+
+  render() {
+    this.container.className = 'buttonWidgetAnnotation radioButton';
+    let creationRoutine = idClosureOverrides[this.data.correctedId] || genericClosureOverrides[fieldTypes.TEXT] || false;
+    let element = null;
+
+    if (creationRoutine != false) {
+      element = creationRoutine(this);
+    } else {
+      element = document.createElement('input');
+      element.disabled = this.data.readOnly;
+      element.type = 'radio';
+      element.id = this.data.correctedId + '.' + this.data.groupingId;
+      element.name = this.data.fieldName;
+      element.value = this.data.buttonValue;
+      let selected = false;
+
+      if (this.data.fieldValue === this.data.buttonValue) {
+        selected = true;
+      }
+
+      let v = _formValues[this.data.correctedId];
+
+      switch (typeof v) {
+        case 'string':
+          {
+            selected = v == this.data.buttonValue;
+            break;
+          }
+      }
+
+      if (selected) {
+        element.setAttribute('checked', true);
+      }
+
+      if (_postCreationTweak) {
+        _postCreationTweak(fieldTypes.RADIO_BUTTON, this.data.correctedId, element);
+      }
+    }
+
+    this.container.appendChild(element);
+    return this.container;
+  }
+
+}
+
+class PushButtonWidgetAnnotationElement extends LinkAnnotationElement {
+  render() {
+    let container = super.render();
+    container.className = 'buttonWidgetAnnotation pushButton';
+    return container;
+  }
+
+}
+
+class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
+  constructor(parameters) {
+    super(parameters, parameters.renderInteractiveForms);
+  }
+
+  render() {
+    this.container.className = 'choiceWidgetAnnotation';
+    let creationRoutine = idClosureOverrides[this.data.correctedId] || genericClosureOverrides[fieldTypes.TEXT] || false;
+    let selectElement = null;
+
+    if (creationRoutine != false) {
+      selectElement = creationRoutine(this);
+    } else {
+      selectElement = document.createElement('select');
+      selectElement.disabled = this.data.readOnly;
+
+      if (this.data.readOnly) {
+        element.style.cursor = "not-allowed";
+      }
+
+      let value = this.data.fieldValue;
+
+      if (this.data.correctedId in _formValues) {
+        value = _formValues[this.data.correctedId];
+      } else if (this.data.fullName in _formValues) {
+        value = _formValues[this.data.fullName];
+      }
+
+      this.data.value = value;
+      selectElement.id = !this.data.isGroupMember || this.data.groupingId == 0 ? this.data.correctedId : this.data.id;
+      selectElement.name = this.data.correctedId;
+
+      if (!this.data.combo) {
+        selectElement.size = this.data.options.length;
+
+        if (this.data.multiSelect) {
+          selectElement.multiple = true;
+        }
+      }
+
+      for (let i = 0, ii = this.data.options.length; i < ii; i++) {
+        let option = this.data.options[i];
+        let optionElement = document.createElement('option');
+        optionElement.textContent = option.displayValue;
+        optionElement.value = option.exportValue;
+
+        if (option.exportValue == this.data.value) {
+          optionElement.selected = true;
+        }
+
+        if (this.data.fieldValue.includes(option.displayValue)) {
+          optionElement.setAttribute('selected', true);
+        }
+
+        selectElement.appendChild(optionElement);
+      }
+    }
+
+    if (_postCreationTweak) {
+      _postCreationTweak(fieldTypes.DROP_DOWN, this.data.correctedId, selectElement);
+    }
+
+    this.container.appendChild(selectElement);
+    return this.container;
+  }
+
+}
+
+class PopupAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    let isRenderable = !!(parameters.data.title || parameters.data.contents);
+    super(parameters, isRenderable);
+  }
+
+  render() {
+    const IGNORE_TYPES = ['Line', 'Square', 'Circle', 'PolyLine', 'Polygon', 'Ink'];
+    this.container.className = 'popupAnnotation';
+
+    if (IGNORE_TYPES.includes(this.data.parentType)) {
+      return this.container;
+    }
+
+    let selector = '[data-annotation-id="' + this.data.parentId + '"]';
+    let parentElement = this.layer.querySelector(selector);
+
+    if (!parentElement) {
+      return this.container;
+    }
+
+    let popup = new PopupElement({
+      container: this.container,
+      trigger: parentElement,
+      color: this.data.color,
+      title: this.data.title,
+      contents: this.data.contents
+    });
+    let parentLeft = parseFloat(parentElement.style.left);
+    let parentWidth = parseFloat(parentElement.style.width);
+    this.container.style.transformOrigin = -(parentLeft + parentWidth) + 'px -' + parentElement.style.top;
+    this.container.style.left = parentLeft + parentWidth + 'px';
+    this.container.appendChild(popup.render());
+    return this.container;
+  }
+
+}
+
+class PopupElement {
+  constructor(parameters) {
+    this.container = parameters.container;
+    this.trigger = parameters.trigger;
+    this.color = parameters.color;
+    this.title = parameters.title;
+    this.contents = parameters.contents;
+    this.hideWrapper = parameters.hideWrapper || false;
+    this.pinned = false;
+  }
+
+  render() {
+    const BACKGROUND_ENLIGHT = 0.7;
+    let wrapper = document.createElement('div');
+    wrapper.className = 'popupWrapper';
+    this.hideElement = this.hideWrapper ? wrapper : this.container;
+    this.hideElement.setAttribute('hidden', true);
+    let popup = document.createElement('div');
+    popup.className = 'popup';
+    let color = this.color;
+
+    if (color) {
+      let r = BACKGROUND_ENLIGHT * (255 - color[0]) + color[0];
+      let g = BACKGROUND_ENLIGHT * (255 - color[1]) + color[1];
+      let b = BACKGROUND_ENLIGHT * (255 - color[2]) + color[2];
+      popup.style.backgroundColor = _util.Util.makeCssRgb(r | 0, g | 0, b | 0);
+    }
+
+    let contents = this._formatContents(this.contents);
+
+    let title = document.createElement('h1');
+    title.textContent = this.title;
+    this.trigger.addEventListener('click', this._toggle.bind(this));
+    this.trigger.addEventListener('mouseover', this._show.bind(this, false));
+    this.trigger.addEventListener('mouseout', this._hide.bind(this, false));
+    popup.addEventListener('click', this._hide.bind(this, true));
+    popup.appendChild(title);
+    popup.appendChild(contents);
+    wrapper.appendChild(popup);
+    return wrapper;
+  }
+
+  _formatContents(contents) {
+    let p = document.createElement('p');
+    let lines = contents.split(/(?:\r\n?|\n)/);
+
+    for (let i = 0, ii = lines.length; i < ii; ++i) {
+      let line = lines[i];
+      p.appendChild(document.createTextNode(line));
+
+      if (i < ii - 1) {
+        p.appendChild(document.createElement('br'));
+      }
+    }
+
+    return p;
+  }
+
+  _toggle() {
+    if (this.pinned) {
+      this._hide(true);
+    } else {
+      this._show(true);
+    }
+  }
+
+  _show(pin = false) {
+    if (pin) {
+      this.pinned = true;
+    }
+
+    if (this.hideElement.hasAttribute('hidden')) {
+      this.hideElement.removeAttribute('hidden');
+      this.container.style.zIndex += 1;
+    }
+  }
+
+  _hide(unpin = true) {
+    if (unpin) {
+      this.pinned = false;
+    }
+
+    if (!this.hideElement.hasAttribute('hidden') && !this.pinned) {
+      this.hideElement.setAttribute('hidden', true);
+      this.container.style.zIndex -= 1;
+    }
+  }
+
+}
+
+class LineAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    super(parameters, isRenderable, true);
+  }
+
+  render() {
+    this.container.className = 'lineAnnotation';
+    let data = this.data;
+    let width = data.rect[2] - data.rect[0];
+    let height = data.rect[3] - data.rect[1];
+    let svg = this.svgFactory.create(width, height);
+    let line = this.svgFactory.createElement('svg:line');
+    line.setAttribute('x1', data.rect[2] - data.lineCoordinates[0]);
+    line.setAttribute('y1', data.rect[3] - data.lineCoordinates[1]);
+    line.setAttribute('x2', data.rect[2] - data.lineCoordinates[2]);
+    line.setAttribute('y2', data.rect[3] - data.lineCoordinates[3]);
+    line.setAttribute('stroke-width', data.borderStyle.width);
+    line.setAttribute('stroke', 'transparent');
+    svg.appendChild(line);
+    this.container.append(svg);
+
+    this._createPopup(this.container, line, data);
+
+    return this.container;
+  }
+
+}
+
+class SquareAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    super(parameters, isRenderable, true);
+  }
+
+  render() {
+    this.container.className = 'squareAnnotation';
+    let data = this.data;
+    let width = data.rect[2] - data.rect[0];
+    let height = data.rect[3] - data.rect[1];
+    let svg = this.svgFactory.create(width, height);
+    let borderWidth = data.borderStyle.width;
+    let square = this.svgFactory.createElement('svg:rect');
+    square.setAttribute('x', borderWidth / 2);
+    square.setAttribute('y', borderWidth / 2);
+    square.setAttribute('width', width - borderWidth);
+    square.setAttribute('height', height - borderWidth);
+    square.setAttribute('stroke-width', borderWidth);
+    square.setAttribute('stroke', 'transparent');
+    square.setAttribute('fill', 'none');
+    svg.appendChild(square);
+    this.container.append(svg);
+
+    this._createPopup(this.container, square, data);
+
+    return this.container;
+  }
+
+}
+
+class CircleAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    super(parameters, isRenderable, true);
+  }
+
+  render() {
+    this.container.className = 'circleAnnotation';
+    let data = this.data;
+    let width = data.rect[2] - data.rect[0];
+    let height = data.rect[3] - data.rect[1];
+    let svg = this.svgFactory.create(width, height);
+    let borderWidth = data.borderStyle.width;
+    let circle = this.svgFactory.createElement('svg:ellipse');
+    circle.setAttribute('cx', width / 2);
+    circle.setAttribute('cy', height / 2);
+    circle.setAttribute('rx', width / 2 - borderWidth / 2);
+    circle.setAttribute('ry', height / 2 - borderWidth / 2);
+    circle.setAttribute('stroke-width', borderWidth);
+    circle.setAttribute('stroke', 'transparent');
+    circle.setAttribute('fill', 'none');
+    svg.appendChild(circle);
+    this.container.append(svg);
+
+    this._createPopup(this.container, circle, data);
+
+    return this.container;
+  }
+
+}
+
+class PolylineAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    super(parameters, isRenderable, true);
+    this.containerClassName = 'polylineAnnotation';
+    this.svgElementName = 'svg:polyline';
+  }
+
+  render() {
+    this.container.className = this.containerClassName;
+    let data = this.data;
+    let width = data.rect[2] - data.rect[0];
+    let height = data.rect[3] - data.rect[1];
+    let svg = this.svgFactory.create(width, height);
+    let vertices = data.vertices;
+    let points = [];
+
+    for (let i = 0, ii = vertices.length; i < ii; i++) {
+      let x = vertices[i].x - data.rect[0];
+      let y = data.rect[3] - vertices[i].y;
+      points.push(x + ',' + y);
+    }
+
+    points = points.join(' ');
+    let borderWidth = data.borderStyle.width;
+    let polyline = this.svgFactory.createElement(this.svgElementName);
+    polyline.setAttribute('points', points);
+    polyline.setAttribute('stroke-width', borderWidth);
+    polyline.setAttribute('stroke', 'transparent');
+    polyline.setAttribute('fill', 'none');
+    svg.appendChild(polyline);
+    this.container.append(svg);
+
+    this._createPopup(this.container, polyline, data);
+
+    return this.container;
+  }
+
+}
+
+class PolygonAnnotationElement extends PolylineAnnotationElement {
+  constructor(parameters) {
+    super(parameters);
+    this.containerClassName = 'polygonAnnotation';
+    this.svgElementName = 'svg:polygon';
+  }
+
+}
+
+class InkAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    super(parameters, isRenderable, true);
+    this.containerClassName = 'inkAnnotation';
+    this.svgElementName = 'svg:polyline';
+  }
+
+  render() {
+    this.container.className = this.containerClassName;
+    let data = this.data;
+    let width = data.rect[2] - data.rect[0];
+    let height = data.rect[3] - data.rect[1];
+    let svg = this.svgFactory.create(width, height);
+    let inkLists = data.inkLists;
+
+    for (let i = 0, ii = inkLists.length; i < ii; i++) {
+      let inkList = inkLists[i];
+      let points = [];
+
+      for (let j = 0, jj = inkList.length; j < jj; j++) {
+        let x = inkList[j].x - data.rect[0];
+        let y = data.rect[3] - inkList[j].y;
+        points.push(x + ',' + y);
+      }
+
+      points = points.join(' ');
+      let borderWidth = data.borderStyle.width;
+      let polyline = this.svgFactory.createElement(this.svgElementName);
+      polyline.setAttribute('points', points);
+      polyline.setAttribute('stroke-width', borderWidth);
+      polyline.setAttribute('stroke', 'transparent');
+      polyline.setAttribute('fill', 'none');
+
+      this._createPopup(this.container, polyline, data);
+
+      svg.appendChild(polyline);
+    }
+
+    this.container.append(svg);
+    return this.container;
+  }
+
+}
+
+class HighlightAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    super(parameters, isRenderable, true);
+  }
+
+  render() {
+    this.container.className = 'highlightAnnotation';
+
+    if (!this.data.hasPopup) {
+      this._createPopup(this.container, null, this.data);
+    }
+
+    return this.container;
+  }
+
+}
+
+class UnderlineAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    super(parameters, isRenderable, true);
+  }
+
+  render() {
+    this.container.className = 'underlineAnnotation';
+
+    if (!this.data.hasPopup) {
+      this._createPopup(this.container, null, this.data);
+    }
+
+    return this.container;
+  }
+
+}
+
+class SquigglyAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    super(parameters, isRenderable, true);
+  }
+
+  render() {
+    this.container.className = 'squigglyAnnotation';
+
+    if (!this.data.hasPopup) {
+      this._createPopup(this.container, null, this.data);
+    }
+
+    return this.container;
+  }
+
+}
+
+class StrikeOutAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    super(parameters, isRenderable, true);
+  }
+
+  render() {
+    this.container.className = 'strikeoutAnnotation';
+
+    if (!this.data.hasPopup) {
+      this._createPopup(this.container, null, this.data);
+    }
+
+    return this.container;
+  }
+
+}
+
+class StampAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    super(parameters, isRenderable, true);
+  }
+
+  render() {
+    this.container.className = 'stampAnnotation';
+
+    if (!this.data.hasPopup) {
+      this._createPopup(this.container, null, this.data);
+    }
+
+    return this.container;
+  }
+
+}
+
+class FileAttachmentAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    super(parameters, true);
+    const {
+      filename,
+      content
+    } = this.data.file;
+    this.filename = (0, _display_utils.getFilenameFromUrl)(filename);
+    this.content = content;
+
+    if (this.linkService.eventBus) {
+      this.linkService.eventBus.dispatch('fileattachmentannotation', {
+        source: this,
+        id: (0, _util.stringToPDFString)(filename),
+        filename,
+        content
+      });
+    }
+  }
+
+  render() {
+    this.container.className = 'fileAttachmentAnnotation';
+    let trigger = document.createElement('div');
+    trigger.style.height = this.container.style.height;
+    trigger.style.width = this.container.style.width;
+    trigger.addEventListener('dblclick', this._download.bind(this));
+
+    if (!this.data.hasPopup && (this.data.title || this.data.contents)) {
+      this._createPopup(this.container, trigger, this.data);
+    }
+
+    this.container.appendChild(trigger);
+    return this.container;
+  }
+
+  _download() {
+    if (!this.downloadManager) {
+      (0, _util.warn)('Download cannot be started due to unavailable download manager');
+      return;
+    }
+
+    this.downloadManager.downloadData(this.content, this.filename, '');
+  }
+
+}
+
+let getFormElementFromAnnotation = function (annotation) {
+  let x = annotation.hasOwnProperty('container');
+
+  if (x) {
+    return annotation.container.children[0];
+  }
+
+  let set = [];
+  let arrayLength = annotation.length;
+
+  for (let i = 0; i < arrayLength; i++) {
+    set.push(annotation[i].container.children[0]);
+  }
+
+  return set;
+};
+
+let _isSelectMultiple = function (element) {
+  for (let i = 0, l = element.attributes.length; i < l; i++) {
+    try {
+      if (element.attributes[i].name == 'multiple') {
+        return true;
+      }
+    } catch (e) {}
+  }
+
+  return false;
+};
+
+class AnnotationLayer {
+  static returnFormElementsOnPage(annotations) {
+    let elements = [];
+
+    for (let i = 0, ii = annotations.length; i < ii; i++) {
+      let annotation = annotations[i];
+      let subtype = annotation.annotationType;
+
+      if (subtype == _util.AnnotationType.WIDGET) {
+        annotation = AnnotationElementFactory.correctProps(annotation);
+        let fieldType = annotation.fieldType;
+
+        switch (fieldType) {
+          case 'Tx':
+            if (annotation.fullName.indexOf('.`') != -1) {
+              if (annotation.groupingId == 0) {
+                elements.push(annotation.correctedId);
+              } else {
+                elements.push(annotation.fullName);
+              }
+            } else {
+              elements.push(annotation.fullName);
+            }
+
+            break;
+
+          default:
+            elements.push(annotation.fullName);
+            break;
+        }
+      }
+    }
+
+    return elements;
+  }
+
+  static render(parameters) {
+    _tabIndex = 1;
+    _formFields = {
+      'CHECK_BOX': {},
+      'TEXT': {},
+      'RADIO_BUTTON': {},
+      'DROP_DOWN': {}
+    };
+
+    for (let i = 0, ii = parameters.annotations.length; i < ii; i++) {
+      let data = parameters.annotations[i];
+
+      if (!data) {
+        continue;
+      }
+
+      let element = AnnotationElementFactory.create({
+        data,
+        layer: parameters.div,
+        page: parameters.page,
+        viewport: parameters.viewport,
+        linkService: parameters.linkService,
+        downloadManager: parameters.downloadManager,
+        imageResourcesPath: parameters.imageResourcesPath || '',
+        renderInteractiveForms: parameters.renderInteractiveForms || false,
+        svgFactory: new _display_utils.DOMSVGFactory()
+      });
+      let elementClass = element.constructor.name;
+      let correctedId = element.getCorrectedId();
+      let groupingId = element.getGroupingId();
+
+      switch (elementClass) {
+        case 'CheckboxWidgetAnnotationElement':
+          if (groupingId == 0) {
+            _formFields[fieldTypes.CHECK_BOX][correctedId] = element;
+          }
+
+          break;
+
+        case 'ChoiceWidgetAnnotationElement':
+          if (groupingId == 0) {
+            _formFields[fieldTypes.DROP_DOWN][correctedId] = element;
+          }
+
+          break;
+
+        case 'TextWidgetAnnotationElement':
+          if (groupingId == 0) {
+            _formFields[fieldTypes.TEXT][correctedId] = element;
+          }
+
+          break;
+
+        case 'RadioButtonWidgetAnnotationElement':
+          _formFields[fieldTypes.RADIO_BUTTON][correctedId] = _formFields[fieldTypes.RADIO_BUTTON][correctedId] || [];
+
+          _formFields[fieldTypes.RADIO_BUTTON][correctedId].push(element);
+
+          break;
+      }
+
+      if (element.isRenderable) {
+        parameters.div.appendChild(element.render());
+      }
+    }
+  }
+
+  static update(parameters) {
+    for (let i = 0, ii = parameters.annotations.length; i < ii; i++) {
+      let data = parameters.annotations[i];
+      let element = parameters.div.querySelector('[data-annotation-id="' + data.id + '"]');
+
+      if (element) {
+        element.style.transform = 'matrix(' + parameters.viewport.transform.join(',') + ')';
+      }
+    }
+
+    parameters.div.removeAttribute('hidden');
+  }
+
+  static getValues() {
+    let values = {};
+
+    let visitElements = function (set, action) {
+      let elementIds = Object.keys(set);
+      elementIds.forEach(function (elementId) {
+        let element = getFormElementFromAnnotation(set[elementId]);
+        if (element) action(elementId, element);
+      });
+    };
+
+    visitElements(_formFields[fieldTypes.CHECK_BOX], function (elementId, element) {
+      values[elementId] = element.checked ? true : false;
+    });
+    visitElements(_formFields[fieldTypes.TEXT], function (elementId, element) {
+      values[elementId] = element.value;
+    });
+    visitElements(_formFields[fieldTypes.DROP_DOWN], function (elementId, element) {
+      if (_isSelectMultiple(element)) {
+        var valueObject = {};
+
+        for (var i = 0; i < element.length; i++) {
+          if (element[i].selected) {
+            valueObject[element[i].value] = element[i].value;
+          }
+        }
+
+        values[elementId] = valueObject;
+      } else {
+        values[elementId] = element.options[element.selectedIndex].value;
+      }
+    });
+    visitElements(_formFields[fieldTypes.RADIO_BUTTON], function (elementId, element) {
+      element.some(function (r) {
+        if (r.checked) values[elementId] = r.value;
+        return r.checked;
+      });
+    });
+    return values;
+  }
+
+  static setValues(values) {
+    _formValues = values;
+  }
+
+  static clearControlRendersById() {
+    idClosureOverrides = {};
+  }
+
+  static clearControlRendersByType() {
+    genericClosureOverrides = {};
+  }
+
+  static setControlRenderClosureByType(closure, type) {
+    if (type != 'CHECK_BOX' && type != 'TEXT' && type != 'DROP_DOWN' && type != 'RADIO_BUTTON') {
+      throw "type must be one of the following: CHECK_BOX, TEXT, DROP_DOWN, RADIO_BUTTON";
+    }
+
+    if (!closure) {
+      try {
+        delete genericClosureOverrides[type];
+      } catch (e) {}
+    } else {
+      genericClosureOverrides[type] = closure;
+    }
+  }
+
+  static setControlRenderClosureById(closure, id) {
+    if (!closure) {
+      try {
+        delete idClosureOverrides[id];
+      } catch (e) {}
+    } else {
+      idClosureOverrides[id] = closure;
+    }
+  }
+
+  static setPostCreationTweak(postCallback) {
+    _postCreationTweak = postCallback;
+  }
+
+}
+
+exports.AnnotationLayer = AnnotationLayer;

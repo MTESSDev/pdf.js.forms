@@ -732,7 +732,7 @@ gulp.task('components', gulp.series('buildnumber', function () {
   return merge([
     createComponentsBundle(defines).pipe(gulp.dest(COMPONENTS_DIR)),
     gulp.src(COMPONENTS_IMAGES).pipe(gulp.dest(COMPONENTS_DIR + 'images')),
-    preprocessCSS('web/pdf_viewer.css', 'components', defines, true)
+    preprocessCSS('web/pdf_forms.css', 'components', defines, true)
         .pipe(postcss([autoprefixer(AUTOPREFIXER_CONFIG)]))
         .pipe(gulp.dest(COMPONENTS_DIR)),
   ]);

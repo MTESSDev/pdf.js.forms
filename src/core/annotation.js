@@ -606,8 +606,39 @@ class WidgetAnnotation extends Annotation {
     let dict = params.dict;
     let data = this.data;
 
+    let fieldName = [];
+    let namedItem = dict;
+    let ref = params.ref;
+    while (namedItem) {
+      let parent = namedItem.get('Parent');
+      let parentRef = namedItem.getRaw('Parent');
+      let name = namedItem.get('T');
+      if (name) {
+        fieldName.unshift(stringToPDFString(name));
+      } else if (parent && ref) {
+        // The field name is absent, that means more than one field
+        // with the same name may exist. Replacing the empty name
+        // with the '`' plus index in the parent's 'Kids' array.
+        // This is not in the PDF spec but necessary to id the
+        // the input controls.
+        let kids = parent.get('Kids');
+        let j, jj;
+        for (j = 0, jj = kids.length; j < jj; j++) {
+          let kidRef = kids[j];
+          if (kidRef.num === ref.num && kidRef.gen === ref.gen) {
+            break;
+          }
+        }
+        fieldName.unshift('`' + j);
+      }
+      namedItem = parent;
+      ref = parentRef;
+    }
+    let groupingName = fieldName.join('.');
+
     data.annotationType = AnnotationType.WIDGET;
     data.fieldName = this._constructFieldName(dict);
+    data.fullName = groupingName; // the default
     data.fieldValue = getInheritableProperty({ dict, key: 'V',
                                                getArray: true, });
     data.alternativeText = stringToPDFString(dict.get('TU') || '');
@@ -631,218 +662,6 @@ class WidgetAnnotation extends Annotation {
       data.fieldValue = null;
       this.setFlags(AnnotationFlag.HIDDEN);
     }
-
-    //#if (FORMS)
-// IAG CODE
-    function checkProperties() {
-      try {
-		// What is the default value?
-		var defaultValue = dict.get('V') ? dict.get('V').name : 'Off';
-
-		// Method 1 : Checkboxes depend on export_value and not 'Yes' to tell if they are checked, this comes from appearance options
-		var appearanceState = dict.get('AP');
-		if (appearanceState && isDict(appearanceState)) {
-			var appearances = appearanceState.get('N');
-			if (appearances && isDict(appearances))
-			{
-				data.options = [];
-				for (var key in appearances.map)
-				{
-					// Make sure Off is always the first state (by unshifting)
-					if (key=='Off') data.options.unshift(key);
-					else data.options.push(key);
-				}
-				if (data.options.length==1) data.options.unshift('Off');		// Certain files only contain the on appearance
-				data.selected = (data.options.length>=2) ? (defaultValue==data.options[1]): false;
-			}
-		}
-
-		// Method 2 : If the appearances failed, there may be an /AS key with the export_value (if selected)
-		if (!data.options)
-		{
-			var as = dict.get('AS');
-			if (as && as.name!='Off')
-			{
-				data.selected = (defaultValue==as.name);
-				data.options = ['Off',as.name];
-			}
-		}
-
-		// Method 3 : Give up, default back to the old method if the others didn't work (unlikely)
-		if (!data.options)
-		{
-			data.selected = (defaultValue!='Off');
-			data.options = ['Off','Yes'];
-		}
-
-      }
-      catch(e) {
-		data.selected = false;
-		data.options = ['Off','Yes'];
-      }
-    }
-
-    function choiceProperties() {
-      data.allowTextEntry = data.fieldFlags & 19 ? true : false;
-      data.multiSelect = data.fieldFlags & 22 ? true : false;
-      try {
-        data.options={};
-        var opt = dict.get('Opt'); // get the dictionary options
-        for (var key in opt) {
-          if (opt.hasOwnProperty(key)) {
-            if (typeof(opt[key])=='object') {
-              data.options[key] = {
-                'value': opt[key][0],
-                'text': opt[key][1]
-              };
-            }
-            else {
-              data.options[key] = {
-                'value': key,
-                'text': opt[key]
-              };
-            }
-          }
-        }
-      }
-      catch(e) {
-        data.options=false;
-      }
-    }
-
-    function radioProperties () {
-      try {
-		// What is the default value?
-		var defaultValue = dict.get('AS') ? dict.get('AS').name : 'Off';
-
-		// The value for the radio, should be the second key in the appearances map
-		var appearanceState = dict.get('AP');
-		if (appearanceState && isDict(appearanceState)) {
-			var appearances = appearanceState.get('N');
-			if (appearances && isDict(appearances))
-			{
-				data.options = [];
-				for (var key in appearances.map)
-				{
-					// Make sure Off is always the first state (by unshifting)
-					if (key=='Off') data.options.unshift(key);
-					else data.options.push(key);
-				}
-				if (data.options.length==1) data.options.unshift('Off');		// Certain files only contain the on appearance
-				data.selected = (data.options.length>=2) ? (defaultValue==data.options[1]): false;
-			}
-		}
-      }
-      catch(e) {
-		// This shouldn't happen, but if it was to somehow occur, we need a somewhat unique value for Yes
-		data.options = ['Off','Yes_'+Math.round(Math.random() * 1000)];
-		data.selected = false;
-      }
-    }
-
-    function textProperties() {
-        data.multiLine = data.fieldFlags & 4096 ? true : false;
-        data.password = data.fieldFlags & 8192 ? true : false;
-        data.fileUpload = data.fieldFlags & 1048576 ? true : false;
-        data.richText=stringToPDFString(Util.getInheritableProperty(dict,'RV') || '');
-        data.maxlen = stringToPDFString(Util.getInheritableProperty(dict,'MaxLen') || '');
-    }
-
-    var regularExp = /\/([\w]+) ([\d]+(\.[\d]+)?) Tf/;
-    var fontResults;
-    if (fontResults = regularExp.exec(data.defaultAppearance)) {
-        if (fontResults[2]>0) {
-            data.fontSize = fontResults[2];
-            data.fontFaceIndex = fontResults[1];
-        }
-    }
-    else {
-        data.fontSize = false;
-        data.fontFaceIndex = false;
-    }
-
-    data.readOnly = data.fieldFlags & 1;
-    data.required = data.fieldFlags & 2;
-    data.noExport = data.fieldFlags & 4;
-    data.originalName=stringToPDFString(Util.getInheritableProperty(dict,'T') || '');
-
-    switch(data.fieldType) {
-      case 'Tx':
-		if (Util.getInheritableProperty(dict, 'PMD'))
-		{
-			data.paperMetaData = true;
-			break; // PaperMetaData means this is a qrcode, datamatrix or similar, ignore
-		}
-        data.formElementType ='TEXT'; //text input
-        break;
-      case 'Btn':
-        if ((data.fieldFlags & 32768)) {
-          data.formElementType ='RADIO_BUTTON'; //radio button
-        }
-        else if (data.fieldFlags & 65536) {
-          data.formElementType ='PUSH_BUTTON'; //push button
-        }
-        else {
-          data.formElementType ='CHECK_BOX';  //checkbox
-        }
-        break;
-      case 'Ch': // choice
-        data.formElementType ='DROP_DOWN'; //drop down
-        break;
-    }
-
-	switch(data.formElementType) {
-		case 'CHECK_BOX':
-			checkProperties();
-			break;
-		case 'RADIO_BUTTON':
-			radioProperties();
-			break;
-		case 'DROP_DOWN':
-			choiceProperties();
-			break;
-		case 'TEXT':
-			textProperties();
-			break;
-	}
-
-    if (typeof(this.data.formElementType)!=='undefined' && !this.hasFlag(AnnotationFlag.HIDDEN)) {
-		data.hiddenForForms = true;		// Hidden by the forms rendering, but shown for a "print" intent
-    }
-
-    // Building the full field name by collecting the field and
-    // its ancestors 'T' data and joining them using '.'.
-    var fieldName = [];
-    var namedItem = dict;
-    var ref = params.ref;
-    while (namedItem) {
-      var parent = namedItem.get('Parent');
-      var parentRef = namedItem.getRaw('Parent');
-      var name = namedItem.get('T');
-      if (name) {
-        fieldName.unshift(stringToPDFString(name));
-      } else if (parent && ref) {
-        // The field name is absent, that means more than one field
-        // with the same name may exist. Replacing the empty name
-        // with the '`' plus index in the parent's 'Kids' array.
-        // This is not in the PDF spec but necessary to id the
-        // the input controls.
-        var kids = parent.get('Kids');
-        var j, jj;
-        for (j = 0, jj = kids.length; j < jj; j++) {
-          var kidRef = kids[j];
-          if (kidRef.num === ref.num && kidRef.gen === ref.gen) {
-            break;
-          }
-        }
-        fieldName.unshift('`' + j);
-      }
-      namedItem = parent;
-      ref = parentRef;
-    }
-    data.fullName = fieldName.join('.');
-    // END IAG CODE
-//#endif
   }
 
   /**

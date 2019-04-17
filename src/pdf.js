@@ -24,11 +24,12 @@ var pdfjsBuild =
 var pdfjsSharedUtil = require('./shared/util.js');
 var pdfjsDisplayAPI = require('./display/api.js');
 var pdfjsDisplayTextLayer = require('./display/text_layer.js');
-var pdfjsDisplayAnnotationLayer = require('./display/annotation_layer.js');
+var pdfjsDisplayAnnotationLayer = require('./display/annotation_layer_forms.js');
 var pdfjsDisplayDisplayUtils = require('./display/display_utils.js');
 var pdfjsDisplaySVG = require('./display/svg.js');
 let pdfjsDisplayWorkerOptions = require('./display/worker_options.js');
 let pdfjsDisplayAPICompatibility = require('./display/api_compatibility.js');
+var pdfForms = require('./display/forms.js');
 
 if (typeof PDFJSDev === 'undefined' || PDFJSDev.test('GENERIC')) {
   const isNodeJS = require('./shared/is_node.js');
@@ -117,3 +118,4 @@ exports.loadScript = pdfjsDisplayDisplayUtils.loadScript;
 exports.GlobalWorkerOptions = pdfjsDisplayWorkerOptions.GlobalWorkerOptions;
 exports.apiCompatibilityParams =
   pdfjsDisplayAPICompatibility.apiCompatibilityParams;
+exports.FormFunctionality = pdfForms.FormFunctionality;
