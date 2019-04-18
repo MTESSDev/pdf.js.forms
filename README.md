@@ -138,6 +138,13 @@ using the getFormValues() function.
 Each element when returned from the closure will then be placed in a positional element that itself will ensure the
 elements placement on the pdf.
 
++ PDFs that have form elements with repeated names will render all but the first as read-only. This would occur in
+scenarios where a value is repeated on the form, such as 'legal name', especially in legal documents. getFormValues()
+will return only the unlocked/primary element's value, and not the others. If you wish to have editing of the primary
+immediately reflected on other elements of the page, you would need to set a watch, and update the others when the
+primary is updated. The attributes on the html elements, data-group and data-group-slave, can help you set up the 
+appropriate listeners and update methods relatively easily.
+
 ## Gotchas
 
 There is an issue with Chrome's handling of css scaling and matrixes that will render drop down's choices 
