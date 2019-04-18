@@ -3,12 +3,10 @@ import {
     Util
 } from '../shared/util';
 import {
-    CSS_UNITS
-} from '../../web/ui_utils';
-import {
     AnnotationLayer
 } from './annotation_layer_forms';
 
+const CSS_UNITS = 96.0 / 72.0;
 
 let _workingViewport = null;
 let _displayedFormElements = [];

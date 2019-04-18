@@ -7,10 +7,9 @@ exports.FormFunctionality = void 0;
 
 var _util = require("../shared/util");
 
-var _ui_utils = require("../../web/ui_utils");
-
 var _annotation_layer_forms = require("./annotation_layer_forms");
 
+const CSS_UNITS = 96.0 / 72.0;
 let _workingViewport = null;
 let _displayedFormElements = [];
 let _postRenderHook = false;
@@ -134,7 +133,7 @@ var FormFunctionality = function FormFunctionalityClosure() {
 
     let pdfPageView = new pdfjsViewer.PDFPageView({
       container: pageHolder,
-      scale: targetScale / _ui_utils.CSS_UNITS,
+      scale: targetScale / CSS_UNITS,
       defaultViewport: viewport,
       annotationLayerFactory: new pdfjsViewer.DefaultAnnotationLayerFactory(),
       renderInteractiveForms: true

@@ -15,17 +15,22 @@ components. Both must be built and included to use pdf.js.forms. This fork
 * replaces web/pdf_viewer.css with pdf_forms.css
 
 To utilize this library you must bundle with your application the files in build\generic\build and
-build\generic\web. If not packing using webpack or some alternative you must serve the following files:
-* build\generic\web\viewer.css
-* build\generic\web\viewer.js
+build\components. If not packing using webpack or some alternative you must serve the following files:
+* build\generic\components\pdf_forms.css
+* build\generic\components\pdf_viewer.js
 * build\generic\build\pdf.js
+
+Be sure to include build\generic\build\pdf.worker.js in the same directory as pdf.js or specify it's 
+location like so
+   
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'some/path/pdf.worker.js';
 
 **Note: Changes since previous release**
 
 The 'PDFJS' global accessor is dead. PDF.js now lives in 'pdfjsLib'. If you have a lot of code and 
 refactoring is not your thing I suppose you could do something like
 
-    $ let PDFJS = pdfjsLib;
+    let PDFJS = pdfjsLib;
 
 That might work.
 
@@ -33,65 +38,65 @@ The 'returnFormElementsOnPage' is now asynchronous, and results must be worked w
 promises: in a then() block. This is because page.getAnnotations is now truly async, and not just
 fake async in the base library. 
 
-## TO USE FORMS:
+### TO USE FORMS:
 To render a form use the PDFJS.FormFunctionality.render call. A width or height can
 be specified, if both are specified this creates a bounding box that the pdf will fit
 inside of.
 
-    $ let target = document.getElementById('target');
-    $ pdf.getPage(1).then(function(page) {
-    $     pdfjsLib.FormFunctionality.render(800,800,page,target);
-    $ });
+    let target = document.getElementById('target');
+    pdf.getPage(1).then(function(page) {
+        pdfjsLib.FormFunctionality.render(800,800,page,target);
+    });
 
 Either of the first two size parameters may be set to either a number, or false, but at
 least one must be specified. If only one is specified, the other parameter will be treated
 as unlimited. An example where we want a maximum width of 800, but don't care how tall
 
-    $ pdfjsLib.FormFunctionality.render(800,false,page,target);
+    pdfjsLib.FormFunctionality.render(800,false,page,target);
     
 The values in the form elements may be overriden at render time by passing in an object
 with alternate values.
 
-    $ let values {'ADDR1': '21 Jump Street', 'CITY': 'San Marino'};
-    $ pdfjsLib.FormFunctionality.render(800,800,page,target,values);
+    let values {'ADDR1': '21 Jump Street', 'CITY': 'San Marino'};
+    pdfjsLib.FormFunctionality.render(800,800,page,target,values);
 
 A page may be rendered without rendering the form at all, or you can render the form non-interactively,
 aka draw it, which is the normal pdf.js method.
 
 To render the pdf and hide the form entirely call render with the options argument like so:
 
-    $ pdfjsLib.FormFunctionality.render(800,800,page,target,values, {hideForms: true});
+    pdfjsLib.FormFunctionality.render(800,800,page,target,values, {hideForms: true});
     
 To render the pdf with forms non-interactively call the render with the options argument like so:
 
-    $ pdfjsLib.FormFunctionality.render(800,800,page,target,values, {interactiveForms: false});
+    pdfjsLib.FormFunctionality.render(800,800,page,target,values, {interactiveForms: false});
 
 The values in the form may be retrieved manually of course outside of the pdf.js.forms library,
 but there is also a call to simplify retrieval of those values. The function will return an
 array of values of the form elements in format \[elementId\]=value.
 
-    $ let values = pdfjsLib.FormFunctionality.getFormValues();
+    let values = pdfjsLib.FormFunctionality.getFormValues();
 
 The forms library also allows the rendering of a particular element (as defined by id) or of
 a class of elements to be handled by a closure, or function. For example, to have all
 text elements rendered by closure, and not by the base library.
 
-    $ let myClosure = function(TextAnnotationElement) {
-    $     control = document.createElement('input');
-    $     // set some stuff
-    $     return control;
-    $ };
-    $ pdfjsLib.FormFunctionality.setControlRenderClosureByType(myClosure,'TEXT');
+    let myClosure = function(TextAnnotationElement) {
+        control = document.createElement('input');
+        // set some stuff
+        return control;
+    };
+    pdfjsLib.FormFunctionality.setControlRenderClosureByType(myClosure,'TEXT');
 
 Alternately, you may accept the base default rendering of the control element, but instead opt to modify the control
 element after the default control element object has been created, but before it has been inserted into the dom.
 
-    $ let myClosure = function (fieldType, elementId, element) {
-    $     if (fieldType!='PAGE' && fieldType!='CANVAS' && fieldType!='FORM') {
-    $         element.style = element.style + '; background-color:orange;';
-    $     }
-    $ };
-    $ pdfjsLib.FormFunctionality.setPostCreationTweak(myClosure);
+    let myClosure = function (fieldType, elementId, element) {
+        if (fieldType!='PAGE' && fieldType!='CANVAS' && fieldType!='FORM') {
+            element.style = element.style + '; background-color:orange;';
+        }
+    };
+    pdfjsLib.FormFunctionality.setPostCreationTweak(myClosure);
 
 The basic types are:
 + CHECK_BOX - Check boxes - Maps to CheckboxWidgetAnnotationElement
@@ -184,23 +189,23 @@ directory `build/chromium`.
 
 To get a local copy of the current code, clone it using git:
 
-    $ git clone https://github.com/mozilla/pdf.js.git
-    $ cd pdf.js
+    git clone https://github.com/mozilla/pdf.js.git
+    cd pdf.js
 
 Next, install Node.js via the [official package](https://nodejs.org) or via
 [nvm](https://github.com/creationix/nvm). You need to install the gulp package
 globally (see also [gulp's getting started](https://github.com/gulpjs/gulp/blob/master/docs/getting-started.md#getting-started)):
 
-    $ npm install -g gulp-cli
+    npm install -g gulp-cli
 
 If everything worked out, install all dependencies for PDF.js:
 
-    $ npm install
+    npm install
 
 Finally, you need to start a local web server as some browsers do not allow opening
 PDF files using a `file://` URL. Run:
 
-    $ gulp server
+    gulp server
 
 and then you can open:
 
@@ -217,7 +222,7 @@ It is also possible to view all test PDF files on the right side by opening:
 In order to bundle all `src/` files into two production scripts and build the generic
 viewer, run:
 
-    $ gulp generic
+    gulp generic
 
 This will generate `pdf.js` and `pdf.worker.js` in the `build/generic/build/` directory.
 Both scripts are needed but only `pdf.js` needs to be included since `pdf.worker.js` will
