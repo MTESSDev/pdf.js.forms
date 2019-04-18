@@ -1,5 +1,146 @@
-# PDF.js [![Build Status](https://travis-ci.org/mozilla/pdf.js.svg?branch=master)](https://travis-ci.org/mozilla/pdf.js)
+# PDF.js / pdf.js.forms
 
+pdf.js.forms is a fork of [PDF.js](https://github.com/mozilla/pdf.js). 
+The original purpose of this fork was to implement fillable
+web forms of pdf.forms using PDF.js. Since the original inception of this fork,
+pdj.js has evolved and now loosely supports rendering forms, however their implementation
+is still not really workable for business/production use so continued maintenance 
+of this library will occur. 
+
+The PDF.js has two builds that are needed to utilize the forms library: generic and
+components. Both must be built and included to use pdf.js.forms. This fork 
+* adds code to core/annotations.js to introduce groupingName and fullName 
+* replaces display/annotation_layer with annotation_layer_forms in pdf.js
+* introduces display/forms, which handles all form rendering and management
+* replaces web/pdf_viewer.css with pdf_forms.css
+
+To utilize this library you must bundle with your application the files in build\generic\build and
+build\generic\web. If not packing using webpack or some alternative you must serve the following files:
+* build\generic\web\viewer.css
+* build\generic\web\viewer.js
+* build\generic\build\pdf.js
+
+**Note: Changes since previous release**
+
+The 'PDFJS' global accessor is dead. PDF.js now lives in 'pdfjsLib'. If you have a lot of code and 
+refactoring is not your thing I suppose you could do something like
+
+    $ let PDFJS = pdfjsLib;
+
+That might work.
+
+The 'returnFormElementsOnPage' is now asynchronous, and results must be worked with as with all
+promises: in a then() block. This is because page.getAnnotations is now truly async, and not just
+fake async in the base library. 
+
+## TO USE FORMS:
+To render a form use the PDFJS.FormFunctionality.render call. A width or height can
+be specified, if both are specified this creates a bounding box that the pdf will fit
+inside of.
+
+    $ let target = document.getElementById('target');
+    $ pdf.getPage(1).then(function(page) {
+    $     pdfjsLib.FormFunctionality.render(800,800,page,target);
+    $ });
+
+Either of the first two size parameters may be set to either a number, or false, but at
+least one must be specified. If only one is specified, the other parameter will be treated
+as unlimited. An example where we want a maximum width of 800, but don't care how tall
+
+    $ pdfjsLib.FormFunctionality.render(800,false,page,target);
+    
+The values in the form elements may be overriden at render time by passing in an object
+with alternate values.
+
+    $ let values {'ADDR1': '21 Jump Street', 'CITY': 'San Marino'};
+    $ pdfjsLib.FormFunctionality.render(800,800,page,target,values);
+
+A page may be rendered without rendering the form at all, or you can render the form non-interactively,
+aka draw it, which is the normal pdf.js method.
+
+To render the pdf and hide the form entirely call render with the options argument like so:
+
+    $ pdfjsLib.FormFunctionality.render(800,800,page,target,values, {hideForms: true});
+    
+To render the pdf with forms non-interactively call the render with the options argument like so:
+
+    $ pdfjsLib.FormFunctionality.render(800,800,page,target,values, {interactiveForms: false});
+
+The values in the form may be retrieved manually of course outside of the pdf.js.forms library,
+but there is also a call to simplify retrieval of those values. The function will return an
+array of values of the form elements in format \[elementId\]=value.
+
+    $ let values = pdfjsLib.FormFunctionality.getFormValues();
+
+The forms library also allows the rendering of a particular element (as defined by id) or of
+a class of elements to be handled by a closure, or function. For example, to have all
+text elements rendered by closure, and not by the base library.
+
+    $ let myClosure = function(TextAnnotationElement) {
+    $     control = document.createElement('input');
+    $     // set some stuff
+    $     return control;
+    $ };
+    $ pdfjsLib.FormFunctionality.setControlRenderClosureByType(myClosure,'TEXT');
+
+Alternately, you may accept the base default rendering of the control element, but instead opt to modify the control
+element after the default control element object has been created, but before it has been inserted into the dom.
+
+    $ let myClosure = function (fieldType, elementId, element) {
+    $     if (fieldType!='PAGE' && fieldType!='CANVAS' && fieldType!='FORM') {
+    $         element.style = element.style + '; background-color:orange;';
+    $     }
+    $ };
+    $ pdfjsLib.FormFunctionality.setPostCreationTweak(myClosure);
+
+The basic types are:
++ CHECK_BOX - Check boxes - Maps to CheckboxWidgetAnnotationElement
++ TEXT - All _input_ controls of type text, file and password as well as _textarea_s - Maps to TextAnnotationElement
++ DROP_DOWN - Regular drop downs and multiselects - Maps to ChoiceWidgetAnnotationElement
++ RADIO_BUTTON - Radio buttons - Maps to RadioButtonWidgetAnnotationElement
+
+Depending on the source element type, the properties that define the element can vary. Each element
+will be one of four annotation widget types, as defined in the annotation_layer_forms file. Exploration of
+these widgets can help you code your own renderers if you wish.
+
+#### Simple example
+
+    window.onload = function () {
+        let DEFAULT_URL = 'pdfs/jax9.pdf';
+        let pageNumber = 1;
+        let container = document.getElementById('pdfTarget');
+        let values = {
+            'txtSimple': 'This is a simple value',
+            'txtRequired': 'This is required',
+            'Group5': 'Choice1',
+        };
+        // Fetch the PDF document from the URL using promises.
+        let loadingTask = pdfjsLib.getDocument(DEFAULT_URL);
+        loadingTask.promise.then(function(doc) {
+            return doc.getPage(pageNumber).then(function (pdfPage) {
+                return pdfjsLib.FormFunctionality.render(1094, null, pdfPage, container, values);
+            });
+        });
+    }
+
+## Notes
++ Since the form elements are basic html elements, the library does not provide any simplification
+of access to the html form elements, such as value setting functions on the fly. The only exceptions
+to this are that the default values may be passed on render, and the values may be retrieved en masse
+using the getFormValues() function.
+
++ When defining your own closures to handle rendering, note that you do not need to position the element yourself.
+Each element when returned from the closure will then be placed in a positional element that itself will ensure the
+elements placement on the pdf.
+
+## Gotchas
+
+There is an issue with Chrome's handling of css scaling and matrixes that will render drop down's choices 
+in the wrong size. This is a fundamental flaw in Chrome. 
+
+
+## >> END FORMS SPECIFIC README <<
+## >> BEGIN BASIC PDF.JS README <<
 PDF.js is a Portable Document Format (PDF) viewer that is built with HTML5.
 
 PDF.js is community-driven and supported by Mozilla Labs. Our goal is to

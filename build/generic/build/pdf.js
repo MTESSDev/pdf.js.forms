@@ -18703,6 +18703,7 @@ var fieldTypes = {
 var genericClosureOverrides = {};
 var idClosureOverrides = {};
 var _postCreationTweak = false;
+var _invisibleForm = false;
 
 var AnnotationElementFactory =
 /*#__PURE__*/
@@ -20161,11 +20162,19 @@ function () {
               _formFields[fieldTypes.CHECK_BOX][correctedId] = _element;
             }
 
+            if (_invisibleForm) {
+              _element.isRenderable = false;
+            }
+
             break;
 
           case 'ChoiceWidgetAnnotationElement':
             if (groupingId == 0) {
               _formFields[fieldTypes.DROP_DOWN][correctedId] = _element;
+            }
+
+            if (_invisibleForm) {
+              _element.isRenderable = false;
             }
 
             break;
@@ -20175,12 +20184,20 @@ function () {
               _formFields[fieldTypes.TEXT][correctedId] = _element;
             }
 
+            if (_invisibleForm) {
+              _element.isRenderable = false;
+            }
+
             break;
 
           case 'RadioButtonWidgetAnnotationElement':
             _formFields[fieldTypes.RADIO_BUTTON][correctedId] = _formFields[fieldTypes.RADIO_BUTTON][correctedId] || [];
 
             _formFields[fieldTypes.RADIO_BUTTON][correctedId].push(_element);
+
+            if (_invisibleForm) {
+              _element.isRenderable = false;
+            }
 
             break;
         }
@@ -20292,6 +20309,11 @@ function () {
     key: "setPostCreationTweak",
     value: function setPostCreationTweak(postCallback) {
       _postCreationTweak = postCallback;
+    }
+  }, {
+    key: "setInvisibleForm",
+    value: function setInvisibleForm(doInvisible) {
+      _invisibleForm = doInvisible;
     }
   }]);
 
@@ -20435,6 +20457,18 @@ var FormFunctionality = function FormFunctionalityClosure() {
       options = {};
     }
 
+    if (options.hideForms) {
+      _annotation_layer_forms.AnnotationLayer.setInvisibleForm(true);
+    } else {
+      _annotation_layer_forms.AnnotationLayer.setInvisibleForm(false);
+    }
+
+    if (typeof options.interactiveForms == 'undefined') {
+      options.interactiveForms = true;
+    }
+
+    var interactiveForms = options.interactiveForms ? true : false;
+
     if (typeof width != 'number' && typeof height != 'number') {
       throw "at least one parameter must be specified as a number: width, height";
     }
@@ -20454,7 +20488,7 @@ var FormFunctionality = function FormFunctionalityClosure() {
       scale: targetScale / _ui_utils.CSS_UNITS,
       defaultViewport: viewport,
       annotationLayerFactory: new pdfjsViewer.DefaultAnnotationLayerFactory(),
-      renderInteractiveForms: true
+      renderInteractiveForms: interactiveForms
     });
     pdfPageView.setPdfPage(page);
     _workingViewport = viewport;
