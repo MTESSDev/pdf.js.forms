@@ -14,6 +14,7 @@
  */
 /* eslint-disable no-unused-vars */
 
+import { FormFunctionality } from './forms';
 import {
   AnnotationLayerBuilder, DefaultAnnotationLayerFactory
 } from './annotation_layer_builder.js';
@@ -55,4 +56,5 @@ export {
   ProgressBar,
   GenericL10n,
   NullL10n,
+  FormFunctionality,
 };

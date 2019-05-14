@@ -11,7 +11,7 @@ The PDF.js has two builds that are needed to utilize the forms library: generic 
 components. Both must be built and included to use pdf.js.forms. This fork 
 * adds code to core/annotations.js to introduce groupingName and fullName 
 * replaces display/annotation_layer with annotation_layer_forms in pdf.js
-* introduces display/forms, which handles all form rendering and management
+* introduces web/forms, which handles all form rendering and management
 * replaces web/pdf_viewer.css with pdf_forms.css
 
 To utilize this library you must bundle with your application the files in build\generic\build and
@@ -38,6 +38,10 @@ The 'returnFormElementsOnPage' is now asynchronous, and results must be worked w
 promises: in a then() block. This is because page.getAnnotations is now truly async, and not just
 fake async in the base library. 
 
+FormFunctionality used to live in the core pdf.js library, but has been moved out to the compentents
+library. This was to simplify using the components viewer code as well as well as to simplify using 
+with webpack in other projects.
+
 ### TO USE FORMS:
 To render a form use the PDFJS.FormFunctionality.render call. A width or height can
 be specified, if both are specified this creates a bounding box that the pdf will fit
@@ -45,37 +49,37 @@ inside of.
 
     let target = document.getElementById('target');
     pdf.getPage(1).then(function(page) {
-        pdfjsLib.FormFunctionality.render(800,800,page,target);
+        pdfjsViewer.FormFunctionality.render(800,800,page,target);
     });
 
 Either of the first two size parameters may be set to either a number, or false, but at
 least one must be specified. If only one is specified, the other parameter will be treated
 as unlimited. An example where we want a maximum width of 800, but don't care how tall
 
-    pdfjsLib.FormFunctionality.render(800,false,page,target);
+    pdfjsViewer.FormFunctionality.render(800,false,page,target);
     
 The values in the form elements may be overriden at render time by passing in an object
 with alternate values.
 
     let values {'ADDR1': '21 Jump Street', 'CITY': 'San Marino'};
-    pdfjsLib.FormFunctionality.render(800,800,page,target,values);
+    pdfjsViewer.FormFunctionality.render(800,800,page,target,values);
 
 A page may be rendered without rendering the form at all, or you can render the form non-interactively,
 aka draw it, which is the normal pdf.js method.
 
 To render the pdf and hide the form entirely call render with the options argument like so:
 
-    pdfjsLib.FormFunctionality.render(800,800,page,target,values, {hideForms: true});
+    pdfjsViewer.FormFunctionality.render(800,800,page,target,values, {hideForms: true});
     
 To render the pdf with forms non-interactively call the render with the options argument like so:
 
-    pdfjsLib.FormFunctionality.render(800,800,page,target,values, {interactiveForms: false});
+    pdfjsViewer.FormFunctionality.render(800,800,page,target,values, {interactiveForms: false});
 
 The values in the form may be retrieved manually of course outside of the pdf.js.forms library,
 but there is also a call to simplify retrieval of those values. The function will return an
 array of values of the form elements in format \[elementId\]=value.
 
-    let values = pdfjsLib.FormFunctionality.getFormValues();
+    let values = pdfjsViewer.FormFunctionality.getFormValues();
 
 The forms library also allows the rendering of a particular element (as defined by id) or of
 a class of elements to be handled by a closure, or function. For example, to have all
@@ -86,7 +90,7 @@ text elements rendered by closure, and not by the base library.
         // set some stuff
         return control;
     };
-    pdfjsLib.FormFunctionality.setControlRenderClosureByType(myClosure,'TEXT');
+    pdfjsViewer.FormFunctionality.setControlRenderClosureByType(myClosure,'TEXT');
 
 Alternately, you may accept the base default rendering of the control element, but instead opt to modify the control
 element after the default control element object has been created, but before it has been inserted into the dom.
@@ -96,7 +100,7 @@ element after the default control element object has been created, but before it
             element.style = element.style + '; background-color:orange;';
         }
     };
-    pdfjsLib.FormFunctionality.setPostCreationTweak(myClosure);
+    pdfjsViewer.FormFunctionality.setPostCreationTweak(myClosure);
 
 The basic types are:
 + CHECK_BOX - Check boxes - Maps to CheckboxWidgetAnnotationElement
@@ -120,10 +124,10 @@ these widgets can help you code your own renderers if you wish.
             'Group5': 'Choice1',
         };
         // Fetch the PDF document from the URL using promises.
-        let loadingTask = pdfjsLib.getDocument(DEFAULT_URL);
+        let loadingTask = pdfjsViewer.getDocument(DEFAULT_URL);
         loadingTask.promise.then(function(doc) {
             return doc.getPage(pageNumber).then(function (pdfPage) {
-                return pdfjsLib.FormFunctionality.render(1094, null, pdfPage, container, values);
+                return pdfjsViewer.FormFunctionality.render(1094, null, pdfPage, container, values);
             });
         });
     }

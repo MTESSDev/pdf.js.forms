@@ -9,8 +9,6 @@ var _display_utils = require("./display_utils");
 
 var _util = require("../shared/util");
 
-var _forms = require("./forms");
-
 let _tabIndex = 1;
 let _formValues = [];
 let _formFields = {

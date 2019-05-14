@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.2.0';
-var pdfjsBuild = '';
+var pdfjsVersion = '2.2.215';
+var pdfjsBuild = 'cefd0fb5';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -136,30 +136,28 @@ var pdfjsDisplayAnnotationLayer = __w_pdfjs_require__(163);
 
 var pdfjsDisplayDisplayUtils = __w_pdfjs_require__(151);
 
-var pdfjsDisplaySVG = __w_pdfjs_require__(165);
+var pdfjsDisplaySVG = __w_pdfjs_require__(164);
 
 var pdfjsDisplayWorkerOptions = __w_pdfjs_require__(156);
 
 var pdfjsDisplayAPICompatibility = __w_pdfjs_require__(153);
 
-var pdfForms = __w_pdfjs_require__(164);
-
 {
   var isNodeJS = __w_pdfjs_require__(4);
 
   if (isNodeJS()) {
-    var PDFNodeStream = __w_pdfjs_require__(166).PDFNodeStream;
+    var PDFNodeStream = __w_pdfjs_require__(165).PDFNodeStream;
 
     pdfjsDisplayAPI.setPDFNetworkStreamFactory(function (params) {
       return new PDFNodeStream(params);
     });
   } else {
-    var PDFNetworkStream = __w_pdfjs_require__(169).PDFNetworkStream;
+    var PDFNetworkStream = __w_pdfjs_require__(168).PDFNetworkStream;
 
     var PDFFetchStream;
 
     if (pdfjsDisplayDisplayUtils.isFetchSupported()) {
-      PDFFetchStream = __w_pdfjs_require__(170).PDFFetchStream;
+      PDFFetchStream = __w_pdfjs_require__(169).PDFFetchStream;
     }
 
     pdfjsDisplayAPI.setPDFNetworkStreamFactory(function (params) {
@@ -205,7 +203,6 @@ exports.addLinkAttributes = pdfjsDisplayDisplayUtils.addLinkAttributes;
 exports.loadScript = pdfjsDisplayDisplayUtils.loadScript;
 exports.GlobalWorkerOptions = pdfjsDisplayWorkerOptions.GlobalWorkerOptions;
 exports.apiCompatibilityParams = pdfjsDisplayAPICompatibility.apiCompatibilityParams;
-exports.FormFunctionality = pdfForms.FormFunctionality;
 
 /***/ }),
 /* 1 */
@@ -10041,7 +10038,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.2.0',
+    apiVersion: '2.2.215',
     source: {
       data: source.data,
       url: source.url,
@@ -12188,9 +12185,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.2.0';
+var version = '2.2.215';
 exports.version = version;
-var build = '';
+var build = 'cefd0fb5';
 exports.build = build;
 
 /***/ }),
@@ -19313,8 +19310,6 @@ var _display_utils = __w_pdfjs_require__(151);
 
 var _util = __w_pdfjs_require__(1);
 
-var _forms = __w_pdfjs_require__(164);
-
 function _get(target, property, receiver) { if (typeof Reflect !== "undefined" && Reflect.get) { _get = Reflect.get; } else { _get = function _get(target, property, receiver) { var base = _superPropBase(target, property); if (!base) return; var desc = Object.getOwnPropertyDescriptor(base, property); if (desc.get) { return desc.get.call(receiver); } return desc.value; }; } return _get(target, property, receiver || target); }
 
 function _superPropBase(object, property) { while (!Object.prototype.hasOwnProperty.call(object, property)) { object = _getPrototypeOf(object); if (object === null) break; } return object; }
@@ -20955,213 +20950,6 @@ exports.AnnotationLayer = AnnotationLayer;
 
 /***/ }),
 /* 164 */
-/***/ (function(module, exports, __w_pdfjs_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.FormFunctionality = void 0;
-
-var _regenerator = _interopRequireDefault(__w_pdfjs_require__(148));
-
-var _util = __w_pdfjs_require__(1);
-
-var _annotation_layer_forms = __w_pdfjs_require__(163);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
-
-function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
-
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-var CSS_UNITS = 96.0 / 72.0;
-var _workingViewport = null;
-var _displayedFormElements = [];
-var _postRenderHook = false;
-
-function _createViewport(width, height, page, dpiRatio) {
-  var actualWidth = page._pageInfo.view[2];
-  var actualHeight = page._pageInfo.view[3];
-  var scale;
-  var viewport;
-
-  if (typeof width == 'number' && typeof height != 'number') {
-    scale = width / actualWidth;
-    viewport = page.getViewport(scale * dpiRatio);
-    return viewport;
-  }
-
-  if (typeof width != 'number' && typeof height == 'number') {
-    scale = height / actualHeight;
-    viewport = page.getViewport(scale * dpiRatio);
-    return viewport;
-  }
-
-  if (typeof width == 'number' && typeof height == 'number') {
-    scale = height / actualHeight;
-
-    if (scale * actualWidth > width) {
-      scale = width / actualWidth;
-      viewport = page.getViewport(scale * dpiRatio);
-      return viewport;
-    }
-
-    viewport = page.getViewport(scale * dpiRatio);
-    return viewport;
-  }
-
-  viewport = page.getViewport(dpiRatio);
-  return viewport;
-}
-
-function _getFormElementsForPage(page) {
-  var intent = 'display';
-  page.getAnnotations({
-    intent: intent
-  }).then(function (annotations) {});
-}
-
-function _assertValidControlTweak(closure) {
-  if (typeof closure != 'function') {
-    throw new Error('Passed item is not a function');
-  }
-
-  if (closure.length != 3) {
-    throw new Error('Passed function must accept three arguments: fieldType, elementId and element');
-  }
-
-  var args = closure.toString().match(/^\s*function\s*(?:\w*\s*)?\((.*?)\)/);
-  args = args ? args[1] ? args[1].trim().split(/\s*,\s*/) : [] : null;
-
-  if (args[0] != 'fieldType' || args[1] != 'elementId' || args[2] != 'element') {
-    throw new Error('Passed function must accept three arguments: fieldType, elementId and element');
-  }
-}
-
-var FormFunctionality = function FormFunctionalityClosure() {
-  function FormFunctionality() {}
-
-  FormFunctionality.clearControlRendersById = function () {
-    _annotation_layer_forms.AnnotationLayer.clearControlRendersById();
-  };
-
-  FormFunctionality.clearControlRendersByType = function () {
-    _annotation_layer_forms.AnnotationLayer.clearControlRendersByType();
-  };
-
-  FormFunctionality.setPostRenderHook = function (hook) {
-    _postRenderHook = hook;
-  };
-
-  FormFunctionality.setControlRenderClosureByType = function (closure, type) {
-    _annotation_layer_forms.AnnotationLayer.setControlRenderClosureByType(closure, type);
-  };
-
-  FormFunctionality.setControlRenderClosureById = function (closure, id) {
-    _annotation_layer_forms.AnnotationLayer.setControlRenderClosureById(closure, id);
-  };
-
-  FormFunctionality.setPostCreationTweak = function (postCallback) {
-    if (postCallback) _assertValidControlTweak(postCallback);
-
-    _annotation_layer_forms.AnnotationLayer.setPostCreationTweak(postCallback);
-  };
-
-  FormFunctionality.getFormValues = function () {
-    return _annotation_layer_forms.AnnotationLayer.getValues();
-  };
-
-  FormFunctionality.render = function (width, height, page, target, values, options) {
-    console.log('In render');
-
-    if (_typeof(values) != 'object') {
-      values = {};
-    }
-
-    if (_typeof(options) != 'object') {
-      options = {};
-    }
-
-    if (typeof width != 'number' && typeof height != 'number') {
-      throw "at least one parameter must be specified as a number: width, height";
-    }
-
-    var viewport = _createViewport(width, height, page, 1.0);
-
-    var pageHolder = document.createElement('div');
-    pageHolder.style.width = viewport.width + 'px';
-    pageHolder.style.height = viewport.height + 'px';
-    target.appendChild(pageHolder);
-    var targetScale = viewport.scale;
-
-    _annotation_layer_forms.AnnotationLayer.setValues(values);
-
-    var pdfPageView = new pdfjsViewer.PDFPageView({
-      container: pageHolder,
-      scale: targetScale / CSS_UNITS,
-      defaultViewport: viewport,
-      annotationLayerFactory: new pdfjsViewer.DefaultAnnotationLayerFactory(),
-      renderInteractiveForms: true
-    });
-    pdfPageView.setPdfPage(page);
-    _workingViewport = viewport;
-    pdfPageView.draw().then(function () {
-      if (_postRenderHook) {
-        _postRenderHook();
-      }
-    });
-  };
-
-  FormFunctionality.returnFormElementsOnPage =
-  /*#__PURE__*/
-  function () {
-    var _ref = _asyncToGenerator(
-    /*#__PURE__*/
-    _regenerator["default"].mark(function _callee(page) {
-      var intent, elements, h, y;
-      return _regenerator["default"].wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              intent = 'display';
-              elements = [];
-              _context.next = 4;
-              return page.getAnnotations(intent).then(function (annotations) {
-                var y = 1;
-                elements = _annotation_layer_forms.AnnotationLayer.returnFormElementsOnPage(annotations);
-              });
-
-            case 4:
-              h = _context.sent;
-              y = 3;
-              y = y + 3;
-              return _context.abrupt("return", elements);
-
-            case 8:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee);
-    }));
-
-    return function (_x) {
-      return _ref.apply(this, arguments);
-    };
-  }();
-
-  return FormFunctionality;
-}();
-
-exports.FormFunctionality = FormFunctionality;
-
-/***/ }),
-/* 165 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -22847,7 +22635,7 @@ exports.SVGGraphics = SVGGraphics;
 }
 
 /***/ }),
-/* 166 */
+/* 165 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -22862,7 +22650,7 @@ var _regenerator = _interopRequireDefault(__w_pdfjs_require__(148));
 
 var _util = __w_pdfjs_require__(1);
 
-var _network_utils = __w_pdfjs_require__(167);
+var _network_utils = __w_pdfjs_require__(166);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -23498,7 +23286,7 @@ function (_BaseRangeReader2) {
 }(BaseRangeReader);
 
 /***/ }),
-/* 167 */
+/* 166 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -23514,7 +23302,7 @@ exports.validateResponseStatus = validateResponseStatus;
 
 var _util = __w_pdfjs_require__(1);
 
-var _content_disposition = __w_pdfjs_require__(168);
+var _content_disposition = __w_pdfjs_require__(167);
 
 function validateRangeRequestCapabilities(_ref) {
   var getResponseHeader = _ref.getResponseHeader,
@@ -23583,7 +23371,7 @@ function validateResponseStatus(status) {
 }
 
 /***/ }),
-/* 168 */
+/* 167 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -23790,7 +23578,7 @@ function getFilenameFromContentDispositionHeader(contentDisposition) {
 }
 
 /***/ }),
-/* 169 */
+/* 168 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -23806,7 +23594,7 @@ var _regenerator = _interopRequireDefault(__w_pdfjs_require__(148));
 
 var _util = __w_pdfjs_require__(1);
 
-var _network_utils = __w_pdfjs_require__(167);
+var _network_utils = __w_pdfjs_require__(166);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -24395,7 +24183,7 @@ PDFNetworkStreamRangeRequestReader.prototype = {
 };
 
 /***/ }),
-/* 170 */
+/* 169 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -24410,7 +24198,7 @@ var _regenerator = _interopRequireDefault(__w_pdfjs_require__(148));
 
 var _util = __w_pdfjs_require__(1);
 
-var _network_utils = __w_pdfjs_require__(167);
+var _network_utils = __w_pdfjs_require__(166);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 

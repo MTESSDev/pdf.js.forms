@@ -20,7 +20,6 @@ import {
     AnnotationBorderStyleType, AnnotationType, stringToPDFString, unreachable,
     Util, warn
 } from '../shared/util';
-import {FormFunctionality} from "./forms";
 
 let _tabIndex = 1;
 let _formValues = [];

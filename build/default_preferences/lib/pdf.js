@@ -19,8 +19,6 @@ let pdfjsDisplayWorkerOptions = require('./display/worker_options.js');
 
 let pdfjsDisplayAPICompatibility = require('./display/api_compatibility.js');
 
-var pdfForms = require('./display/forms.js');
-
 {
   const isNodeJS = require('./shared/is_node.js');
 
@@ -82,4 +80,3 @@ exports.addLinkAttributes = pdfjsDisplayDisplayUtils.addLinkAttributes;
 exports.loadScript = pdfjsDisplayDisplayUtils.loadScript;
 exports.GlobalWorkerOptions = pdfjsDisplayWorkerOptions.GlobalWorkerOptions;
 exports.apiCompatibilityParams = pdfjsDisplayAPICompatibility.apiCompatibilityParams;
-exports.FormFunctionality = pdfForms.FormFunctionality;

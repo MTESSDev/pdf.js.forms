@@ -3,6 +3,12 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+Object.defineProperty(exports, "FormFunctionality", {
+  enumerable: true,
+  get: function () {
+    return _forms.FormFunctionality;
+  }
+});
 Object.defineProperty(exports, "AnnotationLayerBuilder", {
   enumerable: true,
   get: function () {
@@ -99,6 +105,8 @@ Object.defineProperty(exports, "PDFViewer", {
     return _pdf_viewer.PDFViewer;
   }
 });
+
+var _forms = require("./forms");
 
 var _annotation_layer_builder = require("./annotation_layer_builder.js");
 
