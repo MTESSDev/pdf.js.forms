@@ -4471,8 +4471,8 @@ exports.AppOptions = AppOptions;
 
 var pdfjsLib;
 
-if (typeof window !== 'undefined' && window['pdfjs-dist/build/pdf']) {
-  pdfjsLib = window['pdfjs-dist/build/pdf'];
+if (typeof window !== 'undefined' && window['pdfjs-forms-dist/build/pdf']) {
+  pdfjsLib = window['pdfjs-forms-dist/build/pdf'];
 } else {
   pdfjsLib = require('../build/pdf.js');
 }

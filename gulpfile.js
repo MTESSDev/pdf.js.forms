@@ -65,7 +65,7 @@ var COMMON_WEB_FILES = [
 var MOZCENTRAL_DIFF_FILE = 'mozcentral.diff';
 
 var REPO = 'git@github.com:mozilla/pdf.js.git';
-var DIST_REPO_URL = 'https://github.com/mozilla/pdfjs-dist';
+var DIST_REPO_URL = 'https://github.com/mainegreen/pdfjs-forms-dist';
 
 var builder = require('./external/builder/builder.js');
 
@@ -258,7 +258,7 @@ function createBundle(defines) {
   console.log();
   console.log('### Bundling files into pdf.js');
 
-  var mainAMDName = 'pdfjs-dist/build/pdf';
+  var mainAMDName = 'pdfjs-forms-dist/build/pdf';
   var mainOutputName = 'pdf.js';
 
   var mainFileConfig = createWebpackConfig(defines, {
@@ -272,7 +272,7 @@ function createBundle(defines) {
     .pipe(replaceWebpackRequire())
     .pipe(replaceJSRootName(mainAMDName, 'pdfjsLib'));
 
-  var workerAMDName = 'pdfjs-dist/build/pdf.worker';
+  var workerAMDName = 'pdfjs-forms-dist/build/pdf.worker';
   var workerOutputName = 'pdf.worker.js';
 
   var workerFileConfig = createWebpackConfig(defines, {
@@ -300,7 +300,7 @@ function createWebBundle(defines) {
 }
 
 function createComponentsBundle(defines) {
-  var componentsAMDName = 'pdfjs-dist/web/pdf_viewer';
+  var componentsAMDName = 'pdfjs-forms-dist/web/pdf_viewer';
   var componentsOutputName = 'pdf_viewer.js';
 
   var componentsFileConfig = createWebpackConfig(defines, {
@@ -316,7 +316,7 @@ function createComponentsBundle(defines) {
 }
 
 function createImageDecodersBundle(defines) {
-  var imageDecodersAMDName = 'pdfjs-dist/image_decoders/pdf.image_decoders';
+  var imageDecodersAMDName = 'pdfjs-forms-dist/image_decoders/pdf.image_decoders';
   var imageDecodersOutputName = 'pdf.image_decoders.js';
 
   var componentsFileConfig = createWebpackConfig(defines, {
@@ -1305,7 +1305,7 @@ gulp.task('dist-pre', gulp.series('generic', 'components', 'image_decoders',
   rimraf.sync(path.join(DIST_DIR, '*'));
 
   // Rebuilding manifests
-  var DIST_NAME = 'pdfjs-dist';
+  var DIST_NAME = 'pdfjs-forms-dist';
   var DIST_DESCRIPTION = 'Generic build of Mozilla\'s PDF.js library.';
   var DIST_KEYWORDS = ['Mozilla', 'pdf', 'pdf.js'];
   var DIST_HOMEPAGE = 'http://mozilla.github.io/pdf.js/';

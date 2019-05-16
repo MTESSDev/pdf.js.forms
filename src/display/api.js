@@ -58,7 +58,7 @@ if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('GENERIC')) {
     useRequireEnsure = true;
   }
   if (typeof requirejs !== 'undefined' && requirejs.toUrl) {
-    fallbackWorkerSrc = requirejs.toUrl('pdfjs-dist/build/pdf.worker.js');
+    fallbackWorkerSrc = requirejs.toUrl('pdfjs-forms-dist/build/pdf.worker.js');
   }
   const dynamicLoaderSupported =
     typeof requirejs !== 'undefined' && requirejs.load;
@@ -80,7 +80,7 @@ if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('GENERIC')) {
     });
   }) : dynamicLoaderSupported ? (function() {
     return new Promise(function(resolve, reject) {
-      requirejs(['pdfjs-dist/build/pdf.worker'], function(worker) {
+      requirejs(['pdfjs-forms-dist/build/pdf.worker'], function(worker) {
         try {
           resolve(worker.WorkerMessageHandler);
         } catch (ex) {

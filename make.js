@@ -270,7 +270,7 @@ target.dist = function() {
   target.components();
   target.minified();
 
-  var DIST_REPO_URL = 'https://github.com/mozilla/pdfjs-dist';
+  var DIST_REPO_URL = 'https://github.com/mozilla/pdfjs-forms-dist';
   var VERSION = getCurrentVersion();
 
   cd(ROOT_DIR);
@@ -308,7 +308,7 @@ target.dist = function() {
   echo();
   echo('### Rebuilding manifests');
 
-  var DIST_NAME = 'pdfjs-dist';
+  var DIST_NAME = 'pdfjs-forms-dist';
   var DIST_DESCRIPTION = 'Generic build of Mozilla\'s PDF.js library.';
   var DIST_KEYWORDS = ['Mozilla', 'pdf', 'pdf.js'];
   var DIST_HOMEPAGE = 'http://mozilla.github.io/pdf.js/';

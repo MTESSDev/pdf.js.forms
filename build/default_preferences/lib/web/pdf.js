@@ -4,7 +4,7 @@
   'use strict';
 
   if (typeof define === 'function' && define.amd) {
-    define('pdfjs-dist/build/pdf', ['exports'], factory);
+    define('pdfjs-forms-dist/build/pdf', ['exports'], factory);
   } else if (typeof exports !== 'undefined') {
     factory(exports);
   } else {
@@ -8232,7 +8232,7 @@
       }
 
       if (typeof requirejs !== 'undefined' && requirejs.toUrl) {
-        workerSrc = requirejs.toUrl('pdfjs-dist/build/pdf.worker.js');
+        workerSrc = requirejs.toUrl('pdfjs-forms-dist/build/pdf.worker.js');
       }
 
       var dynamicLoaderSupported = typeof requirejs !== 'undefined' && requirejs.load;
@@ -8243,7 +8243,7 @@
           callback(worker.WorkerMessageHandler);
         });
       } : dynamicLoaderSupported ? function (callback) {
-        requirejs(['pdfjs-dist/build/pdf.worker'], function (worker) {
+        requirejs(['pdfjs-forms-dist/build/pdf.worker'], function (worker) {
           callback(worker.WorkerMessageHandler);
         });
       } : null;

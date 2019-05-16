@@ -51,7 +51,7 @@ let fakeWorkerFilesLoader = null;
   }
 
   if (typeof requirejs !== 'undefined' && requirejs.toUrl) {
-    fallbackWorkerSrc = requirejs.toUrl('pdfjs-dist/build/pdf.worker.js');
+    fallbackWorkerSrc = requirejs.toUrl('pdfjs-forms-dist/build/pdf.worker.js');
   }
 
   const dynamicLoaderSupported = typeof requirejs !== 'undefined' && requirejs.load;
@@ -69,7 +69,7 @@ let fakeWorkerFilesLoader = null;
     });
   } : dynamicLoaderSupported ? function () {
     return new Promise(function (resolve, reject) {
-      requirejs(['pdfjs-dist/build/pdf.worker'], function (worker) {
+      requirejs(['pdfjs-forms-dist/build/pdf.worker'], function (worker) {
         try {
           resolve(worker.WorkerMessageHandler);
         } catch (ex) {

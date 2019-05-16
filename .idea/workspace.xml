@@ -11,24 +11,12 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/package.json">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="48">
-              <caret line="3" column="25" selection-start-line="3" selection-start-column="25" selection-end-line="3" selection-end-column="25" />
-              <folding>
-                <element signature="n#!!block;n#devDependencies#0;n#!!top" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/README.md">
           <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
             <state split_layout="SPLIT">
-              <first_editor relative-caret-position="176">
-                <caret line="11" selection-start-line="11" selection-end-line="11" />
+              <first_editor relative-caret-position="208">
+                <caret line="13" selection-start-line="13" selection-end-line="14" />
               </first_editor>
               <second_editor />
             </state>
@@ -62,17 +50,22 @@
       <find>MIN</find>
       <find>FormFunctionality</find>
       <find>minified</find>
+      <find>pdfjs-`dist</find>
+      <find>pdfjs-dist</find>
     </findStrings>
+    <replaceStrings>
+      <replace>pdfjs-forms-dist</replace>
+    </replaceStrings>
     <dirStrings>
       <dir>C:\Users\nandre\Documents\GitHub\pdf.js\src</dir>
       <dir>C:\Users\nandre\Documents\GitHub\pdf.js</dir>
       <dir>C:\Users\nandre\Documents\GitHub\pdf.js\web</dir>
+      <dir>C:\Users\nandre\Documents\GitHub\pdf.js\build</dir>
     </dirStrings>
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/gulpfile.js" />
         <option value="$PROJECT_DIR$/src/display/forms.js" />
         <option value="$PROJECT_DIR$/web/pdf_viewer.component.js" />
         <option value="$PROJECT_DIR$/web/forms.js" />
@@ -80,20 +73,25 @@
         <option value="$PROJECT_DIR$/src/display/annotation_layer_forms.js" />
         <option value="$PROJECT_DIR$/package.json" />
         <option value="$PROJECT_DIR$/README.md" />
+        <option value="$PROJECT_DIR$/gulpfile.js" />
+        <option value="$PROJECT_DIR$/make.js" />
+        <option value="$PROJECT_DIR$/src/display/api.js" />
       </list>
     </option>
   </component>
   <component name="PhpWorkspaceProjectConfiguration" interpreter_name="PHP - ACTS - 7" />
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="-7" />
-    <option name="width" value="1934" />
-    <option name="height" value="1047" />
+    <option name="x" value="-8" />
+    <option name="y" value="-8" />
+    <option name="width" value="1936" />
+    <option name="height" value="1056" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -101,22 +99,10 @@
               <item name="pdf.js" type="b2602c69:ProjectViewProjectNode" />
               <item name="pdf.js" type="462c0819:PsiDirectoryNode" />
             </path>
-            <path>
-              <item name="pdf.js" type="b2602c69:ProjectViewProjectNode" />
-              <item name="pdf.js" type="462c0819:PsiDirectoryNode" />
-              <item name="build" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="pdf.js" type="b2602c69:ProjectViewProjectNode" />
-              <item name="pdf.js" type="462c0819:PsiDirectoryNode" />
-              <item name="build" type="462c0819:PsiDirectoryNode" />
-              <item name="components" type="462c0819:PsiDirectoryNode" />
-            </path>
           </expand>
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -167,7 +153,7 @@
       <window_info id="npm" order="3" side_tool="true" />
       <window_info id="Favorites" order="4" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.67777777" />
       <window_info anchor="bottom" id="Run" order="2" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
@@ -987,8 +973,8 @@
     <entry file="file://$PROJECT_DIR$/README.md">
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
         <state split_layout="SPLIT">
-          <first_editor relative-caret-position="176">
-            <caret line="11" selection-start-line="11" selection-end-line="11" />
+          <first_editor relative-caret-position="208">
+            <caret line="13" selection-start-line="13" selection-end-line="14" />
           </first_editor>
           <second_editor />
         </state>
