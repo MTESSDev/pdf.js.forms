@@ -12,71 +12,12 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/gulpfile.js">
+        <entry file="file://$PROJECT_DIR$/package.json">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="127">
-              <caret line="789" column="17" selection-start-line="789" selection-start-column="6" selection-end-line="789" selection-end-column="17" />
+            <state relative-caret-position="48">
+              <caret line="3" column="25" selection-start-line="3" selection-start-column="25" selection-end-line="3" selection-end-column="25" />
               <folding>
-                <element signature="e#3212#3834#0" />
-                <element signature="e#3883#4110#0" />
-                <element signature="e#4158#6293#0" />
-                <element signature="e#6327#6431#0" />
-                <element signature="e#6459#6539#0" />
-                <element signature="e#6608#7829#0" />
-                <element signature="e#7864#8068#0" />
-                <element signature="e#8114#8290#0" />
-                <element signature="e#8323#9323#0" />
-                <element signature="e#9359#9586#0" />
-                <element signature="e#9629#10118#0" />
-                <element signature="e#10164#10700#0" />
-                <element signature="e#10727#10837#0" />
-                <element signature="e#10863#10978#0" />
-                <element signature="e#11028#11164#0" />
-                <element signature="e#11203#11409#0" />
-                <element signature="e#11453#12939#0" />
-                <element signature="e#12969#13743#0" />
-                <element signature="e#13781#13975#0" />
-                <element signature="e#14020#14991#0" />
-                <element signature="e#15043#16720#0" />
-                <element signature="e#16815#17180#0" />
-                <element signature="e#17217#19338#0" />
-                <element signature="e#19377#20163#0" />
-                <element signature="e#20226#20288#0" />
-                <element signature="e#20348#20796#0" />
-                <element signature="e#20839#21110#0" />
-                <element signature="e#22557#23239#0" />
-                <element signature="e#23310#23581#0" />
-                <element signature="e#23721#24985#0" />
-                <element signature="e#26927#27448#0" />
-                <element signature="e#27589#29736#0" />
-                <element signature="e#29933#31683#0" />
-                <element signature="e#30337#31679#0" />
-                <element signature="e#31776#32201#0" />
-                <element signature="e#32283#35070#0" />
-                <element signature="e#35135#35737#0" />
-                <element signature="e#35782#35830#0" />
-                <element signature="e#35919#36026#0" />
-                <element signature="e#36119#36287#0" />
-                <element signature="e#36384#36425#0" />
-                <element signature="e#36519#36557#0" />
-                <element signature="e#36757#36777#0" />
-                <element signature="e#36877#36903#0" />
-                <element signature="e#36946#37891#0" />
-                <element signature="e#37969#38311#0" />
-                <element signature="e#38384#39212#0" />
-                <element signature="e#39249#39446#0" />
-                <element signature="e#39484#39581#0" />
-                <element signature="e#39619#39951#0" />
-                <element signature="e#39994#40249#0" />
-                <element signature="e#40295#40790#0" />
-                <element signature="e#40835#41772#0" />
-                <element signature="e#41818#42487#0" />
-                <element signature="e#42764#46298#0" />
-                <element signature="e#46369#46640#0" />
-                <element signature="e#46712#47751#0" />
-                <element signature="e#47878#48867#0" />
-                <element signature="e#48968#50022#0" />
-                <element signature="e#50069#50384#0" />
+                <element signature="n#!!block;n#devDependencies#0;n#!!top" />
               </folding>
             </state>
           </provider>
@@ -86,8 +27,8 @@
         <entry file="file://$PROJECT_DIR$/README.md">
           <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
             <state split_layout="SPLIT">
-              <first_editor relative-caret-position="576">
-                <caret line="129" column="34" selection-start-line="129" selection-start-column="34" selection-end-line="129" selection-end-column="34" />
+              <first_editor relative-caret-position="176">
+                <caret line="11" selection-start-line="11" selection-end-line="11" />
               </first_editor>
               <second_editor />
             </state>
@@ -137,16 +78,16 @@
         <option value="$PROJECT_DIR$/web/forms.js" />
         <option value="$PROJECT_DIR$/src/pdf.js" />
         <option value="$PROJECT_DIR$/src/display/annotation_layer_forms.js" />
+        <option value="$PROJECT_DIR$/package.json" />
         <option value="$PROJECT_DIR$/README.md" />
       </list>
     </option>
   </component>
   <component name="PhpWorkspaceProjectConfiguration" interpreter_name="PHP - ACTS - 7" />
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="-8" />
-    <option name="y" value="-8" />
-    <option name="width" value="1936" />
-    <option name="height" value="1056" />
+    <option name="x" value="-7" />
+    <option name="width" value="1934" />
+    <option name="height" value="1047" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -160,6 +101,17 @@
               <item name="pdf.js" type="b2602c69:ProjectViewProjectNode" />
               <item name="pdf.js" type="462c0819:PsiDirectoryNode" />
             </path>
+            <path>
+              <item name="pdf.js" type="b2602c69:ProjectViewProjectNode" />
+              <item name="pdf.js" type="462c0819:PsiDirectoryNode" />
+              <item name="build" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="pdf.js" type="b2602c69:ProjectViewProjectNode" />
+              <item name="pdf.js" type="462c0819:PsiDirectoryNode" />
+              <item name="build" type="462c0819:PsiDirectoryNode" />
+              <item name="components" type="462c0819:PsiDirectoryNode" />
+            </path>
           </expand>
           <select />
         </subPane>
@@ -169,7 +121,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="C:/Projects/mozilla_pdf/git" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../pdfjs-forms-dist" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
     <property name="node.js.selected.package.eslint" value="C:\Users\nandre\Documents\GitHub\pdf.js\node_modules\eslint" />
@@ -542,11 +494,6 @@
     <entry file="file://$PROJECT_DIR$/build/components/pdf_viewer.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-96" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/package.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-30" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/web/pdf.worker.js">
@@ -1027,11 +974,21 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/package.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="48">
+          <caret line="3" column="25" selection-start-line="3" selection-start-column="25" selection-end-line="3" selection-end-column="25" />
+          <folding>
+            <element signature="n#!!block;n#devDependencies#0;n#!!top" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/README.md">
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
         <state split_layout="SPLIT">
-          <first_editor relative-caret-position="576">
-            <caret line="129" column="34" selection-start-line="129" selection-start-column="34" selection-end-line="129" selection-end-column="34" />
+          <first_editor relative-caret-position="176">
+            <caret line="11" selection-start-line="11" selection-end-line="11" />
           </first_editor>
           <second_editor />
         </state>

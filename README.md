@@ -1,4 +1,4 @@
-# PDF.js / pdf.js.forms
+# PDF.js / pdf.js.forms 
 
 pdf.js.forms is a fork of [PDF.js](https://github.com/mozilla/pdf.js). 
 The original purpose of this fork was to implement fillable
@@ -6,6 +6,12 @@ web forms of pdf.forms using PDF.js. Since the original inception of this fork,
 pdj.js has evolved and now loosely supports rendering forms, however their implementation
 is still not really workable for business/production use so continued maintenance 
 of this library will occur. 
+
+There is a distribution package of this should you wish to use it:
+
+**pdf-forms-dist**
+[![GitHub package.json version](https://img.shields.io/github/package-json/v/mainegreen/pdfjs-forms-dist.svg?style=flat-square)](https://github.com/mainegreen/pdfjs-forms-dist)
+[![npm](https://img.shields.io/npm/v/pdfjs-forms-dist.svg?style=flat-square)](https://www.npmjs.com/package/pdfjs-forms-dist)
 
 The PDF.js has two builds that are needed to utilize the forms library: generic and
 components. Both must be built and included to use pdf.js.forms. This fork 
