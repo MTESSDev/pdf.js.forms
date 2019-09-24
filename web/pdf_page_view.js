@@ -96,9 +96,6 @@ class PDFPageView {
     this.resume = null;
     this.error = null;
 
-    this.onBeforeDraw = null;
-    this.onAfterDraw = null;
-
     this.annotationLayer = null;
     this.textLayer = null;
     this.zoomLayer = null;
@@ -223,6 +220,7 @@ class PDFPageView {
         source: this,
         pageNumber: this.id,
         cssTransform: true,
+        timestamp: performance.now(),
       });
       return;
     }
@@ -246,6 +244,7 @@ class PDFPageView {
           source: this,
           pageNumber: this.id,
           cssTransform: true,
+          timestamp: performance.now(),
         });
         return;
       }
@@ -450,13 +449,12 @@ class PDFPageView {
 
       this.error = error;
       this.stats = pdfPage.stats;
-      if (this.onAfterDraw) {
-        this.onAfterDraw();
-      }
+
       this.eventBus.dispatch('pagerendered', {
         source: this,
         pageNumber: this.id,
         cssTransform: false,
+        timestamp: performance.now(),
       });
 
       if (error) {
@@ -494,9 +492,10 @@ class PDFPageView {
     }
     div.setAttribute('data-loaded', true);
 
-    if (this.onBeforeDraw) {
-      this.onBeforeDraw();
-    }
+    this.eventBus.dispatch('pagerender', {
+      source: this,
+      pageNumber: this.id,
+    });
     return resultPromise;
   }
 

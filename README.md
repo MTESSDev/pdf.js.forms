@@ -1,5 +1,6 @@
 # PDF.js / pdf.js.forms 
 
+[PDF.js](https://mozilla.github.io/pdf.js/) is a Portable Document Format (PDF) viewer that is built with HTML5.
 pdf.js.forms is a fork of [PDF.js](https://github.com/mozilla/pdf.js). 
 The original purpose of this fork was to implement fillable
 web forms of pdf.forms using PDF.js. Since the original inception of this fork,
@@ -275,6 +276,10 @@ contributor Julian Viereck:
 More learning resources can be found at:
 
 + https://github.com/mozilla/pdf.js/wiki/Additional-Learning-Resources
+
+The API documentation can be found at:
+
++ https://mozilla.github.io/pdf.js/api/
 
 ## Questions
 

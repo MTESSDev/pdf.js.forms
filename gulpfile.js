@@ -122,6 +122,16 @@ function safeSpawnSync(command, parameters, options) {
   return result;
 }
 
+function startNode(args, options) {
+  // Node.js decreased the maximum header size from 80 KB to 8 KB in newer
+  // releases, which is not sufficient for some of our reference test files
+  // (such as `issue6360.pdf`), so we need to restore this value. Note that
+  // this argument needs to be before all other arguments as it needs to be
+  // passed to the Node.js process itself and not to the script that it runs.
+  args.unshift('--max-http-header-size=80000');
+  return spawn('node', args, options);
+}
+
 function createStringSource(filename, content) {
   var source = stream.Readable({ objectMode: true, });
   source._read = function () {
@@ -174,8 +184,11 @@ function createWebpackConfig(defines, output) {
       rules: [
         {
           loader: 'babel-loader',
-          // babel is too slow
-          exclude: /src[\\\/]core[\\\/](glyphlist|unicode)/,
+          // `core-js` (see https://github.com/zloirock/core-js/issues/514) and
+          // `src/core/{glyphlist,unicode}.js` (Babel is too slow for those)
+          // should be excluded from processing.
+          // eslint-disable-next-line max-len
+          exclude: /(node_modules[\\\/]core-js|src[\\\/]core[\\\/](glyphlist|unicode))/,
           options: {
             presets: skipBabel ? undefined : ['@babel/preset-env'],
             plugins: [
@@ -365,7 +378,7 @@ function getTempFile(prefix, suffix) {
 
 function createTestSource(testsName, bot) {
   var source = stream.Readable({ objectMode: true, });
-  source._read = function () {
+  source._read = function() {
     console.log();
     console.log('### Running ' + testsName + ' tests');
 
@@ -405,10 +418,11 @@ function createTestSource(testsName, bot) {
       args.push('--strictVerify');
     }
 
-    var testProcess = spawn('node', args, { cwd: TEST_DIR, stdio: 'inherit', });
+    var testProcess = startNode(args, { cwd: TEST_DIR, stdio: 'inherit', });
     testProcess.on('close', function (code) {
       source.push(null);
     });
+    return undefined;
   };
   return source;
 }
@@ -434,7 +448,7 @@ function makeRef(done, bot) {
     args.push('--noPrompts', '--strictVerify');
   }
   args.push('--browserManifestFile=' + PDF_BROWSERS);
-  var testProcess = spawn('node', args, { cwd: TEST_DIR, stdio: 'inherit', });
+  var testProcess = startNode(args, { cwd: TEST_DIR, stdio: 'inherit', });
   testProcess.on('close', function (code) {
     done();
   });
@@ -541,7 +555,7 @@ gulp.task('default_preferences-pre', function() {
     .pipe(gulp.dest(DEFAULT_PREFERENCES_DIR + 'lib/'));
   return merge([
     buildLib,
-    gulp.src('external/{streams,url}/*.js', { base: '.', })
+    gulp.src('external/streams/*.js', { base: '.', })
       .pipe(gulp.dest(DEFAULT_PREFERENCES_DIR)),
   ]);
 });
@@ -1038,8 +1052,6 @@ gulp.task('lib', gulp.series('buildnumber', 'default_preferences', function() {
     buildLib,
     gulp.src('external/streams/streams-lib.js', { base: '.', })
       .pipe(gulp.dest('build/')),
-    gulp.src('external/url/url-lib.js', { base: '.', })
-      .pipe(gulp.dest('build/')),
   ]);
 }));
 
@@ -1145,7 +1157,7 @@ gulp.task('baseline', function (done) {
 gulp.task('unittestcli', gulp.series('testing-pre', 'lib', function(done) {
   var options = ['node_modules/jasmine/bin/jasmine',
                  'JASMINE_CONFIG_PATH=test/unit/clitests.json'];
-  var jasmineProcess = spawn('node', options, { stdio: 'inherit', });
+  var jasmineProcess = startNode(options, { stdio: 'inherit', });
   jasmineProcess.on('close', function(code) {
     if (code !== 0) {
       done(new Error('Unit tests failed.'));
@@ -1162,7 +1174,7 @@ gulp.task('lint', gulp.series('default_preferences', function(done) {
   // Ensure that we lint the Firefox specific *.jsm files too.
   var options = ['node_modules/eslint/bin/eslint', '--ext', '.js,.jsm', '.',
                  '--report-unused-disable-directives'];
-  var esLintProcess = spawn('node', options, { stdio: 'inherit', });
+  var esLintProcess = startNode(options, { stdio: 'inherit', });
   esLintProcess.on('close', function (code) {
     if (code !== 0) {
       done(new Error('ESLint failed.'));
@@ -1245,9 +1257,10 @@ gulp.task('gh-pages-prepare', function () {
 gulp.task('wintersmith', function (done) {
   var wintersmith = require('wintersmith');
   var env = wintersmith('docs/config.json');
-  env.build(GH_PAGES_DIR, function (error) {
+  env.build(GH_PAGES_DIR, function(error) {
     if (error) {
-      return done(error);
+      done(error);
+      return;
     }
     replaceInFile(GH_PAGES_DIR + '/getting_started/index.html',
                   /STABLE_VERSION/g, config.stableVersion);
@@ -1357,8 +1370,6 @@ gulp.task('dist-pre', gulp.series('generic', 'components', 'image_decoders',
 
   return merge([
     gulp.src('external/streams/streams-lib.js', { base: '.', })
-      .pipe(gulp.dest('build/dist/')),
-    gulp.src('external/url/url-lib.js', { base: '.', })
       .pipe(gulp.dest('build/dist/')),
     packageJsonSrc.pipe(gulp.dest(DIST_DIR)),
     bowerJsonSrc.pipe(gulp.dest(DIST_DIR)),
