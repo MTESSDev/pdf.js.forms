@@ -11,6 +11,8 @@ var _pdf = require("../pdf");
 
 var _preferences = require("./preferences");
 
+var _ui_utils = require("./ui_utils");
+
 var _app = require("./app");
 
 {
@@ -86,14 +88,14 @@ class DownloadManager {
   }
 
   download(blob, url, filename) {
-    let blobUrl = _pdf.URL.createObjectURL(blob);
+    let blobUrl = URL.createObjectURL(blob);
 
     let onResponse = err => {
       if (err && this.onerror) {
         this.onerror(err);
       }
 
-      _pdf.URL.revokeObjectURL(blobUrl);
+      URL.revokeObjectURL(blobUrl);
     };
 
     FirefoxCom.request('download', {
@@ -160,7 +162,7 @@ class MozL10n {
     }
 
     if (type === 'findbarclose') {
-      _app.PDFViewerApplication.eventBus.dispatch('findbarclose', {
+      _app.PDFViewerApplication.eventBus.dispatch(type, {
         source: window
       });
 
@@ -195,9 +197,12 @@ class MozL10n {
       return;
     }
 
+    if (type === 'zoomreset' && _app.PDFViewerApplication.pdfViewer.currentScaleValue === _ui_utils.DEFAULT_SCALE_VALUE) {
+      return;
+    }
+
     _app.PDFViewerApplication.eventBus.dispatch(type, {
-      source: window,
-      ignoreDuplicate: type === 'zoomreset' ? true : undefined
+      source: window
     });
   };
 

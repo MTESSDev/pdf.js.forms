@@ -59,7 +59,7 @@ class PasswordPrompt {
 
     if (password && password.length > 0) {
       this.close();
-      return this.updateCallback(password);
+      this.updateCallback(password);
     }
   }
 

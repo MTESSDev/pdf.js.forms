@@ -15,8 +15,6 @@ var _download_manager = require("./download_manager");
 
 var _genericl10n = require("./genericl10n");
 
-var _pdf = require("../pdf");
-
 {
   throw new Error('Module "pdfjs-web/chromecom" shall not be used outside ' + 'CHROME build.');
 }
@@ -220,7 +218,7 @@ function requestAccessToLocalFile(fileUrl, overlayManager, callback) {
           originalUrl = 'file:///fakepath/to/' + encodeURIComponent(file.name);
         }
 
-        callback(_pdf.URL.createObjectURL(file), file.size, originalUrl);
+        callback(URL.createObjectURL(file), file.size, originalUrl);
         overlayManager.close('chromeFileAccessOverlay');
       }
     };

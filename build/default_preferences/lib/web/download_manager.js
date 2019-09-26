@@ -46,9 +46,10 @@ class DownloadManager {
 
   downloadData(data, filename, contentType) {
     if (navigator.msSaveBlob) {
-      return navigator.msSaveBlob(new Blob([data], {
+      navigator.msSaveBlob(new Blob([data], {
         type: contentType
       }), filename);
+      return;
     }
 
     let blobUrl = (0, _pdf.createObjectURL)(data, contentType, this.disableCreateObjectURL);
@@ -69,8 +70,7 @@ class DownloadManager {
       return;
     }
 
-    let blobUrl = _pdf.URL.createObjectURL(blob);
-
+    let blobUrl = URL.createObjectURL(blob);
     download(blobUrl, filename);
   }
 

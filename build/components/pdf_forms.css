@@ -29,7 +29,6 @@
     position: absolute;
     white-space: pre;
     cursor: text;
-    -webkit-transform-origin: 0% 0%;
     transform-origin: 0% 0%;
 }
 
@@ -166,12 +165,10 @@
 }
 
 .annotationLayer .buttonWidgetAnnotation.checkBox input:checked:before {
-    -webkit-transform: rotate(45deg);
     transform: rotate(45deg);
 }
 
 .annotationLayer .buttonWidgetAnnotation.checkBox input:checked:after {
-    -webkit-transform: rotate(-45deg);
     transform: rotate(-45deg);
 }
 

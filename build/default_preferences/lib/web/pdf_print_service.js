@@ -9,14 +9,14 @@ var _ui_utils = require("./ui_utils");
 
 var _app = require("./app");
 
-var _pdf = require("../pdf");
+var _app_options = require("./app_options");
 
 let activeService = null;
 let overlayManager = null;
 
 function renderPage(activeServiceOnEntry, pdfDocument, pageNumber, size) {
   let scratchCanvas = activeService.scratchCanvas;
-  const PRINT_RESOLUTION = 150;
+  const PRINT_RESOLUTION = _app_options.AppOptions.get('printResolution') || 150;
   const PRINT_UNITS = PRINT_RESOLUTION / 72.0;
   scratchCanvas.width = Math.floor(size.width * PRINT_UNITS);
   scratchCanvas.height = Math.floor(size.height * PRINT_UNITS);
@@ -59,7 +59,7 @@ function PDFPrintService(pdfDocument, pagesOverview, printContainer, l10n) {
 PDFPrintService.prototype = {
   layout() {
     this.throwIfInactive();
-    let body = document.querySelector('body');
+    const body = document.querySelector('body');
     body.setAttribute('data-pdfjsprinting', true);
     let hasEqualPageSizes = this.pagesOverview.every(function (size) {
       return size.width === this.pagesOverview[0].width && size.height === this.pagesOverview[0].height;
@@ -81,6 +81,8 @@ PDFPrintService.prototype = {
     }
 
     this.printContainer.textContent = '';
+    const body = document.querySelector('body');
+    body.removeAttribute('data-pdfjsprinting');
 
     if (this.pageStyleSheet) {
       this.pageStyleSheet.remove();
@@ -130,7 +132,7 @@ PDFPrintService.prototype = {
 
     if ('toBlob' in scratchCanvas && !this.disableCreateObjectURL) {
       scratchCanvas.toBlob(function (blob) {
-        img.src = _pdf.URL.createObjectURL(blob);
+        img.src = URL.createObjectURL(blob);
       });
     } else {
       img.src = scratchCanvas.toDataURL();
@@ -251,8 +253,6 @@ window.addEventListener('keydown', function (event) {
     } else {
       event.stopPropagation();
     }
-
-    return;
   }
 }, true);
 

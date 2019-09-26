@@ -32,6 +32,7 @@ var _webgl = require("./webgl");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const DEFAULT_RANGE_CHUNK_SIZE = 65536;
+const RENDERING_CANCELLED_TIMEOUT = 100;
 let isWorkerDisabled = false;
 let fallbackWorkerSrc;
 let fakeWorkerFilesLoader = null;
@@ -127,7 +128,7 @@ function getDocument(src) {
 
   for (const key in source) {
     if (key === 'url' && typeof window !== 'undefined') {
-      params[key] = new _util.URL(source[key], window.location).href;
+      params[key] = new URL(source[key], window.location).href;
       continue;
     } else if (key === 'range') {
       rangeTransport = source[key];
@@ -196,7 +197,6 @@ function getDocument(src) {
 
   if (!worker) {
     const workerParams = {
-      postMessageTransfers: params.postMessageTransfers,
       verbosity: params.verbosity,
       port: _worker_options.GlobalWorkerOptions.workerPort
     };
@@ -443,6 +443,10 @@ class PDFDocumentProxy {
     return this._transport.getPageMode();
   }
 
+  getViewerPreferences() {
+    return this._transport.getViewerPreferences();
+  }
+
   getOpenActionDestination() {
     return this._transport.getOpenActionDestination();
   }
@@ -578,12 +582,8 @@ class PDFPageProxy {
   }) {
     const stats = this._stats;
     stats.time('Overall');
-    this.pendingCleanup = false;
     const renderingIntent = intent === 'print' ? 'print' : 'display';
-    const canvasFactoryInstance = canvasFactory || new _display_utils.DOMCanvasFactory();
-    const webGLContext = new _webgl.WebGLContext({
-      enable: enableWebGL
-    });
+    this.pendingCleanup = false;
 
     if (!this.intentStates[renderingIntent]) {
       this.intentStates[renderingIntent] = Object.create(null);
@@ -591,8 +591,17 @@ class PDFPageProxy {
 
     const intentState = this.intentStates[renderingIntent];
 
+    if (intentState.streamReaderCancelTimeout) {
+      clearTimeout(intentState.streamReaderCancelTimeout);
+      intentState.streamReaderCancelTimeout = null;
+    }
+
+    const canvasFactoryInstance = canvasFactory || new _display_utils.DOMCanvasFactory();
+    const webGLContext = new _webgl.WebGLContext({
+      enable: enableWebGL
+    });
+
     if (!intentState.displayReadyCapability) {
-      intentState.receivingOperatorList = true;
       intentState.displayReadyCapability = (0, _util.createPromiseCapability)();
       intentState.operatorList = {
         fnArray: [],
@@ -601,7 +610,7 @@ class PDFPageProxy {
       };
       stats.time('Page Request');
 
-      this._transport.messageHandler.send('RenderPageRequest', {
+      this._pumpOperatorList({
         pageIndex: this.pageNumber - 1,
         intent: renderingIntent,
         renderInteractiveForms: renderInteractiveForms === true
@@ -615,7 +624,7 @@ class PDFPageProxy {
         intentState.renderTasks.splice(i, 1);
       }
 
-      if (this.cleanupAfterRender) {
+      if (this.cleanupAfterRender || renderingIntent === 'print') {
         this.pendingCleanup = true;
       }
 
@@ -623,6 +632,11 @@ class PDFPageProxy {
 
       if (error) {
         internalRenderTask.capability.reject(error);
+
+        this._abortOperatorList({
+          intentState,
+          reason: error
+        });
       } else {
         internalRenderTask.capability.resolve();
       }
@@ -693,7 +707,6 @@ class PDFPageProxy {
     if (!intentState.opListReadCapability) {
       opListTask = {};
       opListTask.operatorListChanged = operatorListChanged;
-      intentState.receivingOperatorList = true;
       intentState.opListReadCapability = (0, _util.createPromiseCapability)();
       intentState.renderTasks = [];
       intentState.renderTasks.push(opListTask);
@@ -705,7 +718,7 @@ class PDFPageProxy {
 
       this._stats.time('Page Request');
 
-      this._transport.messageHandler.send('RenderPageRequest', {
+      this._pumpOperatorList({
         pageIndex: this.pageIndex,
         intent: renderingIntent
       });
@@ -765,18 +778,25 @@ class PDFPageProxy {
     this.destroyed = true;
     this._transport.pageCache[this.pageIndex] = null;
     const waitOn = [];
-    Object.keys(this.intentStates).forEach(function (intent) {
+    Object.keys(this.intentStates).forEach(intent => {
+      const intentState = this.intentStates[intent];
+
+      this._abortOperatorList({
+        intentState,
+        reason: new Error('Page was destroyed.'),
+        force: true
+      });
+
       if (intent === 'oplist') {
         return;
       }
 
-      const intentState = this.intentStates[intent];
       intentState.renderTasks.forEach(function (renderTask) {
         const renderCompleted = renderTask.capability.promise.catch(function () {});
         waitOn.push(renderCompleted);
         renderTask.cancel();
       });
-    }, this);
+    });
     this.objs.clear();
     this.annotationsPromise = null;
     this.pendingCleanup = false;
@@ -790,16 +810,16 @@ class PDFPageProxy {
   }
 
   _tryCleanup(resetStats = false) {
-    if (!this.pendingCleanup || Object.keys(this.intentStates).some(function (intent) {
+    if (!this.pendingCleanup || Object.keys(this.intentStates).some(intent => {
       const intentState = this.intentStates[intent];
-      return intentState.renderTasks.length !== 0 || intentState.receivingOperatorList;
-    }, this)) {
+      return intentState.renderTasks.length !== 0 || !intentState.operatorList.lastChunk;
+    })) {
       return;
     }
 
-    Object.keys(this.intentStates).forEach(function (intent) {
+    Object.keys(this.intentStates).forEach(intent => {
       delete this.intentStates[intent];
-    }, this);
+    });
     this.objs.clear();
     this.annotationsPromise = null;
 
@@ -813,14 +833,18 @@ class PDFPageProxy {
   _startRenderPage(transparency, intent) {
     const intentState = this.intentStates[intent];
 
+    if (!intentState) {
+      return;
+    }
+
+    this._stats.timeEnd('Page Request');
+
     if (intentState.displayReadyCapability) {
       intentState.displayReadyCapability.resolve(transparency);
     }
   }
 
-  _renderPageChunk(operatorListChunk, intent) {
-    const intentState = this.intentStates[intent];
-
+  _renderPageChunk(operatorListChunk, intentState) {
     for (let i = 0, ii = operatorListChunk.length; i < ii; i++) {
       intentState.operatorList.fnArray.push(operatorListChunk.fnArray[i]);
       intentState.operatorList.argsArray.push(operatorListChunk.argsArray[i]);
@@ -833,10 +857,112 @@ class PDFPageProxy {
     }
 
     if (operatorListChunk.lastChunk) {
-      intentState.receivingOperatorList = false;
-
       this._tryCleanup();
     }
+  }
+
+  _pumpOperatorList(args) {
+    (0, _util.assert)(args.intent, 'PDFPageProxy._pumpOperatorList: Expected "intent" argument.');
+
+    const readableStream = this._transport.messageHandler.sendWithStream('GetOperatorList', args);
+
+    const reader = readableStream.getReader();
+    const intentState = this.intentStates[args.intent];
+    intentState.streamReader = reader;
+
+    const pump = () => {
+      reader.read().then(({
+        value,
+        done
+      }) => {
+        if (done) {
+          intentState.streamReader = null;
+          return;
+        }
+
+        if (this._transport.destroyed) {
+          return;
+        }
+
+        this._renderPageChunk(value, intentState);
+
+        pump();
+      }, reason => {
+        intentState.streamReader = null;
+
+        if (this._transport.destroyed) {
+          return;
+        }
+
+        if (intentState.operatorList) {
+          intentState.operatorList.lastChunk = true;
+
+          for (let i = 0; i < intentState.renderTasks.length; i++) {
+            intentState.renderTasks[i].operatorListChanged();
+          }
+
+          this._tryCleanup();
+        }
+
+        if (intentState.displayReadyCapability) {
+          intentState.displayReadyCapability.reject(reason);
+        } else if (intentState.opListReadCapability) {
+          intentState.opListReadCapability.reject(reason);
+        } else {
+          throw reason;
+        }
+      });
+    };
+
+    pump();
+  }
+
+  _abortOperatorList({
+    intentState,
+    reason,
+    force = false
+  }) {
+    (0, _util.assert)(reason instanceof Error, 'PDFPageProxy._abortOperatorList: Expected "reason" argument.');
+
+    if (!intentState.streamReader) {
+      return;
+    }
+
+    if (!force) {
+      if (intentState.renderTasks.length !== 0) {
+        return;
+      }
+
+      if (reason instanceof _display_utils.RenderingCancelledException) {
+        intentState.streamReaderCancelTimeout = setTimeout(() => {
+          this._abortOperatorList({
+            intentState,
+            reason,
+            force: true
+          });
+
+          intentState.streamReaderCancelTimeout = null;
+        }, RENDERING_CANCELLED_TIMEOUT);
+        return;
+      }
+    }
+
+    intentState.streamReader.cancel(new _util.AbortException(reason && reason.message));
+    intentState.streamReader = null;
+
+    if (this._transport.destroyed) {
+      return;
+    }
+
+    Object.keys(this.intentStates).some(intent => {
+      if (this.intentStates[intent] === intentState) {
+        delete this.intentStates[intent];
+        return true;
+      }
+
+      return false;
+    });
+    this.cleanup();
   }
 
   get stats() {
@@ -903,11 +1029,11 @@ class LoopbackPort {
     }
 
     if (!this._defer) {
-      this._listeners.forEach(function (listener) {
+      this._listeners.forEach(listener => {
         listener.call(this, {
           data: obj
         });
-      }, this);
+      });
 
       return;
     }
@@ -918,9 +1044,9 @@ class LoopbackPort {
     };
 
     this._deferred.then(() => {
-      this._listeners.forEach(function (listener) {
+      this._listeners.forEach(listener => {
         listener.call(this, e);
-      }, this);
+      });
     });
   }
 
@@ -935,7 +1061,7 @@ class LoopbackPort {
   }
 
   terminate() {
-    this._listeners = [];
+    this._listeners.length = 0;
   }
 
 }
@@ -994,14 +1120,13 @@ const PDFWorker = function PDFWorkerClosure() {
 
   function createCDNWrapper(url) {
     const wrapper = 'importScripts(\'' + url + '\');';
-    return _util.URL.createObjectURL(new Blob([wrapper]));
+    return URL.createObjectURL(new Blob([wrapper]));
   }
 
   class PDFWorker {
     constructor({
       name = null,
       port = null,
-      postMessageTransfers = true,
       verbosity = (0, _util.getVerbosityLevel)()
     } = {}) {
       if (port && pdfWorkerPorts.has(port)) {
@@ -1010,7 +1135,7 @@ const PDFWorker = function PDFWorkerClosure() {
 
       this.name = name;
       this.destroyed = false;
-      this.postMessageTransfers = postMessageTransfers !== false;
+      this.postMessageTransfers = true;
       this.verbosity = verbosity;
       this._readyCapability = (0, _util.createPromiseCapability)();
       this._port = null;
@@ -1055,7 +1180,7 @@ const PDFWorker = function PDFWorkerClosure() {
 
         try {
           if (!(0, _util.isSameOrigin)(window.location.href, workerSrc)) {
-            workerSrc = createCDNWrapper(new _util.URL(workerSrc, window.location).href);
+            workerSrc = createCDNWrapper(new URL(workerSrc, window.location).href);
           }
 
           const worker = new Worker(workerSrc);
@@ -1088,7 +1213,7 @@ const PDFWorker = function PDFWorkerClosure() {
               return;
             }
 
-            if (data && data.supportTypedArray) {
+            if (data) {
               this._messageHandler = messageHandler;
               this._port = worker;
               this._webWorker = worker;
@@ -1130,7 +1255,7 @@ const PDFWorker = function PDFWorkerClosure() {
             try {
               messageHandler.send('test', testObj, [testObj.buffer]);
             } catch (ex) {
-              (0, _util.info)('Cannot use postMessage transfers');
+              (0, _util.warn)('Cannot use postMessage transfers.');
               testObj[0] = 0;
               messageHandler.send('test', testObj);
             }
@@ -1259,15 +1384,15 @@ class WorkerTransport {
         waitOn.push(page._destroy());
       }
     });
-    this.pageCache = [];
-    this.pagePromises = [];
+    this.pageCache.length = 0;
+    this.pagePromises.length = 0;
     const terminated = this.messageHandler.sendWithPromise('Terminate', null);
     waitOn.push(terminated);
     Promise.all(waitOn).then(() => {
       this.fontLoader.clear();
 
       if (this._networkStream) {
-        this._networkStream.cancelAllRequests();
+        this._networkStream.cancelAllRequests(new _util.AbortException('Worker was terminated.'));
       }
 
       if (this.messageHandler) {
@@ -1285,7 +1410,7 @@ class WorkerTransport {
       messageHandler,
       loadingTask
     } = this;
-    messageHandler.on('GetReader', function (data, sink) {
+    messageHandler.on('GetReader', (data, sink) => {
       (0, _util.assert)(this._networkStream);
       this._fullReader = this._networkStream.getFullReader();
 
@@ -1316,8 +1441,8 @@ class WorkerTransport {
       sink.onCancel = reason => {
         this._fullReader.cancel(reason);
       };
-    }, this);
-    messageHandler.on('ReaderHeadersReady', function (data) {
+    });
+    messageHandler.on('ReaderHeadersReady', data => {
       const headersCapability = (0, _util.createPromiseCapability)();
       const fullReader = this._fullReader;
       fullReader.headersReady.then(() => {
@@ -1343,8 +1468,8 @@ class WorkerTransport {
         });
       }, headersCapability.reject);
       return headersCapability.promise;
-    }, this);
-    messageHandler.on('GetRangeReader', function (data, sink) {
+    });
+    messageHandler.on('GetRangeReader', (data, sink) => {
       (0, _util.assert)(this._networkStream);
 
       const rangeReader = this._networkStream.getRangeReader(data.begin, data.end);
@@ -1374,15 +1499,15 @@ class WorkerTransport {
       sink.onCancel = reason => {
         rangeReader.cancel(reason);
       };
-    }, this);
-    messageHandler.on('GetDoc', function ({
+    });
+    messageHandler.on('GetDoc', ({
       pdfInfo
-    }) {
+    }) => {
       this._numPages = pdfInfo.numPages;
 
       loadingTask._capability.resolve(new PDFDocumentProxy(pdfInfo, this));
-    }, this);
-    messageHandler.on('PasswordRequest', function (exception) {
+    });
+    messageHandler.on('PasswordRequest', exception => {
       this._passwordCapability = (0, _util.createPromiseCapability)();
 
       if (loadingTask.onPassword) {
@@ -1402,23 +1527,23 @@ class WorkerTransport {
       }
 
       return this._passwordCapability.promise;
-    }, this);
+    });
     messageHandler.on('PasswordException', function (exception) {
       loadingTask._capability.reject(new _util.PasswordException(exception.message, exception.code));
-    }, this);
+    });
     messageHandler.on('InvalidPDF', function (exception) {
       loadingTask._capability.reject(new _util.InvalidPDFException(exception.message));
-    }, this);
+    });
     messageHandler.on('MissingPDF', function (exception) {
       loadingTask._capability.reject(new _util.MissingPDFException(exception.message));
-    }, this);
+    });
     messageHandler.on('UnexpectedResponse', function (exception) {
       loadingTask._capability.reject(new _util.UnexpectedResponseException(exception.message, exception.status));
-    }, this);
+    });
     messageHandler.on('UnknownError', function (exception) {
       loadingTask._capability.reject(new _util.UnknownErrorException(exception.message, exception.details));
-    }, this);
-    messageHandler.on('DataLoaded', function (data) {
+    });
+    messageHandler.on('DataLoaded', data => {
       if (loadingTask.onProgress) {
         loadingTask.onProgress({
           loaded: data.length,
@@ -1427,28 +1552,17 @@ class WorkerTransport {
       }
 
       this.downloadInfoCapability.resolve(data);
-    }, this);
-    messageHandler.on('StartRenderPage', function (data) {
+    });
+    messageHandler.on('StartRenderPage', data => {
       if (this.destroyed) {
         return;
       }
 
       const page = this.pageCache[data.pageIndex];
-
-      page._stats.timeEnd('Page Request');
 
       page._startRenderPage(data.transparency, data.intent);
-    }, this);
-    messageHandler.on('RenderPageChunk', function (data) {
-      if (this.destroyed) {
-        return;
-      }
-
-      const page = this.pageCache[data.pageIndex];
-
-      page._renderPageChunk(data.operatorList, data.intent);
-    }, this);
-    messageHandler.on('commonobj', function (data) {
+    });
+    messageHandler.on('commonobj', data => {
       if (this.destroyed) {
         return;
       }
@@ -1500,23 +1614,24 @@ class WorkerTransport {
           break;
 
         case 'FontPath':
+        case 'FontType3Res':
           this.commonObjs.resolve(id, exportedData);
           break;
 
         default:
           throw new Error(`Got unknown common object type ${type}`);
       }
-    }, this);
-    messageHandler.on('obj', function (data) {
+    });
+    messageHandler.on('obj', data => {
       if (this.destroyed) {
-        return;
+        return undefined;
       }
 
       const [id, pageIndex, type, imageData] = data;
       const pageProxy = this.pageCache[pageIndex];
 
       if (pageProxy.objs.has(id)) {
-        return;
+        return undefined;
       }
 
       switch (type) {
@@ -1551,8 +1666,10 @@ class WorkerTransport {
         default:
           throw new Error(`Got unknown object type ${type}`);
       }
-    }, this);
-    messageHandler.on('DocProgress', function (data) {
+
+      return undefined;
+    });
+    messageHandler.on('DocProgress', data => {
       if (this.destroyed) {
         return;
       }
@@ -1563,31 +1680,9 @@ class WorkerTransport {
           total: data.total
         });
       }
-    }, this);
-    messageHandler.on('PageError', function (data) {
-      if (this.destroyed) {
-        return;
-      }
-
-      const page = this.pageCache[data.pageIndex];
-      const intentState = page.intentStates[data.intent];
-
-      if (intentState.displayReadyCapability) {
-        intentState.displayReadyCapability.reject(new Error(data.error));
-      } else {
-        throw new Error(data.error);
-      }
-
-      if (intentState.operatorList) {
-        intentState.operatorList.lastChunk = true;
-
-        for (let i = 0; i < intentState.renderTasks.length; i++) {
-          intentState.renderTasks[i].operatorListChanged();
-        }
-      }
-    }, this);
-    messageHandler.on('UnsupportedFeature', this._onUnsupportedFeature, this);
-    messageHandler.on('JpegDecode', function (data) {
+    });
+    messageHandler.on('UnsupportedFeature', this._onUnsupportedFeature.bind(this));
+    messageHandler.on('JpegDecode', data => {
       if (this.destroyed) {
         return Promise.reject(new Error('Worker was destroyed'));
       }
@@ -1651,16 +1746,29 @@ class WorkerTransport {
 
         img.src = imageUrl;
       });
-    }, this);
-    messageHandler.on('FetchBuiltInCMap', function (data) {
+    });
+    messageHandler.on('FetchBuiltInCMap', (data, sink) => {
       if (this.destroyed) {
-        return Promise.reject(new Error('Worker was destroyed'));
+        sink.error(new Error('Worker was destroyed'));
+        return;
       }
 
-      return this.CMapReaderFactory.fetch({
-        name: data.name
-      });
-    }, this);
+      let fetched = false;
+
+      sink.onPull = () => {
+        if (fetched) {
+          sink.close();
+          return;
+        }
+
+        fetched = true;
+        this.CMapReaderFactory.fetch(data).then(function (builtInCMap) {
+          sink.enqueue(builtInCMap, 1, [builtInCMap.cMapData.buffer]);
+        }).catch(function (reason) {
+          sink.error(reason);
+        });
+      };
+    });
   }
 
   _onUnsupportedFeature({
@@ -1746,8 +1854,12 @@ class WorkerTransport {
     return this.messageHandler.sendWithPromise('GetPageMode', null);
   }
 
+  getViewerPreferences() {
+    return this.messageHandler.sendWithPromise('GetViewerPreferences', null);
+  }
+
   getOpenActionDestination() {
-    return this.messageHandler.sendWithPromise('getOpenActionDestination', null);
+    return this.messageHandler.sendWithPromise('GetOpenActionDestination', null);
   }
 
   getAttachments() {

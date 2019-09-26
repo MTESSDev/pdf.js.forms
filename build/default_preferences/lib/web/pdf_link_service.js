@@ -11,11 +11,13 @@ class PDFLinkService {
   constructor({
     eventBus,
     externalLinkTarget = null,
-    externalLinkRel = null
+    externalLinkRel = null,
+    externalLinkEnabled = true
   } = {}) {
     this.eventBus = eventBus || (0, _ui_utils.getGlobalEventBus)();
     this.externalLinkTarget = externalLinkTarget;
     this.externalLinkRel = externalLinkRel;
+    this.externalLinkEnabled = externalLinkEnabled;
     this.baseUrl = null;
     this.pdfDocument = null;
     this.pdfViewer = null;
@@ -293,12 +295,12 @@ class PDFLinkService {
       return;
     }
 
-    let refStr = pageRef.num + ' ' + pageRef.gen + ' R';
+    const refStr = pageRef.gen === 0 ? `${pageRef.num}R` : `${pageRef.num}R${pageRef.gen}`;
     this._pagesRefCache[refStr] = pageNum;
   }
 
   _cachedPageNumber(pageRef) {
-    let refStr = pageRef.num + ' ' + pageRef.gen + ' R';
+    const refStr = pageRef.gen === 0 ? `${pageRef.num}R` : `${pageRef.num}R${pageRef.gen}`;
     return this._pagesRefCache && this._pagesRefCache[refStr] || null;
   }
 
@@ -383,6 +385,7 @@ class SimpleLinkService {
   constructor() {
     this.externalLinkTarget = null;
     this.externalLinkRel = null;
+    this.externalLinkEnabled = true;
   }
 
   get pagesCount() {

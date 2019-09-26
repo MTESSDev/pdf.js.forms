@@ -135,6 +135,10 @@ const defaultOptions = {
     value: false,
     kind: OptionKind.API + OptionKind.PREFERENCE
   },
+  docBaseUrl: {
+    value: '',
+    kind: OptionKind.API
+  },
   isEvalSupported: {
     value: true,
     kind: OptionKind.API
@@ -145,10 +149,6 @@ const defaultOptions = {
   },
   pdfBug: {
     value: false,
-    kind: OptionKind.API
-  },
-  postMessageTransfers: {
-    value: true,
     kind: OptionKind.API
   },
   verbosity: {

@@ -1,0 +1,10 @@
+-- Get our branch ready
+* - Open github desktop and sync with origin after making sure current branch is mainegreen's pdf fork
+* - Click current branch dropdown and choose to merge upstream/master into branch
+* - Resolve conflicts and commit
+(see https://help.github.com/en/desktop/contributing-to-projects/syncing-your-branch for documentation)
+
+
+-- Setup local and build
+* - Do an npm install
+* - Build with gulp generic

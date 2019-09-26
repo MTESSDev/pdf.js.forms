@@ -54,7 +54,7 @@ class BaseFontLoader {
 
   async bind(font) {
     if (font.attached || font.missingFile) {
-      return;
+      return undefined;
     }
 
     font.attached = true;
@@ -78,7 +78,7 @@ class BaseFontLoader {
         }
       }
 
-      return;
+      return undefined;
     }
 
     const rule = font.createFontFaceRule();
@@ -87,7 +87,7 @@ class BaseFontLoader {
       this.insertRule(rule);
 
       if (this.isSyncFontLoadingSupported) {
-        return;
+        return undefined;
       }
 
       return new Promise(resolve => {
@@ -96,6 +96,8 @@ class BaseFontLoader {
         this._prepareFontLoadEvent([rule], [font], request);
       });
     }
+
+    return undefined;
   }
 
   _queueLoadingCallback(callback) {

@@ -746,12 +746,8 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
         if (fnId !== _util.OPS.dependency) {
           this[fnId].apply(this, argsArray[i]);
         } else {
-          var deps = argsArray[i];
-
-          for (var n = 0, nn = deps.length; n < nn; n++) {
-            var depObjId = deps[n];
-            var common = depObjId[0] === 'g' && depObjId[1] === '_';
-            var objsPool = common ? commonObjs : objs;
+          for (const depObjId of argsArray[i]) {
+            const objsPool = depObjId.startsWith('g_') ? commonObjs : objs;
 
             if (!objsPool.has(depObjId)) {
               objsPool.get(depObjId, continueCallback);
@@ -1061,15 +1057,20 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       consumePath = typeof consumePath !== 'undefined' ? consumePath : true;
       var ctx = this.ctx;
       var strokeColor = this.current.strokeColor;
-      ctx.lineWidth = Math.max(this.getSinglePixelWidth() * MIN_WIDTH_FACTOR, this.current.lineWidth);
       ctx.globalAlpha = this.current.strokeAlpha;
 
       if (strokeColor && strokeColor.hasOwnProperty('type') && strokeColor.type === 'Pattern') {
         ctx.save();
+        let transform = ctx.mozCurrentTransform;
+
+        const scale = _util.Util.singularValueDecompose2dScale(transform)[0];
+
         ctx.strokeStyle = strokeColor.getPattern(ctx, this);
+        ctx.lineWidth = Math.max(this.getSinglePixelWidth() * MIN_WIDTH_FACTOR, this.current.lineWidth * scale);
         ctx.stroke();
         ctx.restore();
       } else {
+        ctx.lineWidth = Math.max(this.getSinglePixelWidth() * MIN_WIDTH_FACTOR, this.current.lineWidth);
         ctx.stroke();
       }
 
@@ -1335,7 +1336,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       var fontSize = current.fontSize;
 
       if (fontSize === 0) {
-        return;
+        return undefined;
       }
 
       var ctx = this.ctx;
@@ -1759,7 +1760,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       this.restore();
     },
     paintJpegXObject: function CanvasGraphics_paintJpegXObject(objId, w, h) {
-      var domImage = this.objs.get(objId);
+      const domImage = this.processingType3 ? this.commonObjs.get(objId) : this.objs.get(objId);
 
       if (!domImage) {
         (0, _util.warn)('Dependent image isn\'t ready yet');
@@ -1868,7 +1869,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       }
     },
     paintImageXObject: function CanvasGraphics_paintImageXObject(objId) {
-      var imgData = this.objs.get(objId);
+      const imgData = this.processingType3 ? this.commonObjs.get(objId) : this.objs.get(objId);
 
       if (!imgData) {
         (0, _util.warn)('Dependent image isn\'t ready yet');
@@ -1878,7 +1879,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       this.paintInlineImageXObject(imgData);
     },
     paintImageXObjectRepeat: function CanvasGraphics_paintImageXObjectRepeat(objId, scaleX, scaleY, positions) {
-      var imgData = this.objs.get(objId);
+      const imgData = this.processingType3 ? this.commonObjs.get(objId) : this.objs.get(objId);
 
       if (!imgData) {
         (0, _util.warn)('Dependent image isn\'t ready yet');

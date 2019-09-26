@@ -222,8 +222,8 @@ class PDFFindController {
         const pageNumber = this._selected.pageIdx + 1;
         const linkService = this._linkService;
 
-        if (pageNumber >= 1 && pageNumber <= linkService.pagesCount && linkService.page !== pageNumber && linkService.isPageVisible && !linkService.isPageVisible(pageNumber)) {
-          break;
+        if (pageNumber >= 1 && pageNumber <= linkService.pagesCount && pageNumber !== linkService.page && !linkService.isPageVisible(pageNumber)) {
+          return true;
         }
 
         return false;

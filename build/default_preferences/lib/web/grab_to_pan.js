@@ -154,4 +154,6 @@ function isLeftMouseReleased(event) {
   if (isChrome15OrOpera15plus || isSafari6plus) {
     return event.which === 0;
   }
+
+  return false;
 }

@@ -95,7 +95,7 @@ if (!globalScope._pdfjsCompatibilityChecked) {
       return;
     }
 
-    require('core-js/fn/string/starts-with');
+    require('core-js/es/string/starts-with');
   })();
 
   (function checkStringEndsWith() {
@@ -103,7 +103,7 @@ if (!globalScope._pdfjsCompatibilityChecked) {
       return;
     }
 
-    require('core-js/fn/string/ends-with');
+    require('core-js/es/string/ends-with');
   })();
 
   (function checkStringIncludes() {
@@ -111,7 +111,7 @@ if (!globalScope._pdfjsCompatibilityChecked) {
       return;
     }
 
-    require('core-js/fn/string/includes');
+    require('core-js/es/string/includes');
   })();
 
   (function checkArrayIncludes() {
@@ -119,7 +119,7 @@ if (!globalScope._pdfjsCompatibilityChecked) {
       return;
     }
 
-    require('core-js/fn/array/includes');
+    require('core-js/es/array/includes');
   })();
 
   (function checkArrayFrom() {
@@ -127,7 +127,7 @@ if (!globalScope._pdfjsCompatibilityChecked) {
       return;
     }
 
-    require('core-js/fn/array/from');
+    require('core-js/es/array/from');
   })();
 
   (function checkObjectAssign() {
@@ -135,7 +135,7 @@ if (!globalScope._pdfjsCompatibilityChecked) {
       return;
     }
 
-    require('core-js/fn/object/assign');
+    require('core-js/es/object/assign');
   })();
 
   (function checkMathLog2() {
@@ -143,7 +143,7 @@ if (!globalScope._pdfjsCompatibilityChecked) {
       return;
     }
 
-    Math.log2 = require('core-js/fn/math/log2');
+    Math.log2 = require('core-js/es/math/log2');
   })();
 
   (function checkNumberIsNaN() {
@@ -151,7 +151,7 @@ if (!globalScope._pdfjsCompatibilityChecked) {
       return;
     }
 
-    Number.isNaN = require('core-js/fn/number/is-nan');
+    Number.isNaN = require('core-js/es/number/is-nan');
   })();
 
   (function checkNumberIsInteger() {
@@ -159,7 +159,7 @@ if (!globalScope._pdfjsCompatibilityChecked) {
       return;
     }
 
-    Number.isInteger = require('core-js/fn/number/is-integer');
+    Number.isInteger = require('core-js/es/number/is-integer');
   })();
 
   (function checkPromise() {
@@ -167,7 +167,11 @@ if (!globalScope._pdfjsCompatibilityChecked) {
       return;
     }
 
-    globalScope.Promise = require('core-js/fn/promise');
+    globalScope.Promise = require('core-js/es/promise/index');
+  })();
+
+  (function checkURL() {
+    globalScope.URL = require('core-js/web/url');
   })();
 
   (function checkWeakMap() {
@@ -175,7 +179,7 @@ if (!globalScope._pdfjsCompatibilityChecked) {
       return;
     }
 
-    globalScope.WeakMap = require('core-js/fn/weak-map');
+    globalScope.WeakMap = require('core-js/es/weak-map/index');
   })();
 
   (function checkWeakSet() {
@@ -183,15 +187,15 @@ if (!globalScope._pdfjsCompatibilityChecked) {
       return;
     }
 
-    globalScope.WeakSet = require('core-js/fn/weak-set');
+    globalScope.WeakSet = require('core-js/es/weak-set/index');
   })();
 
   (function checkStringCodePointAt() {
-    if (String.codePointAt) {
+    if (String.prototype.codePointAt) {
       return;
     }
 
-    String.codePointAt = require('core-js/fn/string/code-point-at');
+    require('core-js/es/string/code-point-at');
   })();
 
   (function checkStringFromCodePoint() {
@@ -199,7 +203,7 @@ if (!globalScope._pdfjsCompatibilityChecked) {
       return;
     }
 
-    String.fromCodePoint = require('core-js/fn/string/from-code-point');
+    String.fromCodePoint = require('core-js/es/string/from-code-point');
   })();
 
   (function checkSymbol() {
@@ -207,7 +211,7 @@ if (!globalScope._pdfjsCompatibilityChecked) {
       return;
     }
 
-    require('core-js/es6/symbol');
+    require('core-js/es/symbol/index');
   })();
 
   (function checkStringPadStart() {
@@ -215,7 +219,7 @@ if (!globalScope._pdfjsCompatibilityChecked) {
       return;
     }
 
-    require('core-js/fn/string/pad-start');
+    require('core-js/es/string/pad-start');
   })();
 
   (function checkStringPadEnd() {
@@ -223,7 +227,7 @@ if (!globalScope._pdfjsCompatibilityChecked) {
       return;
     }
 
-    require('core-js/fn/string/pad-end');
+    require('core-js/es/string/pad-end');
   })();
 
   (function checkObjectValues() {
@@ -231,6 +235,6 @@ if (!globalScope._pdfjsCompatibilityChecked) {
       return;
     }
 
-    Object.values = require('core-js/fn/object/values');
+    Object.values = require('core-js/es/object/values');
   })();
 }

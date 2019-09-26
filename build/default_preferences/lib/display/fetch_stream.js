@@ -44,7 +44,7 @@ class PDFFetchStream {
       return null;
     }
 
-    let reader = new PDFFetchStreamRangeReader(this, begin, end);
+    const reader = new PDFFetchStreamRangeReader(this, begin, end);
 
     this._rangeRequestReaders.push(reader);
 
@@ -56,7 +56,7 @@ class PDFFetchStream {
       this._fullRequestReader.cancel(reason);
     }
 
-    let readers = this._rangeRequestReaders.slice(0);
+    const readers = this._rangeRequestReaders.slice(0);
 
     readers.forEach(function (reader) {
       reader.cancel(reason);
@@ -73,8 +73,8 @@ class PDFFetchStreamReader {
     this._reader = null;
     this._loaded = 0;
     this._filename = null;
-    let source = stream.source;
-    this._withCredentials = source.withCredentials;
+    const source = stream.source;
+    this._withCredentials = source.withCredentials || false;
     this._contentLength = source.length;
     this._headersCapability = (0, _util.createPromiseCapability)();
     this._disableRange = source.disableRange || false;
@@ -92,8 +92,8 @@ class PDFFetchStreamReader {
     this._isRangeSupported = !source.disableRange;
     this._headers = new Headers();
 
-    for (let property in this._stream.httpHeaders) {
-      let value = this._stream.httpHeaders[property];
+    for (const property in this._stream.httpHeaders) {
+      const value = this._stream.httpHeaders[property];
 
       if (typeof value === 'undefined') {
         continue;
@@ -102,7 +102,7 @@ class PDFFetchStreamReader {
       this._headers.append(property, value);
     }
 
-    let url = source.url;
+    const url = source.url;
     fetch(url, createFetchOptions(this._headers, this._withCredentials, this._abortController)).then(response => {
       if (!(0, _network_utils.validateResponseStatus)(response.status)) {
         throw (0, _network_utils.createResponseStatusError)(response.status, url);
@@ -116,7 +116,7 @@ class PDFFetchStreamReader {
         return response.headers.get(name);
       };
 
-      let {
+      const {
         allowRangeRequests,
         suggestedLength
       } = (0, _network_utils.validateRangeRequestCapabilities)({
@@ -130,7 +130,7 @@ class PDFFetchStreamReader {
       this._filename = (0, _network_utils.extractFilenameFromHeader)(getResponseHeader);
 
       if (!this._isStreamingSupported && this._isRangeSupported) {
-        this.cancel(new _util.AbortException('streaming is disabled'));
+        this.cancel(new _util.AbortException('Streaming is disabled.'));
       }
     }).catch(this._headersCapability.reject);
     this.onProgress = null;
@@ -179,7 +179,7 @@ class PDFFetchStreamReader {
       });
     }
 
-    let buffer = new Uint8Array(value).buffer;
+    const buffer = new Uint8Array(value).buffer;
     return {
       value: buffer,
       done: false
@@ -203,8 +203,8 @@ class PDFFetchStreamRangeReader {
     this._stream = stream;
     this._reader = null;
     this._loaded = 0;
-    let source = stream.source;
-    this._withCredentials = source.withCredentials;
+    const source = stream.source;
+    this._withCredentials = source.withCredentials || false;
     this._readCapability = (0, _util.createPromiseCapability)();
     this._isStreamingSupported = !source.disableStream;
 
@@ -214,8 +214,8 @@ class PDFFetchStreamRangeReader {
 
     this._headers = new Headers();
 
-    for (let property in this._stream.httpHeaders) {
-      let value = this._stream.httpHeaders[property];
+    for (const property in this._stream.httpHeaders) {
+      const value = this._stream.httpHeaders[property];
 
       if (typeof value === 'undefined') {
         continue;
@@ -224,11 +224,9 @@ class PDFFetchStreamRangeReader {
       this._headers.append(property, value);
     }
 
-    let rangeStr = begin + '-' + (end - 1);
+    this._headers.append('Range', `bytes=${begin}-${end - 1}`);
 
-    this._headers.append('Range', 'bytes=' + rangeStr);
-
-    let url = source.url;
+    const url = source.url;
     fetch(url, createFetchOptions(this._headers, this._withCredentials, this._abortController)).then(response => {
       if (!(0, _network_utils.validateResponseStatus)(response.status)) {
         throw (0, _network_utils.createResponseStatusError)(response.status, url);
@@ -267,7 +265,7 @@ class PDFFetchStreamRangeReader {
       });
     }
 
-    let buffer = new Uint8Array(value).buffer;
+    const buffer = new Uint8Array(value).buffer;
     return {
       value: buffer,
       done: false

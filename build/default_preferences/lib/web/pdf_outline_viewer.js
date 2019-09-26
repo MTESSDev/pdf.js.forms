@@ -49,7 +49,8 @@ class PDFOutlineViewer {
       (0, _pdf.addLinkAttributes)(element, {
         url,
         target: newWindow ? _pdf.LinkTarget.BLANK : linkService.externalLinkTarget,
-        rel: linkService.externalLinkRel
+        rel: linkService.externalLinkRel,
+        enabled: linkService.externalLinkEnabled
       });
       return;
     }
@@ -84,9 +85,16 @@ class PDFOutlineViewer {
     }
   }
 
-  _addToggleButton(div) {
+  _addToggleButton(div, {
+    count,
+    items
+  }) {
     let toggler = document.createElement('div');
     toggler.className = 'outlineItemToggler';
+
+    if (count < 0 && Math.abs(count) === items.length) {
+      toggler.classList.add('outlineItemsHidden');
+    }
 
     toggler.onclick = evt => {
       evt.stopPropagation();
@@ -143,10 +151,9 @@ class PDFOutlineViewer {
     let hasAnyNesting = false;
 
     while (queue.length > 0) {
-      let levelData = queue.shift();
+      const levelData = queue.shift();
 
-      for (let i = 0, len = levelData.items.length; i < len; i++) {
-        let item = levelData.items[i];
+      for (const item of levelData.items) {
         let div = document.createElement('div');
         div.className = 'outlineItem';
         let element = document.createElement('a');
@@ -161,7 +168,7 @@ class PDFOutlineViewer {
         if (item.items.length > 0) {
           hasAnyNesting = true;
 
-          this._addToggleButton(div);
+          this._addToggleButton(div, item);
 
           let itemsDiv = document.createElement('div');
           itemsDiv.className = 'outlineItems';
@@ -179,6 +186,7 @@ class PDFOutlineViewer {
 
     if (hasAnyNesting) {
       this.container.classList.add('outlineWithDeepNesting');
+      this.lastToggleIsShow = fragment.querySelectorAll('.outlineItemsHidden').length === 0;
     }
 
     this.container.appendChild(fragment);

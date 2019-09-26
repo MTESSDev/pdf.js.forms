@@ -5,6 +5,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.FirefoxPrintService = FirefoxPrintService;
 
+var _app_options = require("./app_options");
+
 var _ui_utils = require("./ui_utils");
 
 var _app = require("./app");
@@ -13,7 +15,7 @@ var _pdf = require("../pdf");
 
 function composePage(pdfDocument, pageNumber, size, printContainer) {
   let canvas = document.createElement('canvas');
-  const PRINT_RESOLUTION = 150;
+  const PRINT_RESOLUTION = _app_options.AppOptions.get('printResolution') || 150;
   const PRINT_UNITS = PRINT_RESOLUTION / 72.0;
   canvas.width = Math.floor(size.width * PRINT_UNITS);
   canvas.height = Math.floor(size.height * PRINT_UNITS);
@@ -62,18 +64,23 @@ function FirefoxPrintService(pdfDocument, pagesOverview, printContainer) {
 
 FirefoxPrintService.prototype = {
   layout() {
-    let pdfDocument = this.pdfDocument;
-    let printContainer = this.printContainer;
-    let body = document.querySelector('body');
+    const {
+      pdfDocument,
+      pagesOverview,
+      printContainer
+    } = this;
+    const body = document.querySelector('body');
     body.setAttribute('data-pdfjsprinting', true);
 
-    for (let i = 0, ii = this.pagesOverview.length; i < ii; ++i) {
-      composePage(pdfDocument, i + 1, this.pagesOverview[i], printContainer);
+    for (let i = 0, ii = pagesOverview.length; i < ii; ++i) {
+      composePage(pdfDocument, i + 1, pagesOverview[i], printContainer);
     }
   },
 
   destroy() {
     this.printContainer.textContent = '';
+    const body = document.querySelector('body');
+    body.removeAttribute('data-pdfjsprinting');
   }
 
 };

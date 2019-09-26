@@ -10,7 +10,7 @@ exports.isValidFetchUrl = isValidFetchUrl;
 exports.loadScript = loadScript;
 exports.deprecated = deprecated;
 exports.releaseImageResources = releaseImageResources;
-exports.DummyStatTimer = exports.StatTimer = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.LinkTarget = exports.RenderingCancelledException = exports.PageViewport = void 0;
+exports.PDFDateString = exports.DummyStatTimer = exports.StatTimer = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.LinkTarget = exports.RenderingCancelledException = exports.PageViewport = void 0;
 
 var _util = require("../shared/util");
 
@@ -309,16 +309,27 @@ const LinkTargetStringMap = ['', '_self', '_blank', '_parent', '_top'];
 function addLinkAttributes(link, {
   url,
   target,
-  rel
+  rel,
+  enabled = true
 } = {}) {
-  link.href = link.title = url ? (0, _util.removeNullCharacters)(url) : '';
+  (0, _util.assert)(url && typeof url === 'string', 'addLinkAttributes: A valid "url" parameter must provided.');
+  const urlNullRemoved = (0, _util.removeNullCharacters)(url);
 
-  if (url) {
-    const LinkTargetValues = Object.values(LinkTarget);
-    const targetIndex = LinkTargetValues.includes(target) ? target : LinkTarget.NONE;
-    link.target = LinkTargetStringMap[targetIndex];
-    link.rel = typeof rel === 'string' ? rel : DEFAULT_LINK_REL;
+  if (enabled) {
+    link.href = link.title = urlNullRemoved;
+  } else {
+    link.href = '';
+    link.title = `Disabled: ${urlNullRemoved}`;
+
+    link.onclick = () => {
+      return false;
+    };
   }
+
+  const LinkTargetValues = Object.values(LinkTarget);
+  const targetIndex = LinkTargetValues.includes(target) ? target : LinkTarget.NONE;
+  link.target = LinkTargetStringMap[targetIndex];
+  link.rel = typeof rel === 'string' ? rel : DEFAULT_LINK_REL;
 }
 
 function getFilenameFromUrl(url) {
@@ -413,7 +424,7 @@ function isValidFetchUrl(url, baseUrl) {
   try {
     const {
       protocol
-    } = baseUrl ? new _util.URL(url, baseUrl) : new _util.URL(url);
+    } = baseUrl ? new URL(url, baseUrl) : new URL(url);
     return protocol === 'http:' || protocol === 'https:';
   } catch (ex) {
     return false;
@@ -442,9 +453,59 @@ function releaseImageResources(img) {
   (0, _util.assert)(img instanceof Image, 'Invalid `img` parameter.');
   const url = img.src;
 
-  if (typeof url === 'string' && url.startsWith('blob:') && _util.URL.revokeObjectURL) {
-    _util.URL.revokeObjectURL(url);
+  if (typeof url === 'string' && url.startsWith('blob:') && URL.revokeObjectURL) {
+    URL.revokeObjectURL(url);
   }
 
   img.removeAttribute('src');
 }
+
+let pdfDateStringRegex;
+
+class PDFDateString {
+  static toDateObject(input) {
+    if (!input || !(0, _util.isString)(input)) {
+      return null;
+    }
+
+    if (!pdfDateStringRegex) {
+      pdfDateStringRegex = new RegExp('^D:' + '(\\d{4})' + '(\\d{2})?' + '(\\d{2})?' + '(\\d{2})?' + '(\\d{2})?' + '(\\d{2})?' + '([Z|+|-])?' + '(\\d{2})?' + '\'?' + '(\\d{2})?' + '\'?');
+    }
+
+    const matches = pdfDateStringRegex.exec(input);
+
+    if (!matches) {
+      return null;
+    }
+
+    const year = parseInt(matches[1], 10);
+    let month = parseInt(matches[2], 10);
+    month = month >= 1 && month <= 12 ? month - 1 : 0;
+    let day = parseInt(matches[3], 10);
+    day = day >= 1 && day <= 31 ? day : 1;
+    let hour = parseInt(matches[4], 10);
+    hour = hour >= 0 && hour <= 23 ? hour : 0;
+    let minute = parseInt(matches[5], 10);
+    minute = minute >= 0 && minute <= 59 ? minute : 0;
+    let second = parseInt(matches[6], 10);
+    second = second >= 0 && second <= 59 ? second : 0;
+    const universalTimeRelation = matches[7] || 'Z';
+    let offsetHour = parseInt(matches[8], 10);
+    offsetHour = offsetHour >= 0 && offsetHour <= 23 ? offsetHour : 0;
+    let offsetMinute = parseInt(matches[9], 10) || 0;
+    offsetMinute = offsetMinute >= 0 && offsetMinute <= 59 ? offsetMinute : 0;
+
+    if (universalTimeRelation === '-') {
+      hour += offsetHour;
+      minute += offsetMinute;
+    } else if (universalTimeRelation === '+') {
+      hour -= offsetHour;
+      minute -= offsetMinute;
+    }
+
+    return new Date(Date.UTC(year, month, day, hour, minute, second));
+  }
+
+}
+
+exports.PDFDateString = PDFDateString;
