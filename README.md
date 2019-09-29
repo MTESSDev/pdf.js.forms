@@ -68,7 +68,7 @@ as unlimited. An example where we want a maximum width of 800, but don't care ho
 The values in the form elements may be overriden at render time by passing in an object
 with alternate values.
 
-    let values {'ADDR1': '21 Jump Street', 'CITY': 'San Marino'};
+    let values = {'ADDR1': '21 Jump Street', 'CITY': 'San Marino'};
     pdfjsViewer.FormFunctionality.render(800,800,page,target,values);
 
 A page may be rendered without rendering the form at all, or you can render the form non-interactively,
