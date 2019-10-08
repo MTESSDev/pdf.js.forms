@@ -23,9 +23,10 @@ components. Both must be built and included to use pdf.js.forms. This fork
 
 To utilize this library you must bundle with your application the files in build\generic\build and
 build\components. If not packing using webpack or some alternative you must serve the following files:
-* build\generic\components\pdf_forms.css
-* build\generic\components\pdf_viewer.js
-* build\generic\build\pdf.js
+* build\components\pdf_forms.css
+* build\generic\build\pdf.js 
+* build\components\pdf_viewer.js 
+pdf.js must be loaded before pdf_viewer.js
 
 Be sure to include build\generic\build\pdf.worker.js in the same directory as pdf.js or specify it's 
 location like so
@@ -131,7 +132,7 @@ these widgets can help you code your own renderers if you wish.
             'Group5': 'Choice1',
         };
         // Fetch the PDF document from the URL using promises.
-        let loadingTask = pdfjsViewer.getDocument(DEFAULT_URL);
+        let loadingTask = pdfjsLib.getDocument(DEFAULT_URL);
         loadingTask.promise.then(function(doc) {
             return doc.getPage(pageNumber).then(function (pdfPage) {
                 return pdfjsViewer.FormFunctionality.render(1094, null, pdfPage, container, values);
