@@ -320,8 +320,7 @@ const PDFDocumentLoadingTask = function PDFDocumentLoadingTaskClosure() {
     }
 
     then(onFulfilled, onRejected) {
-      (0, _display_utils.deprecated)('PDFDocumentLoadingTask.then method, ' + 'use the `promise` getter instead.');
-      return this.promise.then.apply(this.promise, arguments);
+      throw new Error('Removed API method: ' + 'PDFDocumentLoadingTask.then, use the `promise` getter instead.');
     }
 
   }
@@ -544,10 +543,7 @@ class PDFPageProxy {
     dontFlip = false
   } = {}) {
     if (arguments.length > 1 || typeof arguments[0] === 'number') {
-      (0, _display_utils.deprecated)('getViewport is called with obsolete arguments.');
-      scale = arguments[0];
-      rotation = typeof arguments[1] === 'number' ? arguments[1] : this.rotate;
-      dontFlip = typeof arguments[2] === 'boolean' ? arguments[2] : false;
+      throw new Error('PDFPageProxy.getViewport is called with obsolete arguments.');
     }
 
     return new _display_utils.PageViewport({
@@ -1018,7 +1014,15 @@ class LoopbackPort {
           p = Object.getPrototypeOf(p);
         }
 
-        if (typeof desc.value === 'undefined' || typeof desc.value === 'function') {
+        if (typeof desc.value === 'undefined') {
+          continue;
+        }
+
+        if (typeof desc.value === 'function') {
+          if (value.hasOwnProperty && value.hasOwnProperty(i)) {
+            throw new Error(`LoopbackPort.postMessage - cannot clone: ${value[i]}`);
+          }
+
           continue;
         }
 
@@ -1996,8 +2000,7 @@ class RenderTask {
   }
 
   then(onFulfilled, onRejected) {
-    (0, _display_utils.deprecated)('RenderTask.then method, use the `promise` getter instead.');
-    return this.promise.then.apply(this.promise, arguments);
+    throw new Error('Removed API method: ' + 'RenderTask.then, use the `promise` getter instead.');
   }
 
 }

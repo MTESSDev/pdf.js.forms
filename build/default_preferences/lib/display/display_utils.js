@@ -283,17 +283,13 @@ class PageViewport {
 
 exports.PageViewport = PageViewport;
 
-const RenderingCancelledException = function RenderingCancelledException() {
-  function RenderingCancelledException(msg, type) {
-    this.message = msg;
+class RenderingCancelledException extends _util.BaseException {
+  constructor(msg, type) {
+    super(msg);
     this.type = type;
   }
 
-  RenderingCancelledException.prototype = new Error();
-  RenderingCancelledException.prototype.name = 'RenderingCancelledException';
-  RenderingCancelledException.constructor = RenderingCancelledException;
-  return RenderingCancelledException;
-}();
+}
 
 exports.RenderingCancelledException = RenderingCancelledException;
 const LinkTarget = {

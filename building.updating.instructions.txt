@@ -1,10 +1,34 @@
 -- Get our branch ready
-* - Open github desktop and sync with origin after making sure current branch is mainegreen's pdf fork
-* - Click current branch dropdown and choose to merge upstream/master into branch
+* - Open github desktop and sync with origin (fetch origin) after making sure current branch is mainegreen's pdf fork
+* - Click current branch dropdown, click 'Choose a branch to merge into master' and choose to merge upstream/master into branch
 * - Resolve conflicts and commit
+** -- Make sure core/annotation.js still has groupingName created and set as fullName on data in class 'WidgetAnnotation'
+** -- Do a diff of src/display/annotation_layer.js and src/display/annotation_layer_forms.js where you are merging annotation_layer into
+      annotation_layer_forms. annotation_layer is the base pdf.js library file and annotation_layer_forms is our special forked version.
+      This might be the most complicated part of the process.
 (see https://help.github.com/en/desktop/contributing-to-projects/syncing-your-branch for documentation)
-
 
 -- Setup local and build
 * - Do an npm install
 * - Build with gulp generic
+* - Build with gulp components
+* - Build with gulp minified
+* - Copy build\generic\build contents to test_forms\scripts
+* - Copy build\components contents to test_forms\scripts
+* - Test test_forms\index.html
+* - If that passes, update pdfjs-forms-dist (NEXT STEP)
+
+-- Updating pdfjs-forms-dist
+* - Copy the following build results from pdfs.js.forms to pdfjs-forms-dist according to the following instructions:
+** -- Copy build\generic\build contents (all files) to \build
+** -- Copy build\components contents (all files) to \build
+** -- Copy build\minified\build\pdfj.js to \build\pdf.min.js
+** -- Copy build\minified\build\pdfj.worker.js to \build\pdf.worker.min.js
+** -- Copy build\generic\web\cmaps to \build\cmaps
+** -- Update pdfjs-forms-dist package.json's version to pdfjs.forms pdfjs.config's stableVersion
+
+* Commit both libraries to github
+
+* run 'npm publish' in pdfjs-forms-dist
+
+And you're done!

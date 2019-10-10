@@ -18,6 +18,6 @@
   if (isReadableStreamSupported) {
     exports.ReadableStream = ReadableStream;
   } else {
-    exports.ReadableStream = require('../../external/streams/streams-lib').ReadableStream;
+    exports.ReadableStream = require('web-streams-polyfill/dist/ponyfill').ReadableStream;
   }
 }

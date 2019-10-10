@@ -12,27 +12,28 @@ function _createViewport(width, height, page, dpiRatio) {
     let actualHeight = page._pageInfo.view[3];
     let scale;
     let viewport;
-    if (typeof width == 'number' && typeof height != 'number') {
-        scale = width / actualWidth;
-        viewport = page.getViewport(scale * dpiRatio);
+    if (typeof width === 'number' && typeof height !== 'number') {
+        scale = (width / actualWidth) * dpiRatio;
+        viewport = page.getViewport({ scale, });
         return viewport;
     }
-    if (typeof width != 'number' && typeof height == 'number') {
-        scale = height / actualHeight;
-        viewport = page.getViewport(scale * dpiRatio);
+    if (typeof width !== 'number' && typeof height === 'number') {
+        scale = (height / actualHeight) * dpiRatio;
+        viewport = page.getViewport({ scale, });
         return viewport;
     }
-    if (typeof width == 'number' && typeof height == 'number') {
+    if (typeof width === 'number' && typeof height === 'number') {
         scale = height / actualHeight;
         if (scale * actualWidth > width) {
-            scale = width / actualWidth;
-            viewport = page.getViewport(scale * dpiRatio);
+            scale = (width / actualWidth) * dpiRatio;
+            viewport = page.getViewport({ scale, });
             return viewport;
         }
-        viewport = page.getViewport(scale * dpiRatio);
+        scale = scale * dpiRatio;
+        viewport = page.getViewport({ scale, });
         return viewport;
     }
-    viewport = page.getViewport(dpiRatio);
+    viewport = page.getViewport({ dpiRatio, });
     return viewport;
 }
 

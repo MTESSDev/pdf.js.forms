@@ -3341,6 +3341,7 @@ exports.isValidScrollMode = isValidScrollMode;
 exports.isValidSpreadMode = isValidSpreadMode;
 exports.isPortraitOrientation = isPortraitOrientation;
 exports.getGlobalEventBus = getGlobalEventBus;
+exports.clamp = clamp;
 exports.getPDFFileNameFromURL = getPDFFileNameFromURL;
 exports.noContextMenuHandler = noContextMenuHandler;
 exports.parseQueryString = parseQueryString;
@@ -9379,22 +9380,14 @@ function () {
         return false;
       }
 
-      var maxWidth = Math.floor(this.outerContainerWidth / 2);
+      var newWidth = (0, _ui_utils.clamp)(width, SIDEBAR_MIN_WIDTH, Math.floor(this.outerContainerWidth / 2));
 
-      if (width > maxWidth) {
-        width = maxWidth;
-      }
-
-      if (width < SIDEBAR_MIN_WIDTH) {
-        width = SIDEBAR_MIN_WIDTH;
-      }
-
-      if (width === this._width) {
+      if (newWidth === this._width) {
         return false;
       }
 
-      this._width = width;
-      this.doc.style.setProperty(SIDEBAR_WIDTH_VAR, "".concat(width, "px"));
+      this._width = newWidth;
+      this.doc.style.setProperty(SIDEBAR_WIDTH_VAR, "".concat(newWidth, "px"));
       return true;
     }
   }, {
@@ -9445,29 +9438,35 @@ function () {
         _this2.sidebarOpen = !!(evt && evt.view);
       });
       this.eventBus.on('resize', function (evt) {
-        if (evt && evt.source === window) {
-          _this2._outerContainerWidth = null;
-
-          if (_this2._width) {
-            if (_this2.sidebarOpen) {
-              _this2.outerContainer.classList.add(SIDEBAR_RESIZING_CLASS);
-
-              var updated = _this2._updateWidth(_this2._width);
-
-              Promise.resolve().then(function () {
-                _this2.outerContainer.classList.remove(SIDEBAR_RESIZING_CLASS);
-
-                if (updated) {
-                  _this2.eventBus.dispatch('resize', {
-                    source: _this2
-                  });
-                }
-              });
-            } else {
-              _this2._updateWidth(_this2._width);
-            }
-          }
+        if (!evt || evt.source !== window) {
+          return;
         }
+
+        _this2._outerContainerWidth = null;
+
+        if (!_this2._width) {
+          return;
+        }
+
+        if (!_this2.sidebarOpen) {
+          _this2._updateWidth(_this2._width);
+
+          return;
+        }
+
+        _this2.outerContainer.classList.add(SIDEBAR_RESIZING_CLASS);
+
+        var updated = _this2._updateWidth(_this2._width);
+
+        Promise.resolve().then(function () {
+          _this2.outerContainer.classList.remove(SIDEBAR_RESIZING_CLASS);
+
+          if (updated) {
+            _this2.eventBus.dispatch('resize', {
+              source: _this2
+            });
+          }
+        });
       });
     }
   }, {
