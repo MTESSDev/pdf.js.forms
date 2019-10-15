@@ -26,6 +26,7 @@ build\components. If not packing using webpack or some alternative you must serv
 * build\components\pdf_forms.css
 * build\generic\build\pdf.js 
 * build\components\pdf_viewer.js 
+
 pdf.js must be loaded before pdf_viewer.js
 
 Be sure to include build\generic\build\pdf.worker.js in the same directory as pdf.js or specify it's 
