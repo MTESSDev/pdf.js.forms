@@ -425,7 +425,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
         }
 
         if (_postCreationTweak) {
-          _postCreationTweak(fieldTypes.TEXT, this.data.correctedId, element);
+          _postCreationTweak(fieldTypes.TEXT, this.data, element);
         }
       }
     } else {

@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.101';
-var pdfjsBuild = 'd0c9f6a4';
+var pdfjsVersion = '2.4.0';
+var pdfjsBuild = '';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.101',
+    apiVersion: '2.4.0',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.101';
+var version = '2.4.0';
 exports.version = version;
-var build = 'd0c9f6a4';
+var build = '';
 exports.build = build;
 
 /***/ }),
@@ -20173,7 +20173,7 @@ function (_WidgetAnnotationElem) {
           }
 
           if (_postCreationTweak) {
-            _postCreationTweak(fieldTypes.TEXT, this.data.correctedId, element);
+            _postCreationTweak(fieldTypes.TEXT, this.data, element);
           }
         }
       } else {

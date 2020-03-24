@@ -20,7 +20,7 @@
     </div>
     <script>
         window.onload = function () {
-            //pdfjsLib.GlobalWorkerOptions.workerSrc = 'scripts/pdf.worker.js';
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'scripts/pdf.worker.js';
 
             var DEFAULT_URL = 'pdfs/jax9.pdf';
             var DEFAULT_SCALE = 1.0;
@@ -77,10 +77,9 @@
                             pdfjsViewer.FormFunctionality.setPostRenderHook(function() {
                                 console.log('1');
                             });
-                            var pants = 0;
-                            pdfjsViewer.FormFunctionality.setPostCreationTweak(function (fieldType, elementId, element) {
-                                element.title = 'pants #' + pants;
-                                pants++;
+                            
+                            pdfjsViewer.FormFunctionality.setPostCreationTweak(function (fieldType, elementId, element) {                            
+                              element.title = elementId.alternativeText;
                             })
                             return pdfjsViewer.FormFunctionality.render(1094, null, pdfPage, container, values, {hideForms: false});
                         });

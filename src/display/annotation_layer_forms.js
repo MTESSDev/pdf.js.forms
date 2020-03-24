@@ -528,7 +528,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
                     element.style.letterSpacing = `calc(${combWidth}px - 1ch)`;
                 }
                 if (_postCreationTweak) {
-                    _postCreationTweak(fieldTypes.TEXT, this.data.correctedId, element);
+                    _postCreationTweak(fieldTypes.TEXT, this.data, element);
                 }
             }
         } else {
