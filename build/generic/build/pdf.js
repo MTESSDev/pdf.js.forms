@@ -20274,7 +20274,7 @@ function (_WidgetAnnotationElem2) {
         element.value = this.data.exportValue;
 
         if (_postCreationTweak) {
-          _postCreationTweak(fieldTypes.CHECK_BOX, this.data.correctedId, element);
+          _postCreationTweak(fieldTypes.CHECK_BOX, this.data, element);
         }
       }
 
@@ -20334,7 +20334,7 @@ function (_WidgetAnnotationElem3) {
         }
 
         if (_postCreationTweak) {
-          _postCreationTweak(fieldTypes.RADIO_BUTTON, this.data.correctedId, element);
+          _postCreationTweak(fieldTypes.RADIO_BUTTON, this.data, element);
         }
       }
 
@@ -20456,7 +20456,7 @@ function (_WidgetAnnotationElem4) {
       }
 
       if (_postCreationTweak) {
-        _postCreationTweak(fieldTypes.DROP_DOWN, this.data.correctedId, selectElement);
+        _postCreationTweak(fieldTypes.DROP_DOWN, this.data, selectElement);
       }
 
       this.container.appendChild(selectElement);

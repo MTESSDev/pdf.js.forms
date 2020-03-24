@@ -515,7 +515,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
       element.value = this.data.exportValue;
 
       if (_postCreationTweak) {
-        _postCreationTweak(fieldTypes.CHECK_BOX, this.data.correctedId, element);
+        _postCreationTweak(fieldTypes.CHECK_BOX, this.data, element);
       }
     }
 
@@ -565,7 +565,7 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement {
       }
 
       if (_postCreationTweak) {
-        _postCreationTweak(fieldTypes.RADIO_BUTTON, this.data.correctedId, element);
+        _postCreationTweak(fieldTypes.RADIO_BUTTON, this.data, element);
       }
     }
 
@@ -642,7 +642,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
     }
 
     if (_postCreationTweak) {
-      _postCreationTweak(fieldTypes.DROP_DOWN, this.data.correctedId, selectElement);
+      _postCreationTweak(fieldTypes.DROP_DOWN, this.data, selectElement);
     }
 
     this.container.appendChild(selectElement);
