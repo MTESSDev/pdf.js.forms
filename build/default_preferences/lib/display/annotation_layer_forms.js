@@ -11,6 +11,7 @@ var _util = require("../shared/util");
 
 let _tabIndex = 1;
 let _formValues = [];
+let _formOptions = [];
 let _formFields = {
   'CHECK_BOX': {},
   'TEXT': {},
@@ -162,7 +163,6 @@ class AnnotationElement {
     const rect = _util.Util.normalizeRect([data.rect[0], page.view[3] - data.rect[1] + page.view[1], data.rect[2], page.view[3] - data.rect[3] + page.view[1]]);
 
     container.style.transform = `matrix(${viewport.transform.join(',')})`;
-    container.style.transformOrigin = `-${rect[0]}px -${rect[1]}px`;
 
     if (!ignoreBorder && data.borderStyle.width > 0) {
       container.style.borderWidth = `${data.borderStyle.width}px`;
@@ -206,12 +206,17 @@ class AnnotationElement {
       }
 
       if (data.color) {
-        container.style.borderColor = _util.Util.makeCssRgb(data.color[0] | 0, data.color[1] | 0, data.color[2] | 0);
+        container.style.backgroundColor = _util.Util.makeCssRgb(data.color[0] | 0, data.color[1] | 0, data.color[2] | 0);
+      }
+
+      if (data.borderStyle.borderColor) {
+        container.style.borderColor = _util.Util.makeCssRgb(data.borderStyle.borderColor[0] | 0, data.borderStyle.borderColor[1] | 0, data.borderStyle.borderColor[2] | 0);
       } else {
         container.style.borderWidth = 0;
       }
     }
 
+    container.style.transformOrigin = `-${rect[0]}px -${rect[1]}px`;
     container.style.left = `${rect[0]}px`;
     container.style.top = `${rect[1]}px`;
     container.style.width = `${width}px`;
@@ -364,7 +369,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
     if (this.renderInteractiveForms) {
       let creationRoutine = idClosureOverrides[this.data.correctedId] || genericClosureOverrides[fieldTypes.TEXT] || false;
 
-      if (creationRoutine != false) {
+      if (creationRoutine !== false) {
         element = creationRoutine(this);
       } else {
         let value = this.data.fieldValue;
@@ -377,14 +382,14 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
 
         this.data.value = value;
 
-        if (this.data.isGroupMember && this.data.groupingId != 0) {
+        if (this.data.isGroupMember && this.data.groupingId !== 0) {
           this.data.readOnly = true;
         }
 
         if (this.data.multiLine) {
           element = document.createElement('textarea');
           element.textContent = value;
-          element.style.resize = "none";
+          element.style.resize = 'none';
         } else {
           element = document.createElement('input');
 
@@ -401,13 +406,13 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
 
         if (this.data.isGroupMember) {
           element.setAttribute('data-group', this.data.correctedId);
-          element.setAttribute('data-group-slave', this.data.groupingId != "0" ? 1 : 0);
+          element.setAttribute('data-group-slave', this.data.groupingId !== '0' ? 1 : 0);
         }
 
         element.disabled = this.data.readOnly;
 
         if (this.data.readOnly) {
-          element.style.cursor = "not-allowed";
+          element.style.cursor = 'not-allowed';
         }
 
         if (this.data.maxLen !== null) {
@@ -416,6 +421,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
 
         element.id = !this.data.isGroupMember || this.data.groupingId == 0 ? this.data.correctedId : this.data.id;
         element.name = this.data.correctedId;
+        element.title = this.data.title;
 
         if (this.data.comb) {
           const fieldWidth = this.data.rect[2] - this.data.rect[0];
@@ -423,6 +429,8 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
           element.classList.add('comb');
           element.style.letterSpacing = `calc(${combWidth}px - 1ch)`;
         }
+
+        AnnotationLayer.addJSActions(element, this.data, this.container, this.data.rect[3] - this.data.rect[1]);
 
         if (_postCreationTweak) {
           _postCreationTweak(fieldTypes.TEXT, this.data, element);
@@ -470,7 +478,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
 
 class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
   constructor(parameters) {
-    super(parameters, parameters.renderInteractiveForms);
+    super(parameters, parameters.renderInteractiveForms, parameters.ignoreBorder);
   }
 
   render() {
@@ -478,7 +486,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
     let creationRoutine = idClosureOverrides[this.data.correctedId] || genericClosureOverrides[fieldTypes.TEXT] || false;
     let element = null;
 
-    if (creationRoutine != false) {
+    if (creationRoutine !== false) {
       element = creationRoutine(this);
     } else {
       element = document.createElement('input');
@@ -486,7 +494,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
       element.type = 'checkbox';
       let selected = false;
 
-      if (this.data.fieldValue && this.data.fieldValue !== 'Off') {
+      if (this.data.fieldValue && this.data.fieldValue === this.data.exportValue) {
         selected = true;
       }
 
@@ -495,7 +503,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
       switch (typeof v) {
         case 'string':
           {
-            selected = item.options.indexOf(v) > 0;
+            selected = v === this.data.exportValue;
             break;
           }
 
@@ -512,7 +520,12 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
 
       element.id = 'correctedId' in this.data ? this.data.correctedId : this.data.id;
       element.name = 'correctedId' in this.data ? this.data.correctedId : this.data.id;
+      element.title = this.data.title;
       element.value = this.data.exportValue;
+
+      if (this.renderInteractiveForms) {
+        AnnotationLayer.addJSActions(element, this.data, this.container, this.data.rect[3] - this.data.rect[1]);
+      }
 
       if (_postCreationTweak) {
         _postCreationTweak(fieldTypes.CHECK_BOX, this.data, element);
@@ -1235,6 +1248,7 @@ class AnnotationLayer {
         downloadManager: parameters.downloadManager,
         imageResourcesPath: parameters.imageResourcesPath || '',
         renderInteractiveForms: parameters.renderInteractiveForms || false,
+        ignoreBorder: parameters.ignoreBorder || true,
         svgFactory: new _display_utils.DOMSVGFactory()
       });
       let elementClass = element.constructor.name;
@@ -1243,7 +1257,7 @@ class AnnotationLayer {
 
       switch (elementClass) {
         case 'CheckboxWidgetAnnotationElement':
-          if (groupingId == 0) {
+          if (groupingId === 0) {
             _formFields[fieldTypes.CHECK_BOX][correctedId] = element;
           }
 
@@ -1334,6 +1348,11 @@ class AnnotationLayer {
     _formValues = values;
   }
 
+  static setOptions(options) {
+    options.validationMessages = options.validationMessages || [];
+    _formOptions = options;
+  }
+
   static clearControlRendersById() {
     idClosureOverrides = {};
   }
@@ -1363,6 +1382,71 @@ class AnnotationLayer {
       } catch (e) {}
     } else {
       idClosureOverrides[id] = closure;
+    }
+  }
+
+  static addJSActions(element, data, container, size) {
+    element.setAttribute('data-val', 'true');
+    let errorDiv = document.createElement('div');
+    errorDiv.className = 'field-validation-valid message-erreur-champ';
+    errorDiv.setAttribute('data-valmsg-for', element.id);
+    errorDiv.setAttribute('data-valmsg-replace', 'true');
+    errorDiv.setAttribute('style', 'top:' + size + 'px');
+    container.appendChild(errorDiv);
+
+    if (data.required) {
+      const msg = (_formOptions.validationMessages.required || 'Field {0} is required.').replace('{0}', data.alternativeText);
+      element.setAttribute('data-val-required', msg);
+    }
+
+    if (data.action.JS) {
+      element.setAttribute('data-js-actionjs', btoa(data.action.JS));
+      element.addEventListener('click', function (event) {
+        let data = event.target.getAttribute('data-js-actionjs');
+        pdfjsViewer.FormFunctionality.onKeyPress(event, data);
+      });
+    }
+
+    if (data.action.JSFormat) {
+      element.setAttribute('data-val-pdfformat', 'Format incorrect');
+      element.setAttribute('data-val-pdfformat-valid', 'true');
+      element.setAttribute('data-js-action-format', btoa(data.action.JSFormat));
+      element.addEventListener('blur', function (event) {
+        let data = event.target.getAttribute('data-js-action-format');
+        pdfjsViewer.FormFunctionality.onKeyPress(event, data, 'format');
+      });
+    }
+
+    if (data.action.JSFo) {
+      element.setAttribute('data-js-action-fo', btoa(data.action.JSFo));
+      element.addEventListener('focus', function (event) {
+        let data = event.target.getAttribute('data-js-action-fo');
+        pdfjsViewer.FormFunctionality.onKeyPress(event, data);
+      });
+    }
+
+    if (data.action.JSBl) {
+      element.setAttribute('data-js-action-bl', btoa(data.action.JSBl));
+      element.addEventListener('blur', function (event) {
+        let data = event.target.getAttribute('data-js-action-bl');
+        pdfjsViewer.FormFunctionality.onKeyPress(event, data);
+      });
+    }
+
+    if (data.action.JSU) {
+      element.setAttribute('data-js-action-u', btoa(data.action.JSU));
+      element.addEventListener('mouseup', function (event) {
+        let data = event.target.getAttribute('data-js-action-u');
+        pdfjsViewer.FormFunctionality.onKeyPress(event, data);
+      });
+    }
+
+    if (data.action.JSKeypress) {
+      element.setAttribute('data-js-action-keypress', btoa(data.action.JSKeypress));
+      element.addEventListener('keypress', function (event) {
+        let data = event.target.getAttribute('data-js-action-keypress');
+        pdfjsViewer.FormFunctionality.onKeyPress(event, data);
+      });
     }
   }
 

@@ -4,8 +4,19 @@
     <meta charset="UTF-8">
     <title>Test Pdf Forms - Merge</title>
     <link rel="stylesheet" href="scripts/pdf_viewer.css">
-    <script src="scripts/pdf.js"></script>
-    <script src="scripts/pdf_viewer.js"></script>
+    <script src="../build/generic/build/pdf.js"></script>
+
+    <script src="scripts/app.js"></script>
+    <script src="scripts/util.js"></script>
+    <script src="scripts/sprintf.js"></script>
+    <script src="scripts/Field.js"></script>
+
+     <!--<script src="scripts/Field.js"></script>
+    <script src="scripts/border.js"></script> -->
+    <script src="../build/components/pdf_viewer.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+
 </head>
 <body>
     <div>
@@ -13,80 +24,108 @@
     </div>
     <div style="padding 5px; border: 1px dotted darkgrey; width: 100%">
         <div style="width: 100%; text-align: center;"><h1>Testing</h1></div>
-        <center ><div style="padding: 15px; background: lavender; border: 1px solid black; display: inline-block;">
+        <center><div style="padding: 15px; background: lavender; border: 1px solid black; display: inline-block;">
+           <form id="form1">
             <div style="border: 1px dashed darkviolet;" id="pdfTarget"></div>
+        </form>
         </div></center>
         <br>
-    </div>
-    <script>
-        window.onload = function () {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'scripts/pdf.worker.js';
+    </div> 
+       <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.1/jquery.validate.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.11/jquery.validate.unobtrusive.js"></script>
 
-            var DEFAULT_URL = 'pdfs/jax9.pdf';
+   
+
+    <script>
+  $.validator.addMethod("pdfformat", function (value, element) {
+    return $(element).attr('data-val-pdfformat-valid');
+});
+/*
+$.validator.unobtrusive.adapters.add("pdfformat", ['valid'], function (options) {
+
+    options.rules["pdfformat"] = "#" + options.params.valid;
+    options.messages["pdfformat"] = options.message;
+}); */
+
+$.validator.unobtrusive.adapters.addBool('pdfformat');
+     
+
+   
+        window.onload = function () {
+            //$.validator.unobtrusive.adapters.addBool('pdfformatvalid');
+           // $.validator.unobtrusive.parse();
+
+            pdfjsLib.GlobalWorkerOptions.workerSrc = '../build/generic/build/pdf.worker.js';
+
+            var DEFAULT_URL = 'pdfs/FO-3003FR.pdf';
             var DEFAULT_SCALE = 1.0;
 
             var container = document.getElementById('pdfTarget');
 
-            function _createViewport(width, height, page, dpiRatio) {
-                let actualWidth = page._pageInfo.view[2];
-                let actualHeight = page._pageInfo.view[3];
-                let scale;
-                let viewport;
-                if (typeof width === 'number' && typeof height !== 'number') {
-                    scale = (width / actualWidth) * dpiRatio;
-                    viewport = page.getViewport({ scale, });
-                    return viewport;
-                }
-                if (typeof width !== 'number' && typeof height === 'number') {
-                    scale = (height / actualHeight) * dpiRatio;
-                    viewport = page.getViewport({ scale, });
-                    return viewport;
-                }
-                if (typeof width === 'number' && typeof height === 'number') {
-                    scale = height / actualHeight;
-                    if (scale * actualWidth > width) {
-                        scale = (width / actualWidth) * dpiRatio;
-                        viewport = page.getViewport({ scale, });
-                        return viewport;
-                    }
-                    scale = scale * dpiRatio;
-                    viewport = page.getViewport({ scale, });
-                    return viewport;
-                }
-                viewport = page.getViewport({ dpiRatio, });
-                return viewport;
-            }
-
+            
             var values = {
-                'txtSimple': 'This is a simple value',
-                'txtRequired': 'This is required',
-                'Group5': 'Choice1',
             };
 
 // Fetch the PDF document from the URL using promises.
-            var loadingTask = pdfjsLib.getDocument(DEFAULT_URL);
-            loadingTask.promise.then(function(doc) {
-                // Use a promise to fetch and render the next page.
-                var promise = Promise.resolve(1);
+        var loadingTask = pdfjsLib.getDocument(DEFAULT_URL);
+                loadingTask.promise.then(function (doc) {
 
-                //for (var i = 1; i <= doc.numPages; i++) {
-                    promise = promise.then(function (pageNum) {
-                        return doc.getPage(pageNum).then(function (pdfPage) {
-                            let y = _createViewport(800, null,pdfPage);
-                            // Create the page view.
-                            pdfjsViewer.FormFunctionality.setPostRenderHook(function() {
-                                console.log('1');
+                    for (var i = 1; i <= doc.numPages; i++) {
+                        
+                        var promise = doc.getPage(i).then(function (pdfPage) {
+
+                            pdfjsViewer.FormFunctionality.setPostRenderHook(function () {
+                         
+                                var container = $("#form1");
+                                /*container.removeData('validator');
+                                container.removeData('unobtrusiveValidation');*/
+                                $.validator.unobtrusive.parse(container);
+
+                                /*$("#form1").validate({
+                                    rules: {
+                                            field: {
+                                                required: true,
+                                                minlength: 6
+                                            }
+                                        },
+                                    submitHandler: function(form) {
+                                    // some other code
+                                    // maybe disabling submit button
+                                    // then:
+                                    alert("This is a valid form!");
+                                //      form.submit();
+                                    }
+                                });*/
                             });
-                            
-                            pdfjsViewer.FormFunctionality.setPostCreationTweak(function (fieldType, elementId, element) {                            
-                              element.title = elementId.alternativeText;
-                            })
-                            return pdfjsViewer.FormFunctionality.render(1094, null, pdfPage, container, values, {hideForms: false});
+                            pdfjsViewer.FormFunctionality.setPostCreationTweak(function (fieldType, elementId, element) {
+                                //element.title = elementId.alternativeText;
+                            });
+                            return pdfjsViewer.FormFunctionality.render(1094, null, pdfPage, container, values,
+                                {interactiveForms: true, 
+                                 hideForms: false,
+                                 validationMessages: { required : "Champ {0} pas là!" }
+                                });
                         });
+              
+                    }
+
+                    doc.getJavaScript().then(function (js){ 
+                        for (var i = 0; i <= js.length; i++) {
+                            if (js[i])
+                            {
+                                var newScript = document.createElement("script");
+                                newScript.type = 'text/javascript';
+                                var inlineScript = document.createTextNode(js[i]);
+                                newScript.appendChild(inlineScript); 
+                                document.getElementsByTagName('body')[0].appendChild(newScript);
+                            }
+                        }
                     });
-                //}
-            });
+
+                });
         }
+
     </script>
+    
 </body>
 </html>

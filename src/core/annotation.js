@@ -16,8 +16,8 @@
 
 import {
   AnnotationBorderStyleType, AnnotationFieldFlag, AnnotationFlag,
-  AnnotationReplyType, AnnotationType, assert, isString, OPS, stringToBytes,
-  stringToPDFString, Util, warn
+  AnnotationReplyType, AnnotationType, assert, bytesToString, isString, OPS,
+  stringToBytes, stringToPDFString, Util, warn
 } from '../shared/util';
 import { Catalog, FileSpec, ObjectLoader } from './obj';
 import { Dict, isDict, isName, isRef, isStream } from './primitives';
@@ -209,7 +209,8 @@ class Annotation {
     this.setModificationDate(dict.get('M'));
     this.setFlags(dict.get('F'));
     this.setRectangle(dict.getArray('Rect'));
-    this.setColor(dict.getArray('C'));
+    this.setColor(dict.getArray('C') ||
+              (dict.has('MK') && dict.get('MK').getArray('BG')) || []);
     this.setBorderStyle(dict);
     this.setAppearance(dict);
 
@@ -395,20 +396,27 @@ class Annotation {
         PDFJSDev.test('!PRODUCTION || TESTING')) {
       assert(this.rectangle, 'setRectangle must have been called previously.');
     }
-
     this.borderStyle = new AnnotationBorderStyle();
     if (!isDict(borderStyle)) {
       return;
     }
-    if (borderStyle.has('BS')) {
-      const dict = borderStyle.get('BS');
-      const dictType = dict.get('Type');
 
-      if (!dictType || isName(dictType, 'Border')) {
-        this.borderStyle.setWidth(dict.get('W'), this.rectangle);
-        this.borderStyle.setStyle(dict.get('S'));
-        this.borderStyle.setDashArray(dict.getArray('D'));
-      }
+    // If we have data about "BorderColol aka "BC"
+    if (borderStyle.has('MK') && borderStyle.get('MK').has('BC')) {
+
+        this.borderStyle.setColor(borderStyle.get('MK').get('BC'));
+
+        if (borderStyle.has('BS')) {
+          const bs = borderStyle.get('BS');
+          const dictType = bs.get('Type');
+
+          if (!dictType || isName(dictType, 'Border')) {
+            this.borderStyle.setWidth(bs.get('W'), this.rectangle);
+            this.borderStyle.setStyle(bs.get('S'));
+            this.borderStyle.setDashArray(bs.getArray('D'));
+          }
+        }
+
     } else if (borderStyle.has('Border')) {
       const array = borderStyle.getArray('Border');
       if (Array.isArray(array) && array.length >= 3) {
@@ -421,12 +429,7 @@ class Annotation {
         }
       }
     } else {
-      // There are no border entries in the dictionary. According to the
-      // specification, we should draw a solid border of width 1 in that
-      // case, but Adobe Reader did not implement that part of the
-      // specification and instead draws no border at all, so we do the same.
-      // See also https://github.com/mozilla/pdf.js/issues/6179.
-      this.borderStyle.setWidth(0);
+      this.borderStyle.setWidth(0, this.rectangle);
     }
   }
 
@@ -520,6 +523,7 @@ class AnnotationBorderStyle {
   constructor() {
     this.width = 1;
     this.style = AnnotationBorderStyleType.SOLID;
+    this.borderColor = null;
     this.dashArray = [3];
     this.horizontalCornerRadius = 0;
     this.verticalCornerRadius = 0;
@@ -598,6 +602,49 @@ class AnnotationBorderStyle {
         break;
 
       default:
+        break;
+    }
+  }
+
+  /**
+   * Set the color and take care of color space conversion.
+   * The default value is black, in RGB color space.
+   *
+   * @public
+   * @memberof Annotation
+   * @param {Array} color - The color array containing either 0
+   *                        (transparent), 1 (grayscale), 3 (RGB) or
+   *                        4 (CMYK) elements
+   */
+  setColor(color) {
+    const rgbColor = new Uint8ClampedArray(3);
+    if (!Array.isArray(color)) {
+      this.borderColor = rgbColor;
+      return;
+    }
+
+    switch (color.length) {
+      case 0: // Transparent, which we indicate with a null value
+        this.borderColor = null;
+        break;
+
+      case 1: // Convert grayscale to RGB
+        ColorSpace.singletons.gray.getRgbItem(color, 0, rgbColor, 0);
+        this.borderColor = rgbColor;
+        break;
+
+      case 3: // Convert RGB percentages to RGB
+        ColorSpace.singletons.rgb.getRgbItem(color, 0, rgbColor, 0);
+        this.borderColor = rgbColor;
+        break;
+
+      case 4: // Convert CMYK to RGB
+        ColorSpace.singletons.cmyk.getRgbItem(color, 0, rgbColor, 0);
+        this.borderColor = rgbColor;
+        break;
+
+      default:
+        this.borderColor = rgbColor;
         break;
     }
   }
@@ -793,7 +840,100 @@ class WidgetAnnotation extends Annotation {
       data.fieldFlags = 0;
     }
 
+    data.action = {
+      JS: null,
+      JSBl: null,
+      JSFo: null,
+    };
+
+    let jsA = getInheritableProperty({ dict, key: 'A', });
+    let jsAA = getInheritableProperty({ dict, key: 'AA', });
+    let js = '';
+    // let jsAA = getInheritableProperty({ dict, key: 'AA', });
+    // let mouseUp = jsAA;
+    if (jsA) {
+      /* var JS = (0, _util.stringToPDFString)(jsA.get('JS') || '');
+      data.action = {
+        JS: JS
+      }; */
+      const type = jsA.get('S');
+      if (isName(type, 'JavaScript')) {
+
+        js = jsA.get('JS');
+        if (isStream(js)) {
+          js = bytesToString(js.getBytes());
+        } /* else if (!isString(js)) {
+          return;
+        } */
+
+        data.action.JS = js;
+      }
+    }
+
+    if (jsAA) {
+      const bl = jsAA.get('Bl');
+      if (bl) {
+        const type = bl.get('S');
+        if (isName(type, 'JavaScript')) {
+
+          js = bl.get('JS');
+          if (isStream(js)) {
+            js = bytesToString(js.getBytes());
+          } /* else if (!isString(js)) {
+            return;
+          } */
+
+          data.action.JSBl = js;
+        }
+      }
+      const Fo = jsAA.get('Fo');
+      if (Fo) {
+        const type = Fo.get('S');
+        if (isName(type, 'JavaScript')) {
+
+          js = Fo.get('JS');
+          if (isStream(js)) {
+            js = bytesToString(js.getBytes());
+          } /* else if (!isString(js)) {
+            return;
+          } */
+
+          data.action.JSFo = js;
+        }
+      }
+      const F = jsAA.get('F');
+      if (F) {
+        const type = F.get('S');
+        if (isName(type, 'JavaScript')) {
+
+          js = F.get('JS');
+          if (isStream(js)) {
+            js = bytesToString(js.getBytes());
+          } /* else if (!isString(js)) {
+            return;
+          } */
+
+          data.action.JSFormat = js;
+        }
+      }
+      const K = jsAA.get('K');
+      if (K) {
+        const type = K.get('S');
+        if (isName(type, 'JavaScript')) {
+
+          js = K.get('JS');
+          if (isStream(js)) {
+            js = bytesToString(js.getBytes());
+          } /* else if (!isString(js)) {
+            return;
+          } */
+
+          data.action.JSKeypress = js;
+        }
+      }
+    }
     data.readOnly = this.hasFieldFlag(AnnotationFieldFlag.READONLY);
+    data.required = this.hasFieldFlag(AnnotationFieldFlag.REQUIRED);
 
     // Hide signatures because we cannot validate them, and unset the fieldValue
     // since it's (most likely) a `Dict` which is non-serializable and will thus
@@ -898,6 +1038,7 @@ class TextWidgetAnnotation extends WidgetAnnotation {
     this.data.maxLen = maximumLength;
 
     // Process field flags for the display layer.
+    this.data.doNotScroll = this.hasFieldFlag(AnnotationFieldFlag.DONOTSCROLL);
     this.data.multiLine = this.hasFieldFlag(AnnotationFieldFlag.MULTILINE);
     this.data.comb = this.hasFieldFlag(AnnotationFieldFlag.COMB) &&
                      !this.hasFieldFlag(AnnotationFieldFlag.MULTILINE) &&

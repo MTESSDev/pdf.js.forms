@@ -1,7 +1,7 @@
 import { AnnotationLayer } from 'pdfjs-lib';
 import { CSS_UNITS } from './ui_utils';
-import { PDFPageView } from './pdf_page_view';
 import { DefaultAnnotationLayerFactory } from './annotation_layer_builder.js';
+import { PDFPageView } from './pdf_page_view';
 
 let _workingViewport = null;
 let _displayedFormElements = [];
@@ -60,7 +60,7 @@ function _assertValidControlTweak(closure) {
     }
 }
 
-var FormFunctionality = (function FormFunctionalityClosure() {
+let FormFunctionality = (function FormFunctionalityClosure() {
     function FormFunctionality() {}
 
     FormFunctionality.test = function () {
@@ -88,14 +88,120 @@ var FormFunctionality = (function FormFunctionalityClosure() {
     };
 
     FormFunctionality.setPostCreationTweak = function (postCallback) {
-        if (postCallback)
+        if (postCallback) {
             _assertValidControlTweak(postCallback);
+        }
         AnnotationLayer.setPostCreationTweak(postCallback);
     };
 
     FormFunctionality.getFormValues = function () {
         return AnnotationLayer.getValues();
     };
+
+    // AA(E)
+    FormFunctionality.onMouseOver = function (element, eventData) { };
+    // AA(X)
+    FormFunctionality.onMouseOut = function (element, eventData) { };
+    // AA(D)
+    FormFunctionality.onMouseDown = function (element, eventData) { };
+    // AA(U)
+    FormFunctionality.onMouseUp = function (element, eventData) {
+        let raw = atob(eventData);
+
+        KeyboardEvent.prototype.change = event.key;
+        // eslint-disable-next-line no-undef
+        KeyboardEvent.prototype.selStart = element.target.selectionStart;
+        let val = element.target.value + String.fromCharCode(element.which);
+        KeyboardEvent.prototype.value = val;
+
+        /* raw = raw.replace(/app\./g,
+            'pdfjsAppEmulator.'); */
+            let thisEmulator = new Field(element.target);
+            /* raw = raw.replace(/app\./g,
+                'pdfjsAppEmulator.'); */
+            raw = raw.replace(/this\./g, 'thisEmulator.');
+
+        // eslint-disable-next-line no-eval
+        // eslint-disable-next-line no-new
+        // eslint-disable-next-line no-new-func
+        let a = new Function(thisEmulator, raw);
+
+        element.target.value = event.value;
+        element.preventDefault();
+        return false;
+     };
+    // AA(Fo)
+    FormFunctionality.onFocus = function (element, eventData) {
+        debugger;
+    };
+    // AA(Bl)
+    FormFunctionality.onBlur = function (element, eventData) {
+        let raw = 'var thisEmulator = new Field(document.getElementById(\'' + element.target.id + '\'));\r\n' + atob(eventData);
+
+        // let thisEmulator = new Field(element.target);
+        /* raw = raw.replace(/app\./g,
+            'pdfjsAppEmulator.'); */
+        raw = raw.replace(/this\./g, 'thisEmulator.');
+
+        // eslint-disable-next-line no-eval
+        eval(raw);
+    };
+    // AA(K)
+    FormFunctionality.onKeyPress = function (element, eventData, typeCall) {
+        let raw = 'var thisEmulator = new Field(document.getElementById(\'' + element.target.id + '\'));\r\n' + atob(eventData);
+
+        HTMLInputElement.prototype.borderStyle = element.target.style.borderStyle;
+        let val = element.target.value;
+
+        if ((element.target.tagName === 'input' &&
+             element.target.type === 'text') ||
+             element.target.tagName === 'textarea') {
+                if (element.which !== 0) {
+                    val += String.fromCharCode(element.which);
+                }
+                element.change = event.key;
+                element.selStart = element.target.selectionStart;
+        }
+
+        element.value = val;
+        element.rc = true;
+        /* if ('FocusEvent' in element.toString()) {
+            KeyboardEvent.prototype.change = event.key;
+            KeyboardEvent.prototype.selStart = element.target.selectionStart;
+            KeyboardEvent.prototype.value = val;
+        } else if ('KeyboardEvent' in element.toString()) {
+            KeyboardEvent.prototype.change = event.key;
+            KeyboardEvent.prototype.selStart = element.target.selectionStart;
+            KeyboardEvent.prototype.value = val;
+        } */
+
+        // let thisEmulator = new Field(element.target);
+        /* raw = raw.replace(/app\./g,
+            'pdfjsAppEmulator.'); */
+        raw = raw.replace(/this\./g, 'thisEmulator.');
+
+        // raw += '\r\n var border = { s }';
+        // eslint-disable-next-line no-eval
+        eval(raw);
+
+        if (typeCall === 'format') {
+            if (element.value === '' && val !== '') {
+                element.target.setAttribute('data-val-pdfformatvalid-valid', false);
+            } else {
+                element.target.setAttribute('data-val-pdfformatvalid-valid', true);
+            }
+        }
+
+        if (element.rc) {
+            element.target.style.borderStyle = element.target.borderStyle;
+            return true;
+        }
+
+        element.preventDefault();
+        return false;
+    };
+
+    FormFunctionality.PDFjsThisEmulator = PDFjsThisEmulator;
 
     FormFunctionality.render = function (width, height, page, target, values, options) {
         console.log('In render');
@@ -106,19 +212,20 @@ var FormFunctionality = (function FormFunctionalityClosure() {
             options = {};
         }
         if (typeof width != 'number' && typeof height != 'number') {
-            throw "at least one parameter must be specified as a number: width, height";
+            throw 'at least one parameter must be specified as a number: width, height';
         }
         let viewport = _createViewport(width, height, page, 1.0);
         let pageHolder = document.createElement('div');
         pageHolder.style.width = viewport.width + 'px';
         pageHolder.style.height = viewport.height + 'px';
-        //if (postCreationTweak)
+        // if (postCreationTweak)
         //    postCreationTweak("PAGE", "page", pageHolder);
         target.appendChild(pageHolder);
 
         let targetScale = viewport.scale;
 
         AnnotationLayer.setValues(values);
+        AnnotationLayer.setOptions(options);
 
         let pdfPageView = new PDFPageView({
             container: pageHolder,
@@ -126,7 +233,7 @@ var FormFunctionality = (function FormFunctionalityClosure() {
             defaultViewport: viewport,
             annotationLayerFactory:
                 new DefaultAnnotationLayerFactory(),
-            renderInteractiveForms: true,
+            renderInteractiveForms: (options.renderInteractiveForms || true),
         });
 
         // Associate the actual page with the view and draw it.

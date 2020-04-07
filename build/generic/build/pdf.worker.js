@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.0';
-var pdfjsBuild = '';
+var pdfjsVersion = '2.4.105';
+var pdfjsBuild = 'c0688d11';
 
 var pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -235,7 +235,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     var verbosity = (0, _util.getVerbosityLevel)();
     var apiVersion = docParams.apiVersion;
-    var workerVersion = '2.4.0';
+    var workerVersion = '2.4.105';
 
     if (apiVersion !== workerVersion) {
       throw new Error("The API version \"".concat(apiVersion, "\" does not match ") + "the Worker version \"".concat(workerVersion, "\"."));
@@ -28732,7 +28732,7 @@ function () {
     this.setModificationDate(dict.get('M'));
     this.setFlags(dict.get('F'));
     this.setRectangle(dict.getArray('Rect'));
-    this.setColor(dict.getArray('C'));
+    this.setColor(dict.getArray('C') || dict.has('MK') && dict.get('MK').getArray('BG') || []);
     this.setBorderStyle(dict);
     this.setAppearance(dict);
     this.data = {
@@ -28839,14 +28839,18 @@ function () {
         return;
       }
 
-      if (borderStyle.has('BS')) {
-        var dict = borderStyle.get('BS');
-        var dictType = dict.get('Type');
+      if (borderStyle.has('MK') && borderStyle.get('MK').has('BC')) {
+        this.borderStyle.setColor(borderStyle.get('MK').get('BC'));
 
-        if (!dictType || (0, _primitives.isName)(dictType, 'Border')) {
-          this.borderStyle.setWidth(dict.get('W'), this.rectangle);
-          this.borderStyle.setStyle(dict.get('S'));
-          this.borderStyle.setDashArray(dict.getArray('D'));
+        if (borderStyle.has('BS')) {
+          var bs = borderStyle.get('BS');
+          var dictType = bs.get('Type');
+
+          if (!dictType || (0, _primitives.isName)(dictType, 'Border')) {
+            this.borderStyle.setWidth(bs.get('W'), this.rectangle);
+            this.borderStyle.setStyle(bs.get('S'));
+            this.borderStyle.setDashArray(bs.getArray('D'));
+          }
         }
       } else if (borderStyle.has('Border')) {
         var array = borderStyle.getArray('Border');
@@ -28861,7 +28865,7 @@ function () {
           }
         }
       } else {
-        this.borderStyle.setWidth(0);
+        this.borderStyle.setWidth(0, this.rectangle);
       }
     }
   }, {
@@ -28972,6 +28976,7 @@ function () {
 
     this.width = 1;
     this.style = _util.AnnotationBorderStyleType.SOLID;
+    this.borderColor = null;
     this.dashArray = [3];
     this.horizontalCornerRadius = 0;
     this.verticalCornerRadius = 0;
@@ -29030,6 +29035,44 @@ function () {
           break;
 
         default:
+          break;
+      }
+    }
+  }, {
+    key: "setColor",
+    value: function setColor(color) {
+      var rgbColor = new Uint8ClampedArray(3);
+
+      if (!Array.isArray(color)) {
+        this.borderColor = rgbColor;
+        return;
+      }
+
+      switch (color.length) {
+        case 0:
+          this.borderColor = null;
+          break;
+
+        case 1:
+          _colorspace.ColorSpace.singletons.gray.getRgbItem(color, 0, rgbColor, 0);
+
+          this.borderColor = rgbColor;
+          break;
+
+        case 3:
+          _colorspace.ColorSpace.singletons.rgb.getRgbItem(color, 0, rgbColor, 0);
+
+          this.borderColor = rgbColor;
+          break;
+
+        case 4:
+          _colorspace.ColorSpace.singletons.cmyk.getRgbItem(color, 0, rgbColor, 0);
+
+          this.borderColor = rgbColor;
+          break;
+
+        default:
+          this.borderColor = rgbColor;
           break;
       }
     }
@@ -29257,7 +29300,103 @@ function (_Annotation2) {
       data.fieldFlags = 0;
     }
 
+    data.action = {
+      JS: null,
+      JSBl: null,
+      JSFo: null
+    };
+    var jsA = (0, _core_utils.getInheritableProperty)({
+      dict: dict,
+      key: 'A'
+    });
+    var jsAA = (0, _core_utils.getInheritableProperty)({
+      dict: dict,
+      key: 'AA'
+    });
+    var js = '';
+
+    if (jsA) {
+      var type = jsA.get('S');
+
+      if ((0, _primitives.isName)(type, 'JavaScript')) {
+        js = jsA.get('JS');
+
+        if ((0, _primitives.isStream)(js)) {
+          js = (0, _util.bytesToString)(js.getBytes());
+        }
+
+        data.action.JS = js;
+      }
+    }
+
+    if (jsAA) {
+      var bl = jsAA.get('Bl');
+
+      if (bl) {
+        var _type = bl.get('S');
+
+        if ((0, _primitives.isName)(_type, 'JavaScript')) {
+          js = bl.get('JS');
+
+          if ((0, _primitives.isStream)(js)) {
+            js = (0, _util.bytesToString)(js.getBytes());
+          }
+
+          data.action.JSBl = js;
+        }
+      }
+
+      var Fo = jsAA.get('Fo');
+
+      if (Fo) {
+        var _type2 = Fo.get('S');
+
+        if ((0, _primitives.isName)(_type2, 'JavaScript')) {
+          js = Fo.get('JS');
+
+          if ((0, _primitives.isStream)(js)) {
+            js = (0, _util.bytesToString)(js.getBytes());
+          }
+
+          data.action.JSFo = js;
+        }
+      }
+
+      var F = jsAA.get('F');
+
+      if (F) {
+        var _type3 = F.get('S');
+
+        if ((0, _primitives.isName)(_type3, 'JavaScript')) {
+          js = F.get('JS');
+
+          if ((0, _primitives.isStream)(js)) {
+            js = (0, _util.bytesToString)(js.getBytes());
+          }
+
+          data.action.JSFormat = js;
+        }
+      }
+
+      var K = jsAA.get('K');
+
+      if (K) {
+        var _type4 = K.get('S');
+
+        if ((0, _primitives.isName)(_type4, 'JavaScript')) {
+          js = K.get('JS');
+
+          if ((0, _primitives.isStream)(js)) {
+            js = (0, _util.bytesToString)(js.getBytes());
+          }
+
+          data.action.JSKeypress = js;
+        }
+      }
+    }
+
     data.readOnly = _this3.hasFieldFlag(_util.AnnotationFieldFlag.READONLY);
+    data.required = _this3.hasFieldFlag(_util.AnnotationFieldFlag.REQUIRED);
 
     if (data.fieldType === 'Sig') {
       data.fieldValue = null;
@@ -29354,6 +29493,7 @@ function (_WidgetAnnotation) {
     }
 
     _this4.data.maxLen = maximumLength;
+    _this4.data.doNotScroll = _this4.hasFieldFlag(_util.AnnotationFieldFlag.DONOTSCROLL);
     _this4.data.multiLine = _this4.hasFieldFlag(_util.AnnotationFieldFlag.MULTILINE);
     _this4.data.comb = _this4.hasFieldFlag(_util.AnnotationFieldFlag.COMB) && !_this4.hasFieldFlag(_util.AnnotationFieldFlag.MULTILINE) && !_this4.hasFieldFlag(_util.AnnotationFieldFlag.PASSWORD) && !_this4.hasFieldFlag(_util.AnnotationFieldFlag.FILESELECT) && _this4.data.maxLen !== null;
     return _this4;
