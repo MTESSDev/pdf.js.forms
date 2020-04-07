@@ -834,8 +834,8 @@ gulp.task('minified-post', gulp.series('minified-pre', function (done) {
   console.log();
   console.log('### Cleaning js files');
 
-  fs.unlinkSync(MINIFIED_DIR + '/components/jsEmulator.js');
-  fs.unlinkSync(MINIFIED_DIR + '/components/pdf_viewer.js');
+  /* fs.unlinkSync(MINIFIED_DIR + '/components/jsEmulator.js');
+  fs.unlinkSync(MINIFIED_DIR + '/components/pdf_viewer.js'); */
   fs.unlinkSync(MINIFIED_DIR + '/web/viewer.js');
   fs.unlinkSync(MINIFIED_DIR + '/web/debugger.js');
   fs.unlinkSync(MINIFIED_DIR + '/build/pdf.js');
