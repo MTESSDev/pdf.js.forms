@@ -105,9 +105,9 @@ let FormFunctionality = (function FormFunctionalityClosure() {
         HTMLInputElement.prototype.borderStyle = element.target.style.borderStyle;
         let val = element.target.value;
 
-        if ((element.target.tagName === 'input' &&
-             element.target.type === 'text') ||
-             element.target.tagName === 'textarea') {
+        if ((element.target.tagName.toLowerCase() === 'input' &&
+             element.target.type.toLowerCase() === 'text') ||
+             element.target.tagName.toLowerCase() === 'textarea') {
                 if (element.which !== 0) {
                     val += String.fromCharCode(element.which);
                 }

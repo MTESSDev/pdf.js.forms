@@ -1386,17 +1386,12 @@ class AnnotationLayer {
   }
 
   static addJSActions(element, data, container, size) {
-    element.setAttribute('data-val', 'true');
-    let errorDiv = document.createElement('div');
-    errorDiv.className = 'field-validation-valid message-erreur-champ';
-    errorDiv.setAttribute('data-valmsg-for', element.id);
-    errorDiv.setAttribute('data-valmsg-replace', 'true');
-    errorDiv.setAttribute('style', 'top:' + size + 'px');
-    container.appendChild(errorDiv);
+    let addDataVal = false;
 
     if (data.required) {
       const msg = (_formOptions.validationMessages.required || 'Field {0} is required.').replace('{0}', data.alternativeText);
       element.setAttribute('data-val-required', msg);
+      addDataVal = true;
     }
 
     if (data.action.JS) {
@@ -1415,6 +1410,7 @@ class AnnotationLayer {
         let data = event.target.getAttribute('data-js-action-format');
         pdfjsViewer.FormFunctionality.javascriptEvent(event, data, 'format');
       });
+      addDataVal = true;
     }
 
     if (data.action.JSFo) {
@@ -1447,6 +1443,21 @@ class AnnotationLayer {
         let data = event.target.getAttribute('data-js-action-keypress');
         pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
       });
+    }
+
+    if (addDataVal) {
+      element.setAttribute('data-val', 'true');
+      let errorDiv = document.createElement('div');
+      errorDiv.className = 'field-validation-valid field-error-message';
+      errorDiv.setAttribute('data-valmsg-for', element.id);
+      errorDiv.setAttribute('data-valmsg-replace', 'true');
+      errorDiv.setAttribute('style', 'top:' + size + 'px');
+      container.appendChild(errorDiv);
+      let iconDiv = document.createElement('div');
+      iconDiv.className = 'required-field-icon';
+      iconDiv.setAttribute('aria-hidden', true);
+      iconDiv.textContent = '*';
+      container.appendChild(iconDiv);
     }
   }
 

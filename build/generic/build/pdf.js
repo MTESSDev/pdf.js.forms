@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.110';
-var pdfjsBuild = '9bad64d0';
+var pdfjsVersion = '2.4.111';
+var pdfjsBuild = '59046bfa';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.110',
+    apiVersion: '2.4.111',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.110';
+var version = '2.4.111';
 exports.version = version;
-var build = '9bad64d0';
+var build = '59046bfa';
 exports.build = build;
 
 /***/ }),
@@ -21497,17 +21497,12 @@ function () {
   }, {
     key: "addJSActions",
     value: function addJSActions(element, data, container, size) {
-      element.setAttribute('data-val', 'true');
-      var errorDiv = document.createElement('div');
-      errorDiv.className = 'field-validation-valid message-erreur-champ';
-      errorDiv.setAttribute('data-valmsg-for', element.id);
-      errorDiv.setAttribute('data-valmsg-replace', 'true');
-      errorDiv.setAttribute('style', 'top:' + size + 'px');
-      container.appendChild(errorDiv);
+      var addDataVal = false;
 
       if (data.required) {
         var msg = (_formOptions.validationMessages.required || 'Field {0} is required.').replace('{0}', data.alternativeText);
         element.setAttribute('data-val-required', msg);
+        addDataVal = true;
       }
 
       if (data.action.JS) {
@@ -21526,6 +21521,7 @@ function () {
           var data = event.target.getAttribute('data-js-action-format');
           pdfjsViewer.FormFunctionality.javascriptEvent(event, data, 'format');
         });
+        addDataVal = true;
       }
 
       if (data.action.JSFo) {
@@ -21558,6 +21554,21 @@ function () {
           var data = event.target.getAttribute('data-js-action-keypress');
           pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
         });
+      }
+
+      if (addDataVal) {
+        element.setAttribute('data-val', 'true');
+        var errorDiv = document.createElement('div');
+        errorDiv.className = 'field-validation-valid field-error-message';
+        errorDiv.setAttribute('data-valmsg-for', element.id);
+        errorDiv.setAttribute('data-valmsg-replace', 'true');
+        errorDiv.setAttribute('style', 'top:' + size + 'px');
+        container.appendChild(errorDiv);
+        var iconDiv = document.createElement('div');
+        iconDiv.className = 'required-field-icon';
+        iconDiv.setAttribute('aria-hidden', true);
+        iconDiv.textContent = '*';
+        container.appendChild(iconDiv);
       }
     }
   }, {
