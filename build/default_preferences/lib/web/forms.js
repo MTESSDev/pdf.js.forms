@@ -161,12 +161,15 @@ let FormFunctionality = function FormFunctionalityClosure() {
     HTMLInputElement.prototype.borderStyle = element.target.style.borderStyle;
     let val = element.target.value;
 
-    if (element.which !== 0) {
-      val += String.fromCharCode(element.which);
+    if (element.target.tagName === 'input' && element.target.type === 'text' || element.target.tagName === 'textarea') {
+      if (element.which !== 0) {
+        val += String.fromCharCode(element.which);
+      }
+
+      element.change = event.key;
+      element.selStart = element.target.selectionStart;
     }
 
-    element.change = event.key;
-    element.selStart = element.target.selectionStart;
     element.value = val;
     element.rc = true;
     raw = raw.replace(/this\./g, 'thisEmulator.');
@@ -189,7 +192,7 @@ let FormFunctionality = function FormFunctionalityClosure() {
     return false;
   };
 
-  FormFunctionality.PDFjsThisEmulator = _pdf.PDFjsThisEmulator;
+  FormFunctionality.PDFjsThisEmulator = PDFjsThisEmulator;
 
   FormFunctionality.render = function (width, height, page, target, values, options) {
     console.log('In render');

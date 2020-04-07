@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.105';
-var pdfjsBuild = 'c0688d11';
+var pdfjsVersion = '2.4.107';
+var pdfjsBuild = 'efa5bd97';
 
 var pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -235,7 +235,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     var verbosity = (0, _util.getVerbosityLevel)();
     var apiVersion = docParams.apiVersion;
-    var workerVersion = '2.4.105';
+    var workerVersion = '2.4.107';
 
     if (apiVersion !== workerVersion) {
       throw new Error("The API version \"".concat(apiVersion, "\" does not match ") + "the Worker version \"".concat(workerVersion, "\"."));
@@ -28865,7 +28865,7 @@ function () {
           }
         }
       } else {
-        this.borderStyle.setWidth(0, this.rectangle);
+        this.borderStyle.setWidth(0);
       }
     }
   }, {

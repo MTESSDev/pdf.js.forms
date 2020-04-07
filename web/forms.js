@@ -1,6 +1,7 @@
 import { AnnotationLayer } from 'pdfjs-lib';
 import { CSS_UNITS } from './ui_utils';
 import { DefaultAnnotationLayerFactory } from './annotation_layer_builder.js';
+import { DefaultTextLayerFactory } from './text_layer_builder.js';
 import { PDFPageView } from './pdf_page_view';
 
 let _workingViewport = null;
@@ -98,56 +99,7 @@ let FormFunctionality = (function FormFunctionalityClosure() {
         return AnnotationLayer.getValues();
     };
 
-    // AA(E)
-    FormFunctionality.onMouseOver = function (element, eventData) { };
-    // AA(X)
-    FormFunctionality.onMouseOut = function (element, eventData) { };
-    // AA(D)
-    FormFunctionality.onMouseDown = function (element, eventData) { };
-    // AA(U)
-    FormFunctionality.onMouseUp = function (element, eventData) {
-        let raw = atob(eventData);
-
-        KeyboardEvent.prototype.change = event.key;
-        // eslint-disable-next-line no-undef
-        KeyboardEvent.prototype.selStart = element.target.selectionStart;
-        let val = element.target.value + String.fromCharCode(element.which);
-        KeyboardEvent.prototype.value = val;
-
-        /* raw = raw.replace(/app\./g,
-            'pdfjsAppEmulator.'); */
-            let thisEmulator = new Field(element.target);
-            /* raw = raw.replace(/app\./g,
-                'pdfjsAppEmulator.'); */
-            raw = raw.replace(/this\./g, 'thisEmulator.');
-
-        // eslint-disable-next-line no-eval
-        // eslint-disable-next-line no-new
-        // eslint-disable-next-line no-new-func
-        let a = new Function(thisEmulator, raw);
-
-        element.target.value = event.value;
-        element.preventDefault();
-        return false;
-     };
-    // AA(Fo)
-    FormFunctionality.onFocus = function (element, eventData) {
-        debugger;
-    };
-    // AA(Bl)
-    FormFunctionality.onBlur = function (element, eventData) {
-        let raw = 'var thisEmulator = new Field(document.getElementById(\'' + element.target.id + '\'));\r\n' + atob(eventData);
-
-        // let thisEmulator = new Field(element.target);
-        /* raw = raw.replace(/app\./g,
-            'pdfjsAppEmulator.'); */
-        raw = raw.replace(/this\./g, 'thisEmulator.');
-
-        // eslint-disable-next-line no-eval
-        eval(raw);
-    };
-    // AA(K)
-    FormFunctionality.onKeyPress = function (element, eventData, typeCall) {
+    FormFunctionality.javascriptEvent = function (element, eventData, typeCall) {
         let raw = 'var thisEmulator = new Field(document.getElementById(\'' + element.target.id + '\'));\r\n' + atob(eventData);
 
         HTMLInputElement.prototype.borderStyle = element.target.style.borderStyle;
@@ -201,8 +153,6 @@ let FormFunctionality = (function FormFunctionalityClosure() {
         return false;
     };
 
-    FormFunctionality.PDFjsThisEmulator = PDFjsThisEmulator;
-
     FormFunctionality.render = function (width, height, page, target, values, options) {
         console.log('In render');
         if (typeof values != 'object') {
@@ -228,11 +178,12 @@ let FormFunctionality = (function FormFunctionalityClosure() {
         AnnotationLayer.setOptions(options);
 
         let pdfPageView = new PDFPageView({
+            id: page.pageNumber,
             container: pageHolder,
             scale: targetScale / CSS_UNITS,
             defaultViewport: viewport,
-            annotationLayerFactory:
-                new DefaultAnnotationLayerFactory(),
+            textLayerFactory: new DefaultTextLayerFactory(),
+            annotationLayerFactory: new DefaultAnnotationLayerFactory(),
             renderInteractiveForms: (options.renderInteractiveForms || true),
         });
 

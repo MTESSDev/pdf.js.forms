@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.105';
-var pdfjsBuild = 'c0688d11';
+var pdfjsVersion = '2.4.107';
+var pdfjsBuild = 'efa5bd97';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.105',
+    apiVersion: '2.4.107',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.105';
+var version = '2.4.107';
 exports.version = version;
-var build = 'c0688d11';
+var build = 'efa5bd97';
 exports.build = build;
 
 /***/ }),
@@ -20169,7 +20169,7 @@ function (_WidgetAnnotationElem) {
 
           element.id = !this.data.isGroupMember || this.data.groupingId == 0 ? this.data.correctedId : this.data.id;
           element.name = this.data.correctedId;
-          element.title = this.data.title;
+          element.title = this.data.alternativeText;
 
           if (this.data.comb) {
             var fieldWidth = this.data.rect[2] - this.data.rect[0];
@@ -20279,7 +20279,7 @@ function (_WidgetAnnotationElem2) {
 
         element.id = 'correctedId' in this.data ? this.data.correctedId : this.data.id;
         element.name = 'correctedId' in this.data ? this.data.correctedId : this.data.id;
-        element.title = this.data.title;
+        element.title = this.data.alternativeText;
         element.value = this.data.exportValue;
 
         if (this.renderInteractiveForms) {

@@ -421,7 +421,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
 
         element.id = !this.data.isGroupMember || this.data.groupingId == 0 ? this.data.correctedId : this.data.id;
         element.name = this.data.correctedId;
-        element.title = this.data.title;
+        element.title = this.data.alternativeText;
 
         if (this.data.comb) {
           const fieldWidth = this.data.rect[2] - this.data.rect[0];
@@ -520,7 +520,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
 
       element.id = 'correctedId' in this.data ? this.data.correctedId : this.data.id;
       element.name = 'correctedId' in this.data ? this.data.correctedId : this.data.id;
-      element.title = this.data.title;
+      element.title = this.data.alternativeText;
       element.value = this.data.exportValue;
 
       if (this.renderInteractiveForms) {

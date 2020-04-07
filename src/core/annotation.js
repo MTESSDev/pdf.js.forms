@@ -429,7 +429,12 @@ class Annotation {
         }
       }
     } else {
-      this.borderStyle.setWidth(0, this.rectangle);
+      // There are no border entries in the dictionary. According to the
+      // specification, we should draw a solid border of width 1 in that
+      // case, but Adobe Reader did not implement that part of the
+      // specification and instead draws no border at all, so we do the same.
+      // See also https://github.com/mozilla/pdf.js/issues/6179.
+      this.borderStyle.setWidth(0);
     }
   }
 

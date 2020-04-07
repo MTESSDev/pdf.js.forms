@@ -392,8 +392,13 @@ function AFMakeDate(out, year, month, date, time)
 		year += 2000;
 	if (year < 100)
 		year += 1900;
-	out.setFullYear(year, month, date);
-	if (out.getFullYear() != year || out.getMonth() != month || out.getDate() != date)
+	
+	// out.setFullYear(year, month, date);
+	out.setYear(year || 2020);
+	out.setDate(date || 01);
+	out.setMonth(month || 01);
+
+	if ((year != '' && out.getFullYear() != year) || (month != '' && out.getMonth() != month) || (date != '' && out.getDate() != date))
 		return null;
 	if (time)
 		out = AFParseTime(time, out);
