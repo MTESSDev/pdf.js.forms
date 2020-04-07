@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.0';
-var pdfjsBuild = '';
+var pdfjsVersion = '2.4.106';
+var pdfjsBuild = '9dd658e7';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.0',
+    apiVersion: '2.4.106',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.0';
+var version = '2.4.106';
 exports.version = version;
-var build = '';
+var build = '9dd658e7';
 exports.build = build;
 
 /***/ }),
@@ -19685,6 +19685,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 var _tabIndex = 1;
 var _formValues = [];
+var _formOptions = [];
 var _formFields = {
   'CHECK_BOX': {},
   'TEXT': {},
@@ -19857,7 +19858,6 @@ function () {
       var rect = _util.Util.normalizeRect([data.rect[0], page.view[3] - data.rect[1] + page.view[1], data.rect[2], page.view[3] - data.rect[3] + page.view[1]]);
 
       container.style.transform = "matrix(".concat(viewport.transform.join(','), ")");
-      container.style.transformOrigin = "-".concat(rect[0], "px -").concat(rect[1], "px");
 
       if (!ignoreBorder && data.borderStyle.width > 0) {
         container.style.borderWidth = "".concat(data.borderStyle.width, "px");
@@ -19901,12 +19901,17 @@ function () {
         }
 
         if (data.color) {
-          container.style.borderColor = _util.Util.makeCssRgb(data.color[0] | 0, data.color[1] | 0, data.color[2] | 0);
+          container.style.backgroundColor = _util.Util.makeCssRgb(data.color[0] | 0, data.color[1] | 0, data.color[2] | 0);
+        }
+
+        if (data.borderStyle.borderColor) {
+          container.style.borderColor = _util.Util.makeCssRgb(data.borderStyle.borderColor[0] | 0, data.borderStyle.borderColor[1] | 0, data.borderStyle.borderColor[2] | 0);
         } else {
           container.style.borderWidth = 0;
         }
       }
 
+      container.style.transformOrigin = "-".concat(rect[0], "px -").concat(rect[1], "px");
       container.style.left = "".concat(rect[0], "px");
       container.style.top = "".concat(rect[1], "px");
       container.style.width = "".concat(width, "px");
@@ -20112,7 +20117,7 @@ function (_WidgetAnnotationElem) {
       if (this.renderInteractiveForms) {
         var creationRoutine = idClosureOverrides[this.data.correctedId] || genericClosureOverrides[fieldTypes.TEXT] || false;
 
-        if (creationRoutine != false) {
+        if (creationRoutine !== false) {
           element = creationRoutine(this);
         } else {
           var value = this.data.fieldValue;
@@ -20125,14 +20130,14 @@ function (_WidgetAnnotationElem) {
 
           this.data.value = value;
 
-          if (this.data.isGroupMember && this.data.groupingId != 0) {
+          if (this.data.isGroupMember && this.data.groupingId !== 0) {
             this.data.readOnly = true;
           }
 
           if (this.data.multiLine) {
             element = document.createElement('textarea');
             element.textContent = value;
-            element.style.resize = "none";
+            element.style.resize = 'none';
           } else {
             element = document.createElement('input');
 
@@ -20149,13 +20154,13 @@ function (_WidgetAnnotationElem) {
 
           if (this.data.isGroupMember) {
             element.setAttribute('data-group', this.data.correctedId);
-            element.setAttribute('data-group-slave', this.data.groupingId != "0" ? 1 : 0);
+            element.setAttribute('data-group-slave', this.data.groupingId !== '0' ? 1 : 0);
           }
 
           element.disabled = this.data.readOnly;
 
           if (this.data.readOnly) {
-            element.style.cursor = "not-allowed";
+            element.style.cursor = 'not-allowed';
           }
 
           if (this.data.maxLen !== null) {
@@ -20164,6 +20169,7 @@ function (_WidgetAnnotationElem) {
 
           element.id = !this.data.isGroupMember || this.data.groupingId == 0 ? this.data.correctedId : this.data.id;
           element.name = this.data.correctedId;
+          element.title = this.data.title;
 
           if (this.data.comb) {
             var fieldWidth = this.data.rect[2] - this.data.rect[0];
@@ -20171,6 +20177,8 @@ function (_WidgetAnnotationElem) {
             element.classList.add('comb');
             element.style.letterSpacing = "calc(".concat(combWidth, "px - 1ch)");
           }
+
+          AnnotationLayer.addJSActions(element, this.data, this.container, this.data.rect[3] - this.data.rect[1]);
 
           if (_postCreationTweak) {
             _postCreationTweak(fieldTypes.TEXT, this.data, element);
@@ -20227,7 +20235,7 @@ function (_WidgetAnnotationElem2) {
   function CheckboxWidgetAnnotationElement(parameters) {
     _classCallCheck(this, CheckboxWidgetAnnotationElement);
 
-    return _possibleConstructorReturn(this, _getPrototypeOf(CheckboxWidgetAnnotationElement).call(this, parameters, parameters.renderInteractiveForms));
+    return _possibleConstructorReturn(this, _getPrototypeOf(CheckboxWidgetAnnotationElement).call(this, parameters, parameters.renderInteractiveForms, parameters.ignoreBorder));
   }
 
   _createClass(CheckboxWidgetAnnotationElement, [{
@@ -20237,7 +20245,7 @@ function (_WidgetAnnotationElem2) {
       var creationRoutine = idClosureOverrides[this.data.correctedId] || genericClosureOverrides[fieldTypes.TEXT] || false;
       var element = null;
 
-      if (creationRoutine != false) {
+      if (creationRoutine !== false) {
         element = creationRoutine(this);
       } else {
         element = document.createElement('input');
@@ -20245,7 +20253,7 @@ function (_WidgetAnnotationElem2) {
         element.type = 'checkbox';
         var selected = false;
 
-        if (this.data.fieldValue && this.data.fieldValue !== 'Off') {
+        if (this.data.fieldValue && this.data.fieldValue === this.data.exportValue) {
           selected = true;
         }
 
@@ -20254,7 +20262,7 @@ function (_WidgetAnnotationElem2) {
         switch (_typeof(v)) {
           case 'string':
             {
-              selected = item.options.indexOf(v) > 0;
+              selected = v === this.data.exportValue;
               break;
             }
 
@@ -20271,7 +20279,12 @@ function (_WidgetAnnotationElem2) {
 
         element.id = 'correctedId' in this.data ? this.data.correctedId : this.data.id;
         element.name = 'correctedId' in this.data ? this.data.correctedId : this.data.id;
+        element.title = this.data.title;
         element.value = this.data.exportValue;
+
+        if (this.renderInteractiveForms) {
+          AnnotationLayer.addJSActions(element, this.data, this.container, this.data.rect[3] - this.data.rect[1]);
+        }
 
         if (_postCreationTweak) {
           _postCreationTweak(fieldTypes.CHECK_BOX, this.data, element);
@@ -21299,6 +21312,7 @@ function () {
             downloadManager: parameters.downloadManager,
             imageResourcesPath: parameters.imageResourcesPath || '',
             renderInteractiveForms: parameters.renderInteractiveForms || false,
+            ignoreBorder: parameters.ignoreBorder || true,
             svgFactory: new _display_utils.DOMSVGFactory()
           });
 
@@ -21310,7 +21324,7 @@ function () {
 
           switch (elementClass) {
             case 'CheckboxWidgetAnnotationElement':
-              if (groupingId == 0) {
+              if (groupingId === 0) {
                 _formFields[fieldTypes.CHECK_BOX][correctedId] = _element;
               }
 
@@ -21439,6 +21453,12 @@ function () {
       _formValues = values;
     }
   }, {
+    key: "setOptions",
+    value: function setOptions(options) {
+      options.validationMessages = options.validationMessages || [];
+      _formOptions = options;
+    }
+  }, {
     key: "clearControlRendersById",
     value: function clearControlRendersById() {
       idClosureOverrides = {};
@@ -21472,6 +21492,72 @@ function () {
         } catch (e) {}
       } else {
         idClosureOverrides[id] = closure;
+      }
+    }
+  }, {
+    key: "addJSActions",
+    value: function addJSActions(element, data, container, size) {
+      element.setAttribute('data-val', 'true');
+      var errorDiv = document.createElement('div');
+      errorDiv.className = 'field-validation-valid message-erreur-champ';
+      errorDiv.setAttribute('data-valmsg-for', element.id);
+      errorDiv.setAttribute('data-valmsg-replace', 'true');
+      errorDiv.setAttribute('style', 'top:' + size + 'px');
+      container.appendChild(errorDiv);
+
+      if (data.required) {
+        var msg = (_formOptions.validationMessages.required || 'Field {0} is required.').replace('{0}', data.alternativeText);
+        element.setAttribute('data-val-required', msg);
+      }
+
+      if (data.action.JS) {
+        element.setAttribute('data-js-actionjs', btoa(data.action.JS));
+        element.addEventListener('click', function (event) {
+          var data = event.target.getAttribute('data-js-actionjs');
+          pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
+        });
+      }
+
+      if (data.action.JSFormat) {
+        element.setAttribute('data-val-pdfformat', 'Format incorrect');
+        element.setAttribute('data-val-pdfformat-valid', 'true');
+        element.setAttribute('data-js-action-format', btoa(data.action.JSFormat));
+        element.addEventListener('blur', function (event) {
+          var data = event.target.getAttribute('data-js-action-format');
+          pdfjsViewer.FormFunctionality.javascriptEvent(event, data, 'format');
+        });
+      }
+
+      if (data.action.JSFo) {
+        element.setAttribute('data-js-action-fo', btoa(data.action.JSFo));
+        element.addEventListener('focus', function (event) {
+          var data = event.target.getAttribute('data-js-action-fo');
+          pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
+        });
+      }
+
+      if (data.action.JSBl) {
+        element.setAttribute('data-js-action-bl', btoa(data.action.JSBl));
+        element.addEventListener('blur', function (event) {
+          var data = event.target.getAttribute('data-js-action-bl');
+          pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
+        });
+      }
+
+      if (data.action.JSU) {
+        element.setAttribute('data-js-action-u', btoa(data.action.JSU));
+        element.addEventListener('mouseup', function (event) {
+          var data = event.target.getAttribute('data-js-action-u');
+          pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
+        });
+      }
+
+      if (data.action.JSKeypress) {
+        element.setAttribute('data-js-action-keypress', btoa(data.action.JSKeypress));
+        element.addEventListener('keypress', function (event) {
+          var data = event.target.getAttribute('data-js-action-keypress');
+          pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
+        });
       }
     }
   }, {

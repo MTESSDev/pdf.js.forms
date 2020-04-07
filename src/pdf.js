@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /* Copyright 2012 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");

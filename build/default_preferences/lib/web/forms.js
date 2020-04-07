@@ -9,9 +9,9 @@ var _pdf = require("../pdf");
 
 var _ui_utils = require("./ui_utils");
 
-var _pdf_page_view = require("./pdf_page_view");
-
 var _annotation_layer_builder = require("./annotation_layer_builder.js");
+
+var _pdf_page_view = require("./pdf_page_view");
 
 let _workingViewport = null;
 let _displayedFormElements = [];
@@ -87,7 +87,7 @@ function _assertValidControlTweak(closure) {
   }
 }
 
-var FormFunctionality = function FormFunctionalityClosure() {
+let FormFunctionality = function FormFunctionalityClosure() {
   function FormFunctionality() {}
 
   FormFunctionality.test = function () {
@@ -115,13 +115,51 @@ var FormFunctionality = function FormFunctionalityClosure() {
   };
 
   FormFunctionality.setPostCreationTweak = function (postCallback) {
-    if (postCallback) _assertValidControlTweak(postCallback);
+    if (postCallback) {
+      _assertValidControlTweak(postCallback);
+    }
 
     _pdf.AnnotationLayer.setPostCreationTweak(postCallback);
   };
 
   FormFunctionality.getFormValues = function () {
     return _pdf.AnnotationLayer.getValues();
+  };
+
+  FormFunctionality.javascriptEvent = function (element, eventData, typeCall) {
+    let raw = 'var thisEmulator = new Field(document.getElementById(\'' + element.target.id + '\'));\r\n' + atob(eventData);
+    HTMLInputElement.prototype.borderStyle = element.target.style.borderStyle;
+    let val = element.target.value;
+
+    if (element.target.tagName === 'input' && element.target.type === 'text' || element.target.tagName === 'textarea') {
+      if (element.which !== 0) {
+        val += String.fromCharCode(element.which);
+      }
+
+      element.change = event.key;
+      element.selStart = element.target.selectionStart;
+    }
+
+    element.value = val;
+    element.rc = true;
+    raw = raw.replace(/this\./g, 'thisEmulator.');
+    eval(raw);
+
+    if (typeCall === 'format') {
+      if (element.value === '' && val !== '') {
+        element.target.setAttribute('data-val-pdfformatvalid-valid', false);
+      } else {
+        element.target.setAttribute('data-val-pdfformatvalid-valid', true);
+      }
+    }
+
+    if (element.rc) {
+      element.target.style.borderStyle = element.target.borderStyle;
+      return true;
+    }
+
+    element.preventDefault();
+    return false;
   };
 
   FormFunctionality.render = function (width, height, page, target, values, options) {
@@ -136,7 +174,7 @@ var FormFunctionality = function FormFunctionalityClosure() {
     }
 
     if (typeof width != 'number' && typeof height != 'number') {
-      throw "at least one parameter must be specified as a number: width, height";
+      throw 'at least one parameter must be specified as a number: width, height';
     }
 
     let viewport = _createViewport(width, height, page, 1.0);
@@ -149,12 +187,14 @@ var FormFunctionality = function FormFunctionalityClosure() {
 
     _pdf.AnnotationLayer.setValues(values);
 
+    _pdf.AnnotationLayer.setOptions(options);
+
     let pdfPageView = new _pdf_page_view.PDFPageView({
       container: pageHolder,
       scale: targetScale / _ui_utils.CSS_UNITS,
       defaultViewport: viewport,
       annotationLayerFactory: new _annotation_layer_builder.DefaultAnnotationLayerFactory(),
-      renderInteractiveForms: true
+      renderInteractiveForms: options.renderInteractiveForms || true
     });
     pdfPageView.setPdfPage(page);
     _workingViewport = viewport;
