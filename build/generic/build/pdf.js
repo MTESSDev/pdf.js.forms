@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.107';
-var pdfjsBuild = 'efa5bd97';
+var pdfjsVersion = '2.4.108';
+var pdfjsBuild = '0ef63725';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.107',
+    apiVersion: '2.4.108',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.107';
+var version = '2.4.108';
 exports.version = version;
-var build = 'efa5bd97';
+var build = '0ef63725';
 exports.build = build;
 
 /***/ }),
@@ -21514,7 +21514,7 @@ function () {
         element.setAttribute('data-js-actionjs', btoa(data.action.JS));
         element.addEventListener('click', function (event) {
           var data = event.target.getAttribute('data-js-actionjs');
-          pdfjsViewer.FormFunctionality.onKeyPress(event, data);
+          pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
         });
       }
 
@@ -21524,7 +21524,7 @@ function () {
         element.setAttribute('data-js-action-format', btoa(data.action.JSFormat));
         element.addEventListener('blur', function (event) {
           var data = event.target.getAttribute('data-js-action-format');
-          pdfjsViewer.FormFunctionality.onKeyPress(event, data, 'format');
+          pdfjsViewer.FormFunctionality.javascriptEvent(event, data, 'format');
         });
       }
 
@@ -21532,7 +21532,7 @@ function () {
         element.setAttribute('data-js-action-fo', btoa(data.action.JSFo));
         element.addEventListener('focus', function (event) {
           var data = event.target.getAttribute('data-js-action-fo');
-          pdfjsViewer.FormFunctionality.onKeyPress(event, data);
+          pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
         });
       }
 
@@ -21540,7 +21540,7 @@ function () {
         element.setAttribute('data-js-action-bl', btoa(data.action.JSBl));
         element.addEventListener('blur', function (event) {
           var data = event.target.getAttribute('data-js-action-bl');
-          pdfjsViewer.FormFunctionality.onKeyPress(event, data);
+          pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
         });
       }
 
@@ -21548,7 +21548,7 @@ function () {
         element.setAttribute('data-js-action-u', btoa(data.action.JSU));
         element.addEventListener('mouseup', function (event) {
           var data = event.target.getAttribute('data-js-action-u');
-          pdfjsViewer.FormFunctionality.onKeyPress(event, data);
+          pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
         });
       }
 
@@ -21556,7 +21556,7 @@ function () {
         element.setAttribute('data-js-action-keypress', btoa(data.action.JSKeypress));
         element.addEventListener('keypress', function (event) {
           var data = event.target.getAttribute('data-js-action-keypress');
-          pdfjsViewer.FormFunctionality.onKeyPress(event, data);
+          pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
         });
       }
     }

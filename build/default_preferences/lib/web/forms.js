@@ -11,6 +11,8 @@ var _ui_utils = require("./ui_utils");
 
 var _annotation_layer_builder = require("./annotation_layer_builder.js");
 
+var _text_layer_builder = require("./text_layer_builder.js");
+
 var _pdf_page_view = require("./pdf_page_view");
 
 let _workingViewport = null;
@@ -126,37 +128,7 @@ let FormFunctionality = function FormFunctionalityClosure() {
     return _pdf.AnnotationLayer.getValues();
   };
 
-  FormFunctionality.onMouseOver = function (element, eventData) {};
-
-  FormFunctionality.onMouseOut = function (element, eventData) {};
-
-  FormFunctionality.onMouseDown = function (element, eventData) {};
-
-  FormFunctionality.onMouseUp = function (element, eventData) {
-    let raw = atob(eventData);
-    KeyboardEvent.prototype.change = event.key;
-    KeyboardEvent.prototype.selStart = element.target.selectionStart;
-    let val = element.target.value + String.fromCharCode(element.which);
-    KeyboardEvent.prototype.value = val;
-    let thisEmulator = new Field(element.target);
-    raw = raw.replace(/this\./g, 'thisEmulator.');
-    let a = new Function(thisEmulator, raw);
-    element.target.value = event.value;
-    element.preventDefault();
-    return false;
-  };
-
-  FormFunctionality.onFocus = function (element, eventData) {
-    debugger;
-  };
-
-  FormFunctionality.onBlur = function (element, eventData) {
-    let raw = 'var thisEmulator = new Field(document.getElementById(\'' + element.target.id + '\'));\r\n' + atob(eventData);
-    raw = raw.replace(/this\./g, 'thisEmulator.');
-    eval(raw);
-  };
-
-  FormFunctionality.onKeyPress = function (element, eventData, typeCall) {
+  FormFunctionality.javascriptEvent = function (element, eventData, typeCall) {
     let raw = 'var thisEmulator = new Field(document.getElementById(\'' + element.target.id + '\'));\r\n' + atob(eventData);
     HTMLInputElement.prototype.borderStyle = element.target.style.borderStyle;
     let val = element.target.value;
@@ -192,8 +164,6 @@ let FormFunctionality = function FormFunctionalityClosure() {
     return false;
   };
 
-  FormFunctionality.PDFjsThisEmulator = PDFjsThisEmulator;
-
   FormFunctionality.render = function (width, height, page, target, values, options) {
     console.log('In render');
 
@@ -222,9 +192,11 @@ let FormFunctionality = function FormFunctionalityClosure() {
     _pdf.AnnotationLayer.setOptions(options);
 
     let pdfPageView = new _pdf_page_view.PDFPageView({
+      id: page.pageNumber,
       container: pageHolder,
       scale: targetScale / _ui_utils.CSS_UNITS,
       defaultViewport: viewport,
+      textLayerFactory: new _text_layer_builder.DefaultTextLayerFactory(),
       annotationLayerFactory: new _annotation_layer_builder.DefaultAnnotationLayerFactory(),
       renderInteractiveForms: options.renderInteractiveForms || true
     });

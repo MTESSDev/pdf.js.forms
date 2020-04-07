@@ -63,6 +63,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "gulp-concat": "^2.6.1",
     "pdfjs-dist": "file:build/dist"
   }
 }

@@ -325,6 +325,25 @@ function createComponentsBundle(defines) {
     umdNamedDefine: true,
   });
 
+
+
+
+  /* gulp.task("min:js", function () {
+    var tasks = getBundles(regex.js).map(function (bundle) {
+    return gulp.src(bundle.inputFiles, { base: "." })
+    .pipe(concat(bundle.outputFileName))
+    .pipe(gulpIf(bundle.minify.enabled === true, uglify({ preserveComments: 'license', })))
+    .pipe(gulp.dest("."));
+    });
+    return merge(tasks);
+    }); */
+
+  gulp.task('bundle-js', function() {
+  return gulp.src('./src/js/*.js')
+          .pipe(concat('file123.js'))
+          .pipe(gulp.dest('./toPutBundledJsHere/'));
+        });
+
   return gulp.src('./web/pdf_viewer.component.js')
     .pipe(webpack2Stream(componentsFileConfig))
     .pipe(replaceWebpackRequire())
@@ -748,7 +767,7 @@ gulp.task('components', gulp.series('buildnumber', function () {
         .pipe(postcss([autoprefixer(AUTOPREFIXER_CONFIG)]))
         .pipe(gulp.dest(COMPONENTS_DIR)),
         gulp.src('./src/js/*.js')
-          .pipe(concat('jsEmulator.js'))
+          .pipe(concat('file123.js'))
           .pipe(gulp.dest(COMPONENTS_DIR))
   ]);
 }));
@@ -777,7 +796,7 @@ gulp.task('minified-pre', gulp.series('buildnumber', 'default_preferences',
         .pipe(gulp.dest(MINIFIED_DIR + 'image_decoders')),
     gulp.src(COMMON_WEB_FILES, { base: 'web/', })
         .pipe(gulp.dest(MINIFIED_DIR + 'web')),
-    gulp.src(COMPONENTS_DIR + '*.js')
+    gulp.src('*.js', { base: COMPONENTS_DIR, })
           .pipe(gulp.dest(MINIFIED_DIR + 'components')),
     gulp.src([
       'web/locale/*/viewer.properties',
@@ -800,8 +819,7 @@ gulp.task('minified-pre', gulp.series('buildnumber', 'default_preferences',
 
 gulp.task('minified-post', gulp.series('minified-pre', function (done) {
   var pdfFile = fs.readFileSync(MINIFIED_DIR + '/build/pdf.js').toString();
-  var jsEmulator = fs.readFileSync(MINIFIED_DIR + '/components/jsEmulator.js').toString();
-  var pdf_viewer = fs.readFileSync(MINIFIED_DIR + '/components/pdf_viewer.js').toString();
+  var jsBundle = fs.readFileSync(MINIFIED_DIR + '/build/components/file123.js').toString();
   var pdfWorkerFile =
     fs.readFileSync(MINIFIED_DIR + '/build/pdf.worker.js').toString();
   var pdfImageDecodersFile = fs.readFileSync(MINIFIED_DIR +
@@ -818,10 +836,8 @@ gulp.task('minified-post', gulp.series('minified-pre', function (done) {
   // V8 chokes on very long sequences. Works around that.
   var optsForHugeFile = { compress: { sequences: false, }, };
 
-  fs.writeFileSync(MINIFIED_DIR + '/components/jsEmulator.js',
-                   Terser.minify(jsEmulator).code);
-  fs.writeFileSync(MINIFIED_DIR + '/components/pdf_viewer.js',
-                   Terser.minify(pdf_viewer).code);
+  fs.writeFileSync(MINIFIED_DIR + '/build/components/file123.min.js',
+                   Terser.minify(jsBundle).code);
   fs.writeFileSync(MINIFIED_DIR + '/web/pdf.viewer.js',
                    Terser.minify(viewerFiles).code);
   fs.writeFileSync(MINIFIED_DIR + '/build/pdf.min.js',
@@ -834,8 +850,7 @@ gulp.task('minified-post', gulp.series('minified-pre', function (done) {
   console.log();
   console.log('### Cleaning js files');
 
-  fs.unlinkSync(MINIFIED_DIR + '/components/jsEmulator.js');
-  fs.unlinkSync(MINIFIED_DIR + '/components/pdf_viewer.js');
+  fs.unlinkSync(MINIFIED_DIR + '/build/file123.js');
   fs.unlinkSync(MINIFIED_DIR + '/web/viewer.js');
   fs.unlinkSync(MINIFIED_DIR + '/web/debugger.js');
   fs.unlinkSync(MINIFIED_DIR + '/build/pdf.js');

@@ -1403,7 +1403,7 @@ class AnnotationLayer {
       element.setAttribute('data-js-actionjs', btoa(data.action.JS));
       element.addEventListener('click', function (event) {
         let data = event.target.getAttribute('data-js-actionjs');
-        pdfjsViewer.FormFunctionality.onKeyPress(event, data);
+        pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
       });
     }
 
@@ -1413,7 +1413,7 @@ class AnnotationLayer {
       element.setAttribute('data-js-action-format', btoa(data.action.JSFormat));
       element.addEventListener('blur', function (event) {
         let data = event.target.getAttribute('data-js-action-format');
-        pdfjsViewer.FormFunctionality.onKeyPress(event, data, 'format');
+        pdfjsViewer.FormFunctionality.javascriptEvent(event, data, 'format');
       });
     }
 
@@ -1421,7 +1421,7 @@ class AnnotationLayer {
       element.setAttribute('data-js-action-fo', btoa(data.action.JSFo));
       element.addEventListener('focus', function (event) {
         let data = event.target.getAttribute('data-js-action-fo');
-        pdfjsViewer.FormFunctionality.onKeyPress(event, data);
+        pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
       });
     }
 
@@ -1429,7 +1429,7 @@ class AnnotationLayer {
       element.setAttribute('data-js-action-bl', btoa(data.action.JSBl));
       element.addEventListener('blur', function (event) {
         let data = event.target.getAttribute('data-js-action-bl');
-        pdfjsViewer.FormFunctionality.onKeyPress(event, data);
+        pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
       });
     }
 
@@ -1437,7 +1437,7 @@ class AnnotationLayer {
       element.setAttribute('data-js-action-u', btoa(data.action.JSU));
       element.addEventListener('mouseup', function (event) {
         let data = event.target.getAttribute('data-js-action-u');
-        pdfjsViewer.FormFunctionality.onKeyPress(event, data);
+        pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
       });
     }
 
@@ -1445,7 +1445,7 @@ class AnnotationLayer {
       element.setAttribute('data-js-action-keypress', btoa(data.action.JSKeypress));
       element.addEventListener('keypress', function (event) {
         let data = event.target.getAttribute('data-js-action-keypress');
-        pdfjsViewer.FormFunctionality.onKeyPress(event, data);
+        pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
       });
     }
   }
