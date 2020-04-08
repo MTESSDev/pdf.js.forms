@@ -16,7 +16,11 @@
     <script src="../build/components/pdf_viewer.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 
-
+<style>
+    .required-field-icon {
+        display: none;
+    }
+</style>
 </head>
 <body>
     <div>
@@ -64,6 +68,7 @@ $.validator.unobtrusive.adapters.addBool('pdfformat');
 
             
             var values = {
+                Group8: 'non'
             };
 
 // Fetch the PDF document from the URL using promises.

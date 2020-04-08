@@ -554,7 +554,7 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement {
       element = document.createElement('input');
       element.disabled = this.data.readOnly;
       element.type = 'radio';
-      element.id = this.data.correctedId + '.' + this.data.groupingId;
+      element.id = this.data.correctedId + '_' + this.data.fieldName;
       element.name = this.data.fieldName;
       element.value = this.data.buttonValue;
       let selected = false;
@@ -1391,6 +1391,11 @@ class AnnotationLayer {
     if (data.required) {
       const msg = (_formOptions.validationMessages.required || 'Field {0} is required.').replace('{0}', data.alternativeText);
       element.setAttribute('data-val-required', msg);
+      let iconDiv = document.createElement('div');
+      iconDiv.className = 'required-field-icon';
+      iconDiv.setAttribute('aria-hidden', true);
+      iconDiv.textContent = '*';
+      container.appendChild(iconDiv);
       addDataVal = true;
     }
 
@@ -1453,11 +1458,6 @@ class AnnotationLayer {
       errorDiv.setAttribute('data-valmsg-replace', 'true');
       errorDiv.setAttribute('style', 'top:' + size + 'px');
       container.appendChild(errorDiv);
-      let iconDiv = document.createElement('div');
-      iconDiv.className = 'required-field-icon';
-      iconDiv.setAttribute('aria-hidden', true);
-      iconDiv.textContent = '*';
-      container.appendChild(iconDiv);
     }
   }
 
