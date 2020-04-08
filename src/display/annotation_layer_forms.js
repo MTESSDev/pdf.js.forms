@@ -1750,7 +1750,7 @@ class AnnotationLayer {
 
         let addDataVal = false;
 
-        if (data.required && data.checkbox === false) {
+        if (data.required && data.checkBox !== true) {
             const msg = (_formOptions.validationMessages.required ||
                             'Field {0} is required.').replace('{0}', data.alternativeText);
             element.setAttribute('data-val-required', msg);

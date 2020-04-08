@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.113';
-var pdfjsBuild = '5bb1518d';
+var pdfjsVersion = '2.4.114';
+var pdfjsBuild = 'e643d203';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.113',
+    apiVersion: '2.4.114',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.113';
+var version = '2.4.114';
 exports.version = version;
-var build = '5bb1518d';
+var build = 'e643d203';
 exports.build = build;
 
 /***/ }),
@@ -21499,7 +21499,7 @@ function () {
     value: function addJSActions(element, data, container, size) {
       var addDataVal = false;
 
-      if (data.required && data.checkbox === false) {
+      if (data.required && data.checkBox !== true) {
         var msg = (_formOptions.validationMessages.required || 'Field {0} is required.').replace('{0}', data.alternativeText);
         element.setAttribute('data-val-required', msg);
         var iconDiv = document.createElement('div');
