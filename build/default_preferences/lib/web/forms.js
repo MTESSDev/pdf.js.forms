@@ -145,14 +145,15 @@ let FormFunctionality = function FormFunctionalityClosure() {
 
       element.value = val;
       element.rc = true;
+      element.willCommit = false;
       raw = raw.replace(/this\./g, 'thisEmulator.');
       eval(raw);
 
       if (typeCall === 'format') {
         if (element.value === '' && val !== '') {
-          element.target.setAttribute('data-val-pdfformatvalid-valid', false);
+          return false;
         } else {
-          element.target.setAttribute('data-val-pdfformatvalid-valid', true);
+          return true;
         }
       }
 
@@ -160,9 +161,6 @@ let FormFunctionality = function FormFunctionalityClosure() {
         element.target.style.borderStyle = element.target.borderStyle;
         return true;
       }
-
-      element.preventDefault();
-      return false;
     } catch (error) {
       if (console) {
         console.info('Validating PDF field ' + element.target.name + ' failed.');

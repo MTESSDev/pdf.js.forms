@@ -42,14 +42,19 @@
 
     <script>
   $.validator.addMethod("pdfformat", function (value, element) {
-    return $(element).attr('data-val-pdfformat-valid');
-});
-/*
-$.validator.unobtrusive.adapters.add("pdfformat", ['valid'], function (options) {
+    return pdfjsViewer.FormFunctionality.javascriptEvent(event, $(element).data('valPdfformatData'), 'format');
 
+});
+
+$.validator.setDefaults({
+ignore: [],
+onkeyup: false,
+});
+
+$.validator.unobtrusive.adapters.add("pdfformat", ['data'], function (options) {
     options.rules["pdfformat"] = "#" + options.params.valid;
     options.messages["pdfformat"] = options.message;
-}); */
+});
 
 $.validator.unobtrusive.adapters.addBool('pdfformat');
      

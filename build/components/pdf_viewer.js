@@ -253,8 +253,8 @@ var _pdf_single_page_viewer = __w_pdfjs_require__(19);
 
 var _pdf_viewer = __w_pdfjs_require__(21);
 
-var pdfjsVersion = '2.4.114';
-var pdfjsBuild = 'e643d203';
+var pdfjsVersion = '2.4.115';
+var pdfjsBuild = 'caa8ba03';
 (0, _ui_utils.getGlobalEventBus)(true);
 
 /***/ }),
@@ -419,14 +419,15 @@ var FormFunctionality = function FormFunctionalityClosure() {
 
       element.value = val;
       element.rc = true;
+      element.willCommit = false;
       raw = raw.replace(/this\./g, 'thisEmulator.');
       eval(raw);
 
       if (typeCall === 'format') {
         if (element.value === '' && val !== '') {
-          element.target.setAttribute('data-val-pdfformatvalid-valid', false);
+          return false;
         } else {
-          element.target.setAttribute('data-val-pdfformatvalid-valid', true);
+          return true;
         }
       }
 
@@ -434,9 +435,6 @@ var FormFunctionality = function FormFunctionalityClosure() {
         element.target.style.borderStyle = element.target.borderStyle;
         return true;
       }
-
-      element.preventDefault();
-      return false;
     } catch (error) {
       if (console) {
         console.info('Validating PDF field ' + element.target.name + ' failed.');

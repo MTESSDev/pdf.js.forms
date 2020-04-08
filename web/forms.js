@@ -118,6 +118,7 @@ let FormFunctionality = (function FormFunctionalityClosure() {
 
             element.value = val;
             element.rc = true;
+            element.willCommit = false;
             /* if ('FocusEvent' in element.toString()) {
                 KeyboardEvent.prototype.change = event.key;
                 KeyboardEvent.prototype.selStart = element.target.selectionStart;
@@ -139,9 +140,11 @@ let FormFunctionality = (function FormFunctionalityClosure() {
 
             if (typeCall === 'format') {
                 if (element.value === '' && val !== '') {
-                    element.target.setAttribute('data-val-pdfformatvalid-valid', false);
+                    // element.target.setAttribute('data-val-pdfformatvalid-valid', false);
+                    return false;
                 } else {
-                    element.target.setAttribute('data-val-pdfformatvalid-valid', true);
+                    return true;
+                    // element.target.setAttribute('data-val-pdfformatvalid-valid', true);
                 }
             }
 
@@ -150,8 +153,8 @@ let FormFunctionality = (function FormFunctionalityClosure() {
                 return true;
             }
 
-            element.preventDefault();
-            return false;
+            // element.preventDefault();
+            // return false;
 
         } catch (error) {
             if (console) {

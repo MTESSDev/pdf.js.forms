@@ -1408,13 +1408,9 @@ class AnnotationLayer {
     }
 
     if (data.action.JSFormat) {
-      element.setAttribute('data-val-pdfformat', 'Format incorrect');
-      element.setAttribute('data-val-pdfformat-valid', 'true');
-      element.setAttribute('data-js-action-format', btoa(data.action.JSFormat));
-      element.addEventListener('blur', function (event) {
-        let data = event.target.getAttribute('data-js-action-format');
-        pdfjsViewer.FormFunctionality.javascriptEvent(event, data, 'format');
-      });
+      const msg = (_formOptions.validationMessages.pdfformat || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+      element.setAttribute('data-val-pdfformat', msg);
+      element.setAttribute('data-val-pdfformat-data', btoa(data.action.JSFormat));
       addDataVal = true;
     }
 

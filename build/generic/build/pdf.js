@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.114';
-var pdfjsBuild = 'e643d203';
+var pdfjsVersion = '2.4.115';
+var pdfjsBuild = 'caa8ba03';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.114',
+    apiVersion: '2.4.115',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.114';
+var version = '2.4.115';
 exports.version = version;
-var build = 'e643d203';
+var build = 'caa8ba03';
 exports.build = build;
 
 /***/ }),
@@ -21519,13 +21519,10 @@ function () {
       }
 
       if (data.action.JSFormat) {
-        element.setAttribute('data-val-pdfformat', 'Format incorrect');
-        element.setAttribute('data-val-pdfformat-valid', 'true');
-        element.setAttribute('data-js-action-format', btoa(data.action.JSFormat));
-        element.addEventListener('blur', function (event) {
-          var data = event.target.getAttribute('data-js-action-format');
-          pdfjsViewer.FormFunctionality.javascriptEvent(event, data, 'format');
-        });
+        var _msg = (_formOptions.validationMessages.pdfformat || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+
+        element.setAttribute('data-val-pdfformat', _msg);
+        element.setAttribute('data-val-pdfformat-data', btoa(data.action.JSFormat));
         addDataVal = true;
       }
 
