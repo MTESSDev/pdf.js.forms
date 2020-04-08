@@ -129,39 +129,47 @@ let FormFunctionality = function FormFunctionalityClosure() {
   };
 
   FormFunctionality.javascriptEvent = function (element, eventData, typeCall) {
-    let raw = 'var thisEmulator = new Field(document.getElementById(\'' + element.target.id + '\'));\r\n' + atob(eventData);
-    HTMLInputElement.prototype.borderStyle = element.target.style.borderStyle;
-    let val = element.target.value;
+    try {
+      let raw = 'var thisEmulator = new Field(document.getElementById(\'' + element.target.id + '\'));\r\n' + atob(eventData);
+      HTMLInputElement.prototype.borderStyle = element.target.style.borderStyle;
+      let val = element.target.value;
 
-    if (element.target.tagName.toLowerCase() === 'input' && element.target.type.toLowerCase() === 'text' || element.target.tagName.toLowerCase() === 'textarea') {
-      if (element.which !== 0) {
-        val += String.fromCharCode(element.which);
+      if (element.target.tagName.toLowerCase() === 'input' && element.target.type.toLowerCase() === 'text' || element.target.tagName.toLowerCase() === 'textarea') {
+        if (element.which !== 0) {
+          val += String.fromCharCode(element.which);
+        }
+
+        element.change = event.key;
+        element.selStart = element.target.selectionStart;
       }
 
-      element.change = event.key;
-      element.selStart = element.target.selectionStart;
-    }
+      element.value = val;
+      element.rc = true;
+      raw = raw.replace(/this\./g, 'thisEmulator.');
+      eval(raw);
 
-    element.value = val;
-    element.rc = true;
-    raw = raw.replace(/this\./g, 'thisEmulator.');
-    eval(raw);
-
-    if (typeCall === 'format') {
-      if (element.value === '' && val !== '') {
-        element.target.setAttribute('data-val-pdfformatvalid-valid', false);
-      } else {
-        element.target.setAttribute('data-val-pdfformatvalid-valid', true);
+      if (typeCall === 'format') {
+        if (element.value === '' && val !== '') {
+          element.target.setAttribute('data-val-pdfformatvalid-valid', false);
+        } else {
+          element.target.setAttribute('data-val-pdfformatvalid-valid', true);
+        }
       }
-    }
 
-    if (element.rc) {
-      element.target.style.borderStyle = element.target.borderStyle;
+      if (element.rc) {
+        element.target.style.borderStyle = element.target.borderStyle;
+        return true;
+      }
+
+      element.preventDefault();
+      return false;
+    } catch (error) {
+      if (console) {
+        console.info('Validating PDF field ' + element.target.name + ' failed.');
+      }
+
       return true;
     }
-
-    element.preventDefault();
-    return false;
   };
 
   FormFunctionality.render = function (width, height, page, target, values, options) {

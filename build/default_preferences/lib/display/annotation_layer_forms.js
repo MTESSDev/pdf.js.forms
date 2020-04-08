@@ -1388,7 +1388,7 @@ class AnnotationLayer {
   static addJSActions(element, data, container, size) {
     let addDataVal = false;
 
-    if (data.required) {
+    if (data.required && data.checkbox === false) {
       const msg = (_formOptions.validationMessages.required || 'Field {0} is required.').replace('{0}', data.alternativeText);
       element.setAttribute('data-val-required', msg);
       let iconDiv = document.createElement('div');

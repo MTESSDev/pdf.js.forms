@@ -253,8 +253,8 @@ var _pdf_single_page_viewer = __w_pdfjs_require__(19);
 
 var _pdf_viewer = __w_pdfjs_require__(21);
 
-var pdfjsVersion = '2.4.112';
-var pdfjsBuild = '69cf739d';
+var pdfjsVersion = '2.4.113';
+var pdfjsBuild = '5bb1518d';
 (0, _ui_utils.getGlobalEventBus)(true);
 
 /***/ }),
@@ -403,39 +403,47 @@ var FormFunctionality = function FormFunctionalityClosure() {
   };
 
   FormFunctionality.javascriptEvent = function (element, eventData, typeCall) {
-    var raw = 'var thisEmulator = new Field(document.getElementById(\'' + element.target.id + '\'));\r\n' + atob(eventData);
-    HTMLInputElement.prototype.borderStyle = element.target.style.borderStyle;
-    var val = element.target.value;
+    try {
+      var raw = 'var thisEmulator = new Field(document.getElementById(\'' + element.target.id + '\'));\r\n' + atob(eventData);
+      HTMLInputElement.prototype.borderStyle = element.target.style.borderStyle;
+      var val = element.target.value;
 
-    if (element.target.tagName.toLowerCase() === 'input' && element.target.type.toLowerCase() === 'text' || element.target.tagName.toLowerCase() === 'textarea') {
-      if (element.which !== 0) {
-        val += String.fromCharCode(element.which);
+      if (element.target.tagName.toLowerCase() === 'input' && element.target.type.toLowerCase() === 'text' || element.target.tagName.toLowerCase() === 'textarea') {
+        if (element.which !== 0) {
+          val += String.fromCharCode(element.which);
+        }
+
+        element.change = event.key;
+        element.selStart = element.target.selectionStart;
       }
 
-      element.change = event.key;
-      element.selStart = element.target.selectionStart;
-    }
+      element.value = val;
+      element.rc = true;
+      raw = raw.replace(/this\./g, 'thisEmulator.');
+      eval(raw);
 
-    element.value = val;
-    element.rc = true;
-    raw = raw.replace(/this\./g, 'thisEmulator.');
-    eval(raw);
-
-    if (typeCall === 'format') {
-      if (element.value === '' && val !== '') {
-        element.target.setAttribute('data-val-pdfformatvalid-valid', false);
-      } else {
-        element.target.setAttribute('data-val-pdfformatvalid-valid', true);
+      if (typeCall === 'format') {
+        if (element.value === '' && val !== '') {
+          element.target.setAttribute('data-val-pdfformatvalid-valid', false);
+        } else {
+          element.target.setAttribute('data-val-pdfformatvalid-valid', true);
+        }
       }
-    }
 
-    if (element.rc) {
-      element.target.style.borderStyle = element.target.borderStyle;
+      if (element.rc) {
+        element.target.style.borderStyle = element.target.borderStyle;
+        return true;
+      }
+
+      element.preventDefault();
+      return false;
+    } catch (error) {
+      if (console) {
+        console.info('Validating PDF field ' + element.target.name + ' failed.');
+      }
+
       return true;
     }
-
-    element.preventDefault();
-    return false;
   };
 
   FormFunctionality.render = function (width, height, page, target, values, options) {

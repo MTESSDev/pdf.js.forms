@@ -63,7 +63,12 @@ PdfjsAppEmulator.prototype =
  */
 PdfjsAppEmulator.prototype.alert = function(cMsg, nIcon)
 {
-	return alert(cMsg + "");
+	if (console) {
+		console.info(cMsg + "");
+		return true;
+	} else {
+		return true;
+	}
 };
 
 /**
