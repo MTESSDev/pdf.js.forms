@@ -42,19 +42,22 @@
 
     <script>
   $.validator.addMethod("pdfformat", function (value, element) {
-    return pdfjsViewer.FormFunctionality.javascriptEvent(event, $(element).data('valPdfformatData'), 'format');
-
-});
+      if (value) {
+        return pdfjsViewer.FormFunctionality.javascriptEvent(event, $(element).data('valPdfformatData'), 'format');
+      } else {
+          return true;
+      }
+    });
 
 $.validator.setDefaults({
 ignore: [],
 onkeyup: false,
 });
 
-$.validator.unobtrusive.adapters.add("pdfformat", ['data'], function (options) {
+/*$.validator.unobtrusive.adapters.add("pdfformat", ['data'], function (options) {
     options.rules["pdfformat"] = "#" + options.params.valid;
     options.messages["pdfformat"] = options.message;
-});
+});*/
 
 $.validator.unobtrusive.adapters.addBool('pdfformat');
      
