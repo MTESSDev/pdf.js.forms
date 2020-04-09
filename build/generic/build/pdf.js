@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.119';
-var pdfjsBuild = '9afb751a';
+var pdfjsVersion = '2.4.120';
+var pdfjsBuild = '5375fa2d';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.119',
+    apiVersion: '2.4.120',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.119';
+var version = '2.4.120';
 exports.version = version;
-var build = '9afb751a';
+var build = '5375fa2d';
 exports.build = build;
 
 /***/ }),
@@ -21531,12 +21531,21 @@ function () {
       if (data.required && data.checkBox !== true) {
         var msg = (_formOptions.validationMessages.required || 'Field {0} is required.').replace('{0}', data.alternativeText);
         element.setAttribute('data-val-required', msg);
+        element.setAttribute('required', '');
         var iconDiv = document.createElement('div');
         iconDiv.className = 'required-field-icon';
         iconDiv.setAttribute('aria-hidden', true);
         iconDiv.textContent = '*';
         outDiv.iconDiv = iconDiv;
         addDataVal = true;
+      }
+
+      if (data.action.JS) {
+        element.setAttribute('data-js-actionjs', btoa(data.action.JS));
+        element.addEventListener('click', function (event) {
+          var data = event.target.getAttribute('data-js-actionjs');
+          pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
+        });
       }
 
       if (data.action.JSFormat) {

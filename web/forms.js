@@ -139,14 +139,53 @@ let FormFunctionality = (function FormFunctionalityClosure() {
             eval(raw);
 
             if (typeCall === 'format') {
-                if (element.value === '' && val !== '') {
+                if (element.value.trim() === '' && val.trim() !== '') {
                     // element.target.setAttribute('data-val-pdfformatvalid-valid', false);
                     return false;
-                } else {
-                    return true;
-                    // element.target.setAttribute('data-val-pdfformatvalid-valid', true);
+                }
+
+                let finalValue = val;
+                // Check the difference
+                if (element.value !== val) {
+
+                    if (element.value === val.toUpperCase()) {
+                        // Only case change
+                        element.target.value = finalValue.toUpperCase();
+                        return true;
+                    }
+                    if (element.target.getAttribute('data-val-pdfformat-type') === 'number' &&
+                        element.value.replace(/\.00$/, '') === val.toLowerCase().trim()) {
+                        // Validation added trailing numbers (currency)
+                        element.target.value = val + '.00';
+                        return true;
+                    }
+                    if (element.target.getAttribute('data-val-pdfformat-type') === 'number' &&
+                        element.value.replace('.', ',') === val.replace('.', ',')) {
+                        // Validation added trailing numbers (currency)
+                        return true;
+                    }
+                    if (element.value.trim() === val.trim()) {
+                        // Validation added trailing numbers (currency)
+                        // element.target.value = val + '.00';
+                        return true;
+                    }
+
+                    return false;
+
                 }
             }
+                /* if (element.value.toLowerCase() !== val.toLowerCase() &&
+                    (element.target.getAttribute('data-val-pdfformat-type') === 'number' &&
+                    element.value.replace(/\.00$/, '') !== val.toLowerCase().trim())) {
+                    return false;
+                } else {
+                    /*if (element.which !== 0) { */
+                       // element.target.value = element.value.trimEnd();
+                   /* }
+                }
+                return true;
+                // element.target.setAttribute('data-val-pdfformatvalid-valid', true);
+            } */
 
             if (element.rc) {
                 element.target.style.borderStyle = element.target.borderStyle;

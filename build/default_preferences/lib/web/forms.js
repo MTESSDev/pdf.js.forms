@@ -150,11 +150,17 @@ let FormFunctionality = function FormFunctionalityClosure() {
       eval(raw);
 
       if (typeCall === 'format') {
-        if (element.value === '' && val !== '') {
+        if (element.value.trim() === '' && val.trim() !== '') {
+          return false;
+        }
+
+        if (element.value.toLowerCase().trim() !== val.toLowerCase().trim() && element.target.getAttribute('data-val-pdfformat-type') === 'number' && element.value.replace(/\.00$/, '') !== val.toLowerCase().trim()) {
           return false;
         } else {
-          return true;
+          element.target.value = element.value.trimEnd();
         }
+
+        return true;
       }
 
       if (element.rc) {

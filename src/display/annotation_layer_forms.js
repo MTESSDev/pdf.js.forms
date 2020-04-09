@@ -1777,6 +1777,7 @@ class AnnotationLayer {
             const msg = (_formOptions.validationMessages.required ||
                             'Field {0} is required.').replace('{0}', data.alternativeText);
             element.setAttribute('data-val-required', msg);
+            element.setAttribute('required', '');
 
             let iconDiv = document.createElement('div');
             iconDiv.className = 'required-field-icon';
@@ -1787,14 +1788,14 @@ class AnnotationLayer {
             addDataVal = true;
         }
 
-        /* if (data.action.JS) {
+        if (data.action.JS) {
             element.setAttribute('data-js-actionjs', btoa(data.action.JS));
             element.addEventListener('click', function(event) {
                 let data = event.target.getAttribute('data-js-actionjs');
                 // eslint-disable-next-line no-undef
                 pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
             });
-        } */
+        }
 
         if (data.action.JSFormat) {
             let jsdata = data.action.JSFormat;
@@ -1842,24 +1843,24 @@ class AnnotationLayer {
             addDataVal = true;
         }
 
-        /* if (data.action.JSFo) {
+         /* if (data.action.JSFo) {
             element.setAttribute('data-js-action-fo', btoa(data.action.JSFo));
             element.addEventListener('focus', function(event) {
                 let data = event.target.getAttribute('data-js-action-fo');
                 // eslint-disable-next-line no-undef
                 pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
              });
-        } */ 
-        /*
-        if (data.action.JSBl) {
+        } */
+        
+       /* if (data.action.JSBl) {
             element.setAttribute('data-js-action-bl', btoa(data.action.JSBl));
             element.addEventListener('blur', function(event) {
                 let data = event.target.getAttribute('data-js-action-bl');
                 // eslint-disable-next-line no-undef
                 pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
              });
-        }
- */
+        } */
+ 
         /* if (data.action.JSU) {
             element.setAttribute('data-js-action-u', btoa(data.action.JSU));
             element.addEventListener('mouseup', function(event) {
@@ -1876,7 +1877,7 @@ class AnnotationLayer {
                 // eslint-disable-next-line no-undef
                 pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
             });
-        } */ 
+        } */
 
         if (addDataVal) {
             element.setAttribute('data-val', 'true');

@@ -220,7 +220,82 @@ Util.prototype.printd = function (fmt, date) {
 	return out;
 }
 
-Util.prototype.printxOriginal = function (fmt, val) {
+Util.prototype.printx = function (fmt, val) {
+	function toUpper(str) { return str.toUpperCase(); }
+	function toLower(str) { return str.toLowerCase(); }
+	function toSame(str) { return str; }
+	var convertCase = toSame;
+	var res = '';
+	var i, m;
+	var n = fmt ? fmt.length : 0;
+	var vn = val ? val.length : 0;
+	var cleaned = fmt ? fmt.replace(/[^A-Za-z0-9]/g, '').length : 0;
+	
+	if (fmt.indexOf('A') != -1 && cleaned != vn) {
+		return '';
+	}
+	
+	for (i = 0; i < n; ++i) {
+		switch (fmt.charAt(i)) {
+		case '\\':
+			if (++i < n)
+				res += fmt.charAt(i);
+			break;
+		case 'X':
+			m = val.match(/\w/);
+			if (m) {
+				res += convertCase(m[0]);
+				val = val.replace(/^\W*\w/, '');
+			} else {
+				res += ' ';
+			}
+			break;
+		case 'A':
+			m = val.match(/[A-Za-z]/);
+			if (m) {
+				res += convertCase(m[0]);
+				val = val.replace(/^[^A-Za-z]*[A-Za-z]/, '');
+			} else {
+				res += ' ';
+			}
+			break;
+		case '9':
+			m = val.match(/\d/);
+			if (m) {
+				res += m[0];
+				val = val.replace(/^\D*\d/, '');
+			} else {
+				res += ' ';
+			}
+			break;
+		case '*':
+			res += convertCase(val);
+			val = '';
+			break;
+		case '?':
+			if (val !== '') {
+				res += convertCase(val.charAt(0));
+				val = val.substring(1);
+			}
+			break;
+		case '=':
+			convertCase = toSame;
+			break;
+		case '>':
+			convertCase = toUpper;
+			break;
+		case '<':
+			convertCase = toLower;
+			break;
+		default:
+			res += convertCase(fmt.charAt(i));
+			break;
+		}
+	}
+	return res;
+}
+
+/*Util.prototype.printx = function (fmt, val) {
 	function toUpper(str) { return str.toUpperCase(); }
 	function toLower(str) { return str.toLowerCase(); }
 	function toSame(str) { return str; }
@@ -280,9 +355,9 @@ Util.prototype.printxOriginal = function (fmt, val) {
 		}
 	}
 	return res;
-}
+}*/
 
-Util.prototype.printx = function (fmt, val) {
+/*Util.prototype.printx = function (fmt, val) {
 	debugger;
 	function toUpper(str) { return str.toUpperCase(); }
 	function toLower(str) { return str.toLowerCase(); }
@@ -293,7 +368,7 @@ Util.prototype.printx = function (fmt, val) {
 	var n = fmt ? fmt.length : 0;
 	var vn = val ? val.length : 0;
 	
-	if (n != vn) {
+	/*if (n != vn) {
 		return '';
 	}
 	
@@ -355,7 +430,7 @@ Util.prototype.printx = function (fmt, val) {
 		}
 	}
 	return res;
-}
+}*/
 
 Util.prototype.printf = function()
 		{
@@ -790,7 +865,7 @@ function AFNumber_Keystroke(nDec, sepStyle, negStyle, currStyle, strCurrency, bC
 
 function AFNumber_Format(nDec, sepStyle, negStyle, currStyle, strCurrency, bCurrencyPrepend) {
 	var value = AFMakeNumber(event.value);
-	var fmt = '%,' + sepStyle + '.' + nDec + 'f';
+	var fmt = '%' + sepStyle + '.' + nDec + 'f';
 	if (value == null) {
 		event.value = '';
 		return;

@@ -1420,12 +1420,21 @@ class AnnotationLayer {
     if (data.required && data.checkBox !== true) {
       const msg = (_formOptions.validationMessages.required || 'Field {0} is required.').replace('{0}', data.alternativeText);
       element.setAttribute('data-val-required', msg);
+      element.setAttribute('required', '');
       let iconDiv = document.createElement('div');
       iconDiv.className = 'required-field-icon';
       iconDiv.setAttribute('aria-hidden', true);
       iconDiv.textContent = '*';
       outDiv.iconDiv = iconDiv;
       addDataVal = true;
+    }
+
+    if (data.action.JS) {
+      element.setAttribute('data-js-actionjs', btoa(data.action.JS));
+      element.addEventListener('click', function (event) {
+        let data = event.target.getAttribute('data-js-actionjs');
+        pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
+      });
     }
 
     if (data.action.JSFormat) {

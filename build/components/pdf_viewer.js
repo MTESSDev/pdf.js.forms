@@ -253,8 +253,8 @@ var _pdf_single_page_viewer = __w_pdfjs_require__(19);
 
 var _pdf_viewer = __w_pdfjs_require__(21);
 
-var pdfjsVersion = '2.4.117';
-var pdfjsBuild = '9fcdd3a0';
+var pdfjsVersion = '2.4.120';
+var pdfjsBuild = '5375fa2d';
 (0, _ui_utils.getGlobalEventBus)(true);
 
 /***/ }),
@@ -424,10 +424,32 @@ var FormFunctionality = function FormFunctionalityClosure() {
       eval(raw);
 
       if (typeCall === 'format') {
-        if (element.value === '' && val !== '') {
+        if (element.value.trim() === '' && val.trim() !== '') {
           return false;
-        } else {
-          return true;
+        }
+
+        var finalValue = val;
+
+        if (element.value !== val) {
+          if (element.value === val.toUpperCase()) {
+            element.target.value = finalValue.toUpperCase();
+            return true;
+          }
+
+          if (element.target.getAttribute('data-val-pdfformat-type') === 'number' && element.value.replace(/\.00$/, '') === val.toLowerCase().trim()) {
+            element.target.value = val + '.00';
+            return true;
+          }
+
+          if (element.target.getAttribute('data-val-pdfformat-type') === 'number' && element.value.replace('.', ',') === val.replace('.', ',')) {
+            return true;
+          }
+
+          if (element.value.trim() === val.trim()) {
+            return true;
+          }
+
+          return false;
         }
       }
 
