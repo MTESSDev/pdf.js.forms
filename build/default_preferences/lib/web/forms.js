@@ -154,13 +154,29 @@ let FormFunctionality = function FormFunctionalityClosure() {
           return false;
         }
 
-        if (element.value.toLowerCase().trim() !== val.toLowerCase().trim() && element.target.getAttribute('data-val-pdfformat-type') === 'number' && element.value.replace(/\.00$/, '') !== val.toLowerCase().trim()) {
-          return false;
-        } else {
-          element.target.value = element.value.trimEnd();
-        }
+        let finalValue = val;
 
-        return true;
+        if (element.value !== val) {
+          if (element.value === val.toUpperCase()) {
+            element.target.value = finalValue.toUpperCase();
+            return true;
+          }
+
+          if (element.target.getAttribute('data-val-pdfformat-type') === 'number' && element.value.replace(/\.00$/, '') === val.toLowerCase().trim()) {
+            element.target.value = val + '.00';
+            return true;
+          }
+
+          if (element.target.getAttribute('data-val-pdfformat-type') === 'number' && element.value.replace('.', ',') === val.replace('.', ',')) {
+            return true;
+          }
+
+          if (element.value.trim() === val.trim()) {
+            return true;
+          }
+
+          return false;
+        }
       }
 
       if (element.rc) {
