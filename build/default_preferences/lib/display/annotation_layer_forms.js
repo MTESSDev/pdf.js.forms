@@ -1428,14 +1428,6 @@ class AnnotationLayer {
       addDataVal = true;
     }
 
-    if (data.action.JS) {
-      element.setAttribute('data-js-actionjs', btoa(data.action.JS));
-      element.addEventListener('click', function (event) {
-        let data = event.target.getAttribute('data-js-actionjs');
-        pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
-      });
-    }
-
     if (data.action.JSFormat) {
       let jsdata = data.action.JSFormat;
       let formatType = 'custom';
@@ -1460,43 +1452,15 @@ class AnnotationLayer {
         formatType = 'percent';
         const msg = (_formOptions.validationMessages.pdfformat.percent || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
         element.setAttribute('data-val-pdfformat', msg);
+      } else {
+        formatType = 'custom';
+        const msg = (_formOptions.validationMessages.pdfformat.custom || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+        element.setAttribute('data-val-pdfformat', msg);
       }
 
       element.setAttribute('data-val-pdfformat-type', formatType);
       element.setAttribute('data-val-pdfformat-data', btoa(jsdata));
       addDataVal = true;
-    }
-
-    if (data.action.JSFo) {
-      element.setAttribute('data-js-action-fo', btoa(data.action.JSFo));
-      element.addEventListener('focus', function (event) {
-        let data = event.target.getAttribute('data-js-action-fo');
-        pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
-      });
-    }
-
-    if (data.action.JSBl) {
-      element.setAttribute('data-js-action-bl', btoa(data.action.JSBl));
-      element.addEventListener('blur', function (event) {
-        let data = event.target.getAttribute('data-js-action-bl');
-        pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
-      });
-    }
-
-    if (data.action.JSU) {
-      element.setAttribute('data-js-action-u', btoa(data.action.JSU));
-      element.addEventListener('mouseup', function (event) {
-        let data = event.target.getAttribute('data-js-action-u');
-        pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
-      });
-    }
-
-    if (data.action.JSKeypress) {
-      element.setAttribute('data-js-action-keypress', btoa(data.action.JSKeypress));
-      element.addEventListener('keypress', function (event) {
-        let data = event.target.getAttribute('data-js-action-keypress');
-        pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
-      });
     }
 
     if (addDataVal) {

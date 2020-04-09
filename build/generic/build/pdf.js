@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.118';
-var pdfjsBuild = '09cc2a82';
+var pdfjsVersion = '2.4.119';
+var pdfjsBuild = '9afb751a';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.118',
+    apiVersion: '2.4.119',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.118';
+var version = '2.4.119';
 exports.version = version;
-var build = '09cc2a82';
+var build = '9afb751a';
 exports.build = build;
 
 /***/ }),
@@ -21539,14 +21539,6 @@ function () {
         addDataVal = true;
       }
 
-      if (data.action.JS) {
-        element.setAttribute('data-js-actionjs', btoa(data.action.JS));
-        element.addEventListener('click', function (event) {
-          var data = event.target.getAttribute('data-js-actionjs');
-          pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
-        });
-      }
-
       if (data.action.JSFormat) {
         var jsdata = data.action.JSFormat;
         var formatType = 'custom';
@@ -21581,43 +21573,17 @@ function () {
           var _msg5 = (_formOptions.validationMessages.pdfformat.percent || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
 
           element.setAttribute('data-val-pdfformat', _msg5);
+        } else {
+          formatType = 'custom';
+
+          var _msg6 = (_formOptions.validationMessages.pdfformat.custom || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+
+          element.setAttribute('data-val-pdfformat', _msg6);
         }
 
         element.setAttribute('data-val-pdfformat-type', formatType);
         element.setAttribute('data-val-pdfformat-data', btoa(jsdata));
         addDataVal = true;
-      }
-
-      if (data.action.JSFo) {
-        element.setAttribute('data-js-action-fo', btoa(data.action.JSFo));
-        element.addEventListener('focus', function (event) {
-          var data = event.target.getAttribute('data-js-action-fo');
-          pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
-        });
-      }
-
-      if (data.action.JSBl) {
-        element.setAttribute('data-js-action-bl', btoa(data.action.JSBl));
-        element.addEventListener('blur', function (event) {
-          var data = event.target.getAttribute('data-js-action-bl');
-          pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
-        });
-      }
-
-      if (data.action.JSU) {
-        element.setAttribute('data-js-action-u', btoa(data.action.JSU));
-        element.addEventListener('mouseup', function (event) {
-          var data = event.target.getAttribute('data-js-action-u');
-          pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
-        });
-      }
-
-      if (data.action.JSKeypress) {
-        element.setAttribute('data-js-action-keypress', btoa(data.action.JSKeypress));
-        element.addEventListener('keypress', function (event) {
-          var data = event.target.getAttribute('data-js-action-keypress');
-          pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
-        });
       }
 
       if (addDataVal) {
