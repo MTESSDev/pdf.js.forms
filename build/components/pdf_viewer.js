@@ -253,8 +253,8 @@ var _pdf_single_page_viewer = __w_pdfjs_require__(19);
 
 var _pdf_viewer = __w_pdfjs_require__(21);
 
-var pdfjsVersion = '2.4.122';
-var pdfjsBuild = '9b62177a';
+var pdfjsVersion = '2.4.123';
+var pdfjsBuild = 'e3fd1b74';
 (0, _ui_utils.getGlobalEventBus)(true);
 
 /***/ }),
@@ -409,7 +409,7 @@ var FormFunctionality = function FormFunctionalityClosure() {
       var val = element.target.value;
 
       if (element.target.tagName.toLowerCase() === 'input' && element.target.type.toLowerCase() === 'text' || element.target.tagName.toLowerCase() === 'textarea') {
-        if (element.which !== null || element.which !== 0) {
+        if (element.which !== undefined && element.which !== 0) {
           val += String.fromCharCode(element.which);
         }
 
