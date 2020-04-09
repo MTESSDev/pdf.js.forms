@@ -135,7 +135,7 @@ let FormFunctionality = function FormFunctionalityClosure() {
       let val = element.target.value;
 
       if (element.target.tagName.toLowerCase() === 'input' && element.target.type.toLowerCase() === 'text' || element.target.tagName.toLowerCase() === 'textarea') {
-        if (element.which !== null || element.which !== 0) {
+        if (element.which !== undefined && element.which !== 0) {
           val += String.fromCharCode(element.which);
         }
 
