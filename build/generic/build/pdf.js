@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.115';
-var pdfjsBuild = 'caa8ba03';
+var pdfjsVersion = '2.4.118';
+var pdfjsBuild = '09cc2a82';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.115',
+    apiVersion: '2.4.118',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.115';
+var version = '2.4.118';
 exports.version = version;
-var build = 'caa8ba03';
+var build = '09cc2a82';
 exports.build = build;
 
 /***/ }),
@@ -20113,6 +20113,7 @@ function (_WidgetAnnotationElem) {
       var TEXT_ALIGNMENT = ['left', 'center', 'right'];
       this.container.className = 'textWidgetAnnotation';
       var element = null;
+      var outDiv = null;
 
       if (this.renderInteractiveForms) {
         var creationRoutine = idClosureOverrides[this.data.correctedId] || genericClosureOverrides[fieldTypes.TEXT] || false;
@@ -20163,6 +20164,10 @@ function (_WidgetAnnotationElem) {
             element.style.cursor = 'not-allowed';
           }
 
+          if (this.data.doNotScroll) {
+            element.setAttribute('data-no-scroll', 'true');
+          }
+
           if (this.data.maxLen !== null) {
             element.maxLength = this.data.maxLen;
           }
@@ -20178,7 +20183,7 @@ function (_WidgetAnnotationElem) {
             element.style.letterSpacing = "calc(".concat(combWidth, "px - 1ch)");
           }
 
-          AnnotationLayer.addJSActions(element, this.data, this.container, this.data.rect[3] - this.data.rect[1]);
+          outDiv = AnnotationLayer.addJSActions(element, this.data, this.container, this.data.rect[3] - this.data.rect[1]);
 
           if (_postCreationTweak) {
             _postCreationTweak(fieldTypes.TEXT, this.data, element);
@@ -20203,6 +20208,15 @@ function (_WidgetAnnotationElem) {
       }
 
       this.container.appendChild(element);
+
+      if (outDiv.errorDiv) {
+        this.container.appendChild(outDiv.errorDiv);
+      }
+
+      if (outDiv.iconDiv) {
+        this.container.appendChild(outDiv.iconDiv);
+      }
+
       return this.container;
     }
   }, {
@@ -20244,6 +20258,7 @@ function (_WidgetAnnotationElem2) {
       this.container.className = 'buttonWidgetAnnotation checkBox';
       var creationRoutine = idClosureOverrides[this.data.correctedId] || genericClosureOverrides[fieldTypes.TEXT] || false;
       var element = null;
+      var outDiv = null;
 
       if (creationRoutine !== false) {
         element = creationRoutine(this);
@@ -20283,7 +20298,7 @@ function (_WidgetAnnotationElem2) {
         element.value = this.data.exportValue;
 
         if (this.renderInteractiveForms) {
-          AnnotationLayer.addJSActions(element, this.data, this.container, this.data.rect[3] - this.data.rect[1]);
+          outDiv = AnnotationLayer.addJSActions(element, this.data, this.container, this.data.rect[3] - this.data.rect[1]);
         }
 
         if (_postCreationTweak) {
@@ -20292,6 +20307,15 @@ function (_WidgetAnnotationElem2) {
       }
 
       this.container.appendChild(element);
+
+      if (outDiv.errorDiv) {
+        this.container.appendChild(outDiv.errorDiv);
+      }
+
+      if (outDiv.iconDiv) {
+        this.container.appendChild(outDiv.iconDiv);
+      }
+
       return this.container;
     }
   }]);
@@ -21456,6 +21480,7 @@ function () {
     key: "setOptions",
     value: function setOptions(options) {
       options.validationMessages = options.validationMessages || [];
+      options.validationMessages.pdfformat = options.validationMessages.pdfformat || [];
       _formOptions = options;
     }
   }, {
@@ -21498,6 +21523,10 @@ function () {
     key: "addJSActions",
     value: function addJSActions(element, data, container, size) {
       var addDataVal = false;
+      var outDiv = {
+        iconDiv: null,
+        errorDiv: null
+      };
 
       if (data.required && data.checkBox !== true) {
         var msg = (_formOptions.validationMessages.required || 'Field {0} is required.').replace('{0}', data.alternativeText);
@@ -21506,7 +21535,7 @@ function () {
         iconDiv.className = 'required-field-icon';
         iconDiv.setAttribute('aria-hidden', true);
         iconDiv.textContent = '*';
-        container.appendChild(iconDiv);
+        outDiv.iconDiv = iconDiv;
         addDataVal = true;
       }
 
@@ -21519,10 +21548,43 @@ function () {
       }
 
       if (data.action.JSFormat) {
-        var _msg = (_formOptions.validationMessages.pdfformat || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+        var jsdata = data.action.JSFormat;
+        var formatType = 'custom';
 
-        element.setAttribute('data-val-pdfformat', _msg);
-        element.setAttribute('data-val-pdfformat-data', btoa(data.action.JSFormat));
+        if (jsdata.startsWith('AFNumber_Format')) {
+          formatType = 'number';
+
+          var _msg = (_formOptions.validationMessages.pdfformat.number || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+
+          element.setAttribute('data-val-pdfformat', _msg);
+        } else if (jsdata.startsWith('AFDate_Format')) {
+          formatType = 'date';
+
+          var _msg2 = (_formOptions.validationMessages.pdfformat.date || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+
+          element.setAttribute('data-val-pdfformat', _msg2);
+        } else if (jsdata.startsWith('AFTime_Format')) {
+          formatType = 'time';
+
+          var _msg3 = (_formOptions.validationMessages.pdfformat.time || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+
+          element.setAttribute('data-val-pdfformat', _msg3);
+        } else if (jsdata.startsWith('AFSpecial_Format')) {
+          formatType = 'special';
+
+          var _msg4 = (_formOptions.validationMessages.pdfformat.special || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+
+          element.setAttribute('data-val-pdfformat', _msg4);
+        } else if (jsdata.startsWith('AFPercent_Format')) {
+          formatType = 'percent';
+
+          var _msg5 = (_formOptions.validationMessages.pdfformat.percent || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+
+          element.setAttribute('data-val-pdfformat', _msg5);
+        }
+
+        element.setAttribute('data-val-pdfformat-type', formatType);
+        element.setAttribute('data-val-pdfformat-data', btoa(jsdata));
         addDataVal = true;
       }
 
@@ -21565,8 +21627,10 @@ function () {
         errorDiv.setAttribute('data-valmsg-for', element.id);
         errorDiv.setAttribute('data-valmsg-replace', 'true');
         errorDiv.setAttribute('style', 'top:' + size + 'px');
-        container.appendChild(errorDiv);
+        outDiv.errorDiv = errorDiv;
       }
+
+      return outDiv;
     }
   }, {
     key: "setPostCreationTweak",

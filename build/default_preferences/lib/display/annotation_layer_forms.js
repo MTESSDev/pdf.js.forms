@@ -365,6 +365,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
     const TEXT_ALIGNMENT = ['left', 'center', 'right'];
     this.container.className = 'textWidgetAnnotation';
     let element = null;
+    let outDiv = null;
 
     if (this.renderInteractiveForms) {
       let creationRoutine = idClosureOverrides[this.data.correctedId] || genericClosureOverrides[fieldTypes.TEXT] || false;
@@ -415,6 +416,10 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
           element.style.cursor = 'not-allowed';
         }
 
+        if (this.data.doNotScroll) {
+          element.setAttribute('data-no-scroll', 'true');
+        }
+
         if (this.data.maxLen !== null) {
           element.maxLength = this.data.maxLen;
         }
@@ -430,7 +435,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
           element.style.letterSpacing = `calc(${combWidth}px - 1ch)`;
         }
 
-        AnnotationLayer.addJSActions(element, this.data, this.container, this.data.rect[3] - this.data.rect[1]);
+        outDiv = AnnotationLayer.addJSActions(element, this.data, this.container, this.data.rect[3] - this.data.rect[1]);
 
         if (_postCreationTweak) {
           _postCreationTweak(fieldTypes.TEXT, this.data, element);
@@ -455,6 +460,15 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
     }
 
     this.container.appendChild(element);
+
+    if (outDiv.errorDiv) {
+      this.container.appendChild(outDiv.errorDiv);
+    }
+
+    if (outDiv.iconDiv) {
+      this.container.appendChild(outDiv.iconDiv);
+    }
+
     return this.container;
   }
 
@@ -485,6 +499,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
     this.container.className = 'buttonWidgetAnnotation checkBox';
     let creationRoutine = idClosureOverrides[this.data.correctedId] || genericClosureOverrides[fieldTypes.TEXT] || false;
     let element = null;
+    let outDiv = null;
 
     if (creationRoutine !== false) {
       element = creationRoutine(this);
@@ -524,7 +539,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
       element.value = this.data.exportValue;
 
       if (this.renderInteractiveForms) {
-        AnnotationLayer.addJSActions(element, this.data, this.container, this.data.rect[3] - this.data.rect[1]);
+        outDiv = AnnotationLayer.addJSActions(element, this.data, this.container, this.data.rect[3] - this.data.rect[1]);
       }
 
       if (_postCreationTweak) {
@@ -533,6 +548,15 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
     }
 
     this.container.appendChild(element);
+
+    if (outDiv.errorDiv) {
+      this.container.appendChild(outDiv.errorDiv);
+    }
+
+    if (outDiv.iconDiv) {
+      this.container.appendChild(outDiv.iconDiv);
+    }
+
     return this.container;
   }
 
@@ -1350,6 +1374,7 @@ class AnnotationLayer {
 
   static setOptions(options) {
     options.validationMessages = options.validationMessages || [];
+    options.validationMessages.pdfformat = options.validationMessages.pdfformat || [];
     _formOptions = options;
   }
 
@@ -1387,6 +1412,10 @@ class AnnotationLayer {
 
   static addJSActions(element, data, container, size) {
     let addDataVal = false;
+    let outDiv = {
+      iconDiv: null,
+      errorDiv: null
+    };
 
     if (data.required && data.checkBox !== true) {
       const msg = (_formOptions.validationMessages.required || 'Field {0} is required.').replace('{0}', data.alternativeText);
@@ -1395,7 +1424,7 @@ class AnnotationLayer {
       iconDiv.className = 'required-field-icon';
       iconDiv.setAttribute('aria-hidden', true);
       iconDiv.textContent = '*';
-      container.appendChild(iconDiv);
+      outDiv.iconDiv = iconDiv;
       addDataVal = true;
     }
 
@@ -1408,9 +1437,33 @@ class AnnotationLayer {
     }
 
     if (data.action.JSFormat) {
-      const msg = (_formOptions.validationMessages.pdfformat || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
-      element.setAttribute('data-val-pdfformat', msg);
-      element.setAttribute('data-val-pdfformat-data', btoa(data.action.JSFormat));
+      let jsdata = data.action.JSFormat;
+      let formatType = 'custom';
+
+      if (jsdata.startsWith('AFNumber_Format')) {
+        formatType = 'number';
+        const msg = (_formOptions.validationMessages.pdfformat.number || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+        element.setAttribute('data-val-pdfformat', msg);
+      } else if (jsdata.startsWith('AFDate_Format')) {
+        formatType = 'date';
+        const msg = (_formOptions.validationMessages.pdfformat.date || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+        element.setAttribute('data-val-pdfformat', msg);
+      } else if (jsdata.startsWith('AFTime_Format')) {
+        formatType = 'time';
+        const msg = (_formOptions.validationMessages.pdfformat.time || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+        element.setAttribute('data-val-pdfformat', msg);
+      } else if (jsdata.startsWith('AFSpecial_Format')) {
+        formatType = 'special';
+        const msg = (_formOptions.validationMessages.pdfformat.special || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+        element.setAttribute('data-val-pdfformat', msg);
+      } else if (jsdata.startsWith('AFPercent_Format')) {
+        formatType = 'percent';
+        const msg = (_formOptions.validationMessages.pdfformat.percent || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+        element.setAttribute('data-val-pdfformat', msg);
+      }
+
+      element.setAttribute('data-val-pdfformat-type', formatType);
+      element.setAttribute('data-val-pdfformat-data', btoa(jsdata));
       addDataVal = true;
     }
 
@@ -1453,8 +1506,10 @@ class AnnotationLayer {
       errorDiv.setAttribute('data-valmsg-for', element.id);
       errorDiv.setAttribute('data-valmsg-replace', 'true');
       errorDiv.setAttribute('style', 'top:' + size + 'px');
-      container.appendChild(errorDiv);
+      outDiv.errorDiv = errorDiv;
     }
+
+    return outDiv;
   }
 
   static setPostCreationTweak(postCallback) {
