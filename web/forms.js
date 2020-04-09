@@ -109,7 +109,7 @@ let FormFunctionality = (function FormFunctionalityClosure() {
             if ((element.target.tagName.toLowerCase() === 'input' &&
                 element.target.type.toLowerCase() === 'text') ||
                 element.target.tagName.toLowerCase() === 'textarea') {
-                    if (element.which !== 0) {
+                    if (element.which !== null || element.which !== 0) {
                         val += String.fromCharCode(element.which);
                     }
                     element.change = event.key;
