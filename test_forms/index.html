@@ -43,12 +43,17 @@
     <script>
   $.validator.addMethod("pdfformat", function (value, element) {
       if (value) {
-        debugger;
+        var removeEvent = false;
         if (!event) {
             event = { target: element };
+            removeEvent = true;
         }
-        return pdfjsViewer.FormFunctionality.javascriptEvent(event, $(element).data('valPdfformatData'), 'format');
-      } else {
+        var retour = pdfjsViewer.FormFunctionality.javascriptEvent(event, $(element).data('valPdfformatData'), 'format');
+        if (removeEvent) {
+            event = undefined;
+        }
+        return retour;
+    } else {
           return true;
       }
     });

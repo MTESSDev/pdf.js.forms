@@ -119,33 +119,18 @@ let FormFunctionality = (function FormFunctionalityClosure() {
             element.value = val;
             element.rc = true;
             element.willCommit = false;
-            /* if ('FocusEvent' in element.toString()) {
-                KeyboardEvent.prototype.change = event.key;
-                KeyboardEvent.prototype.selStart = element.target.selectionStart;
-                KeyboardEvent.prototype.value = val;
-            } else if ('KeyboardEvent' in element.toString()) {
-                KeyboardEvent.prototype.change = event.key;
-                KeyboardEvent.prototype.selStart = element.target.selectionStart;
-                KeyboardEvent.prototype.value = val;
-            } */
 
-            // let thisEmulator = new Field(element.target);
-            /* raw = raw.replace(/app\./g,
-                'pdfjsAppEmulator.'); */
             raw = raw.replace(/this\./g, 'thisEmulator.');
 
-            // raw += '\r\n var border = { s }';
-            // eslint-disable-next-line no-eval
             eval(raw);
 
             if (typeCall === 'format') {
                 if (element.value.trim() === '' && val.trim() !== '') {
-                    // element.target.setAttribute('data-val-pdfformatvalid-valid', false);
                     return false;
                 }
 
                 let finalValue = val;
-                // Check the difference
+                // Check values
                 if (element.value !== val) {
 
                     if (element.value === val.toUpperCase()) {
