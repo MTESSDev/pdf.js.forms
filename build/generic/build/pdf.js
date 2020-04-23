@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.125';
-var pdfjsBuild = 'adbc08e1';
+var pdfjsVersion = '2.4.126';
+var pdfjsBuild = '2c54b412';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.125',
+    apiVersion: '2.4.126',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.125';
+var version = '2.4.126';
 exports.version = version;
-var build = 'adbc08e1';
+var build = '2c54b412';
 exports.build = build;
 
 /***/ }),
@@ -21548,51 +21548,51 @@ function () {
         });
       }
 
-      if (data.action.JSFormat) {
-        var jsdata = data.action.JSFormat;
+      if (data.action.JSFormat || data.action.JSKeypress) {
+        var jsdata = data.action.JSFormat || data.action.JSKeypress;
         var formatType = 'custom';
+        var skip = false;
+        var msgFormat = '';
 
-        if (jsdata.startsWith('AFNumber_Format')) {
+        if (jsdata.startsWith('AFNumber_')) {
           formatType = 'number';
-
-          var _msg = (_formOptions.validationMessages.pdfformat.number || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
-
-          element.setAttribute('data-val-pdfformat', _msg);
-        } else if (jsdata.startsWith('AFDate_Format')) {
+          msgFormat = (_formOptions.validationMessages.pdfformat.number || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+        } else if (jsdata.startsWith('AFDate_')) {
           formatType = 'date';
-
-          var _msg2 = (_formOptions.validationMessages.pdfformat.date || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
-
-          element.setAttribute('data-val-pdfformat', _msg2);
-        } else if (jsdata.startsWith('AFTime_Format')) {
+          msgFormat = (_formOptions.validationMessages.pdfformat.date || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+        } else if (jsdata.startsWith('AFTime_')) {
           formatType = 'time';
-
-          var _msg3 = (_formOptions.validationMessages.pdfformat.time || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
-
-          element.setAttribute('data-val-pdfformat', _msg3);
-        } else if (jsdata.startsWith('AFSpecial_Format')) {
+          msgFormat = (_formOptions.validationMessages.pdfformat.time || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+        } else if (jsdata.startsWith('AFSpecial_')) {
           formatType = 'special';
-
-          var _msg4 = (_formOptions.validationMessages.pdfformat.special || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
-
-          element.setAttribute('data-val-pdfformat', _msg4);
-        } else if (jsdata.startsWith('AFPercent_Format')) {
+          msgFormat = (_formOptions.validationMessages.pdfformat.special || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+        } else if (jsdata.startsWith('AFPercent_')) {
           formatType = 'percent';
-
-          var _msg5 = (_formOptions.validationMessages.pdfformat.percent || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
-
-          element.setAttribute('data-val-pdfformat', _msg5);
+          msgFormat = (_formOptions.validationMessages.pdfformat.percent || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
         } else {
-          formatType = 'custom';
-
-          var _msg6 = (_formOptions.validationMessages.pdfformat.custom || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
-
-          element.setAttribute('data-val-pdfformat', _msg6);
+          if (data.action.JSKeypress && jsdata.startsWith('AF')) {
+            skip = true;
+          } else {
+            formatType = 'custom';
+            msgFormat = (_formOptions.validationMessages.pdfformat.custom || 'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+          }
         }
 
-        element.setAttribute('data-val-pdfformat-type', formatType);
-        element.setAttribute('data-val-pdfformat-data', btoa(jsdata));
-        addDataVal = true;
+        if (!skip) {
+          var regexpFormat = /\(([^)]+)\)/;
+          var matches = regexpFormat.exec(jsdata);
+
+          if (matches.length > 0) {
+            msgFormat = msgFormat.replace('{1}', matches[1]);
+          } else {
+            msgFormat = msgFormat.replace('{1}', '');
+          }
+
+          element.setAttribute('data-val-pdfformat', msgFormat);
+          element.setAttribute('data-val-pdfformat-type', formatType);
+          element.setAttribute('data-val-pdfformat-data', btoa(jsdata));
+          addDataVal = true;
+        }
       }
 
       if (addDataVal) {

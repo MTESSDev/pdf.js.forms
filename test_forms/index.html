@@ -78,7 +78,7 @@ $.validator.unobtrusive.adapters.addBool('pdfformat');
 
             pdfjsLib.GlobalWorkerOptions.workerSrc = '../build/generic/build/pdf.worker.js';
 
-            var DEFAULT_URL = 'pdfs/FO-3003FR.pdf';
+            var DEFAULT_URL = 'pdfs/EQ-6544FR.pdf';
             var DEFAULT_SCALE = 1.0;
 
             var container = document.getElementById('pdfTarget');
@@ -125,7 +125,9 @@ $.validator.unobtrusive.adapters.addBool('pdfformat');
                             return pdfjsViewer.FormFunctionality.render(1094, null, pdfPage, container, values,
                                 {interactiveForms: true, 
                                  hideForms: false,
-                                 validationMessages: { required : "Champ {0} pas là!" }
+                                 validationMessages: { required : "Champ {0} pas là!",
+                                                        pdfformat: { special: "format {1} pas bon pour {0}"} 
+                                                    }
                                 });
                         });
               
