@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.126';
-var pdfjsBuild = '2c54b412';
+var pdfjsVersion = '2.4.127';
+var pdfjsBuild = 'a22cc311';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.126',
+    apiVersion: '2.4.127',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.126';
+var version = '2.4.127';
 exports.version = version;
-var build = '2c54b412';
+var build = 'a22cc311';
 exports.build = build;
 
 /***/ }),
@@ -21582,7 +21582,7 @@ function () {
           var regexpFormat = /\(([^)]+)\)/;
           var matches = regexpFormat.exec(jsdata);
 
-          if (matches.length > 0) {
+          if (matches && matches.length > 0) {
             msgFormat = msgFormat.replace('{1}', matches[1]);
           } else {
             msgFormat = msgFormat.replace('{1}', '');

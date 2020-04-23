@@ -1471,7 +1471,7 @@ class AnnotationLayer {
         let regexpFormat = /\(([^)]+)\)/;
         let matches = regexpFormat.exec(jsdata);
 
-        if (matches.length > 0) {
+        if (matches && matches.length > 0) {
           msgFormat = msgFormat.replace('{1}', matches[1]);
         } else {
           msgFormat = msgFormat.replace('{1}', '');
