@@ -538,6 +538,19 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
       element.title = this.data.alternativeText;
       element.value = this.data.exportValue;
 
+      if (element.id.indexOf(_formOptions.checkBoxGroupSeparationChar) != -1) {
+        const groupId = element.id.substring(0, element.id.indexOf('_'));
+        element.setAttribute('data-val-requiredgroup-id', groupId);
+      }
+
+      if (this.data.required) {
+        if (_formOptions.checkBoxRequiredValidation) {
+          if (element.id.indexOf(_formOptions.checkBoxGroupSeparationChar) != -1) {
+            element.setAttribute('data-val-requiredgroup', 'Au moins un obligatoire.');
+          }
+        }
+      }
+
       if (this.renderInteractiveForms) {
         outDiv = AnnotationLayer.addJSActions(element, this.data, this.container, this.data.rect[3] - this.data.rect[1]);
       }
@@ -1375,6 +1388,8 @@ class AnnotationLayer {
   static setOptions(options) {
     options.validationMessages = options.validationMessages || [];
     options.validationMessages.pdfformat = options.validationMessages.pdfformat || [];
+    options.checkBoxGroupSeparationChar = options.checkBoxGroupSeparationChar || '_';
+    options.checkBoxRequiredValidation = options.checkBoxRequiredValidation || true;
     _formOptions = options;
   }
 

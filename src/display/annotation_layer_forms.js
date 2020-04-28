@@ -666,6 +666,33 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
             element.title = this.data.alternativeText;
             element.value = this.data.exportValue;
 
+            if (element.id.indexOf(_formOptions.checkBoxGroupSeparationChar) != -1) {
+                // annotation.correctedId = annotation.fullName.substring(0, annotation.fullName.indexOf('.`'));
+                const groupId = element.id.substring(0, element.id.indexOf('_'));// element.id.substring(element.id.indexOf('_') + 1);
+                element.setAttribute('data-val-requiredgroup-id', groupId);
+            }
+
+            // group name
+           if (this.data.required) {
+                /* const msg = (_formOptions.validationMessages.required ||
+                                'Field {0} is required.').replace('{0}', data.alternativeText); 
+                // element.setAttribute('data-val-required', ""msg""); */
+
+                if (_formOptions.checkBoxRequiredValidation) {
+                    if (element.id.indexOf(_formOptions.checkBoxGroupSeparationChar) != -1) {
+                        // annotation.correctedId = annotation.fullName.substring(0, annotation.fullName.indexOf('.`'));
+                        // const groupId = element.id.substring(0, element.id.indexOf('_'));// element.id.substring(element.id.indexOf('_') + 1);
+                        element.setAttribute('data-val-requiredgroup', 'Au moins un obligatoire.');
+                    }
+                }
+               // element.setAttribute('data-val-requiredGroup', '');
+            } 
+            /* if (_formOptions.checkBoxRequiredValidation && this.data.checkBox) {
+                if (element.id.indexOf(_formOptions.checkBoxGroupSeparationChar) != -1) {
+                    element.setAttribute("data-val-group")
+                }
+            } */
+
             if (this.renderInteractiveForms) {
                 outDiv = AnnotationLayer.addJSActions(element, this.data, this.container, this.data.rect[3] - this.data.rect[1]);
             }
@@ -1731,8 +1758,9 @@ class AnnotationLayer {
     static setOptions(options) {
         options.validationMessages = options.validationMessages || [];
         options.validationMessages.pdfformat = options.validationMessages.pdfformat || [];
+        options.checkBoxGroupSeparationChar = options.checkBoxGroupSeparationChar || '_';
+        options.checkBoxRequiredValidation = options.checkBoxRequiredValidation || true;
         _formOptions = options;
-
     }
 
     static clearControlRendersById() {

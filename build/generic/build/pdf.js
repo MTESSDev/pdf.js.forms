@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.127';
-var pdfjsBuild = 'a22cc311';
+var pdfjsVersion = '2.4.128';
+var pdfjsBuild = '47f584b9';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.127',
+    apiVersion: '2.4.128',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.127';
+var version = '2.4.128';
 exports.version = version;
-var build = 'a22cc311';
+var build = '47f584b9';
 exports.build = build;
 
 /***/ }),
@@ -20297,6 +20297,19 @@ function (_WidgetAnnotationElem2) {
         element.title = this.data.alternativeText;
         element.value = this.data.exportValue;
 
+        if (element.id.indexOf(_formOptions.checkBoxGroupSeparationChar) != -1) {
+          var groupId = element.id.substring(0, element.id.indexOf('_'));
+          element.setAttribute('data-val-requiredgroup-id', groupId);
+        }
+
+        if (this.data.required) {
+          if (_formOptions.checkBoxRequiredValidation) {
+            if (element.id.indexOf(_formOptions.checkBoxGroupSeparationChar) != -1) {
+              element.setAttribute('data-val-requiredgroup', 'Au moins un obligatoire.');
+            }
+          }
+        }
+
         if (this.renderInteractiveForms) {
           outDiv = AnnotationLayer.addJSActions(element, this.data, this.container, this.data.rect[3] - this.data.rect[1]);
         }
@@ -21481,6 +21494,8 @@ function () {
     value: function setOptions(options) {
       options.validationMessages = options.validationMessages || [];
       options.validationMessages.pdfformat = options.validationMessages.pdfformat || [];
+      options.checkBoxGroupSeparationChar = options.checkBoxGroupSeparationChar || '_';
+      options.checkBoxRequiredValidation = options.checkBoxRequiredValidation || true;
       _formOptions = options;
     }
   }, {

@@ -2834,6 +2834,7 @@
       type: itemType(item),
       fieldFlags: item.fieldFlags
      };
+     debugger;
      if (item.fullName.indexOf('.`') != -1) {
       prop.correctedId = item.fullName.substring(0, item.fullName.indexOf('.`'));
       prop.isGroupMember = true;
