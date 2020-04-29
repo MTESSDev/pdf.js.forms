@@ -564,6 +564,11 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
 
             element.setAttribute('data-val-requiredgroup', msg);
             element.setAttribute('data-val', true);
+          } else {
+            const msg = (_formOptions.validationMessages.required || 'Field {0} is required.').replace('{0}', this.data.alternativeText);
+            element.setAttribute('data-val-required', msg);
+            element.setAttribute('required', '');
+            element.className = 'required';
           }
         }
       }

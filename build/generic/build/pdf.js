@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.129';
-var pdfjsBuild = 'e1d41e47';
+var pdfjsVersion = '2.4.130';
+var pdfjsBuild = 'c8bc7304';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.129',
+    apiVersion: '2.4.130',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.129';
+var version = '2.4.130';
 exports.version = version;
-var build = 'e1d41e47';
+var build = 'c8bc7304';
 exports.build = build;
 
 /***/ }),
@@ -20323,6 +20323,12 @@ function (_WidgetAnnotationElem2) {
 
               element.setAttribute('data-val-requiredgroup', msg);
               element.setAttribute('data-val', true);
+            } else {
+              var _msg = (_formOptions.validationMessages.required || 'Field {0} is required.').replace('{0}', this.data.alternativeText);
+
+              element.setAttribute('data-val-required', _msg);
+              element.setAttribute('required', '');
+              element.className = 'required';
             }
           }
         }

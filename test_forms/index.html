@@ -87,50 +87,43 @@ $.validator.unobtrusive.adapters.addSingleVal("requiredgroup", "id", "mynotequal
 });*/
 
 $.validator.addMethod('requiredgroup',
-function (value, element, parameters) {
-//debugger;
-    var groupId = parameters['id'];
+    function (value, element, parameters) {
+        var groupId = parameters['id'];
 
-    /*var props = parameters['props'];
-    props = (props == null ? '' : props).toString();
+        var oneFilled = false;
+        $("input[data-val-requiredgroup-id='" + groupId + "']").each(function() {
+            var control = $( this ).get(0);
+            var controltype = control.type;
 
-    var propsarray = props.split('|');*/
-    var oneFilled = false;
-    $("input[data-val-requiredgroup-id='" + groupId + "']").each(function() {
-        var control = $( this ).get(0);
-        var controltype = control.type;
+            var actualvalue =
+                controltype === 'checkbox' ?
+                    control.checked :
+                    control.val();
 
-        var actualvalue =
-            controltype === 'checkbox' ?
-                control.checked :
-                control.val();
+            if( controltype === 'checkbox' && actualvalue == true) {
+                oneFilled = true;
+            }else if(controltype !== 'checkbox' && actualvalue != ''){
+                oneFilled = true;
+            }
+        });
 
-        if( controltype === 'checkbox' && actualvalue == true) {
-            oneFilled = true;
-        }else if(controltype !== 'checkbox' && actualvalue != ''){
-            oneFilled = true;
+        if(oneFilled) {
+            $("input[data-val-requiredgroup-id='" + groupId + "']").removeClass().addClass('valid');
+        } else{
+            $("input[data-val-requiredgroup-id='" + groupId + "']").removeClass().addClass('input-validation-error');
         }
-    });
 
-    if(oneFilled) {
-        $("input[data-val-requiredgroup-id='" + groupId + "']").removeClass().addClass('valid');
-    } else{
-        $("input[data-val-requiredgroup-id='" + groupId + "']").removeClass().addClass('input-validation-error');
+        return oneFilled;
     }
-
-    return oneFilled;
-}
 );
 
-$.validator.unobtrusive.adapters.add(
-'requiredgroup',
-['id'],
-function (options) {
-    options.rules['requiredgroup'] = {
-        id: options.params['id'],
-    };
-    options.messages['requiredgroup'] = options.message;
-});
+$.validator.unobtrusive.adapters.add('requiredgroup', ['id'],
+    function (options) {
+        options.rules['requiredgroup'] = {
+            id: options.params['id'],
+        };
+        options.messages['requiredgroup'] = options.message;
+    });
 
 
 /* $.validator.unobtrusive.adapters.add("requiredgroup", ['id'], function (options) {
