@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.131';
-var pdfjsBuild = '0c49d4ad';
+var pdfjsVersion = '2.4.132';
+var pdfjsBuild = '630cb40f';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.131',
+    apiVersion: '2.4.132',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.131';
+var version = '2.4.132';
 exports.version = version;
-var build = '0c49d4ad';
+var build = '630cb40f';
 exports.build = build;
 
 /***/ }),
@@ -20329,6 +20329,7 @@ function (_WidgetAnnotationElem2) {
               element.setAttribute('data-val-mandatory', _msg);
               element.setAttribute('required', '');
               element.className = 'required';
+              element.setAttribute('data-val', true);
             }
           }
         }
@@ -21520,7 +21521,7 @@ function () {
       options.checkBoxGroupSeparationChar = options.checkBoxGroupSeparationChar || '_';
       options.checkboxGroupNamePattern = options.checkboxGroupNamePattern || /\(([^)]+)\)/;
       options.checkboxGroupNamePatternIdFallback = options.checkboxGroupNamePatternIdFallback || /\-(\w*)\_/;
-      options.checkBoxRequiredValidation = options.checkBoxRequiredValidation || true;
+      options.checkBoxRequiredValidation = options.checkBoxRequiredValidation || false;
       _formOptions = options;
     }
   }, {

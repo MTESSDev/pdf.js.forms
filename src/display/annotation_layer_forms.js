@@ -700,6 +700,8 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
                         element.setAttribute('data-val-mandatory', msg);
                         element.setAttribute('required', '');
                         element.className = 'required';
+                        element.setAttribute('data-val', true);
+
                     }
                 }
 
@@ -1773,7 +1775,7 @@ class AnnotationLayer {
         options.checkBoxGroupSeparationChar = options.checkBoxGroupSeparationChar || '_';
         options.checkboxGroupNamePattern = options.checkboxGroupNamePattern || /\(([^)]+)\)/;
         options.checkboxGroupNamePatternIdFallback = options.checkboxGroupNamePatternIdFallback || /\-(\w*)\_/;
-        options.checkBoxRequiredValidation = options.checkBoxRequiredValidation || true;
+        options.checkBoxRequiredValidation = options.checkBoxRequiredValidation || false;
         _formOptions = options;
     }
 
