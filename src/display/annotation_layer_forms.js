@@ -697,7 +697,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
                     } else {
                         const msg = (_formOptions.validationMessages.required ||
                             'Field {0} is required.').replace('{0}', this.data.alternativeText);
-                        element.setAttribute('data-val-required', msg);
+                        element.setAttribute('data-val-mandatory', msg);
                         element.setAttribute('required', '');
                         element.className = 'required';
                     }
