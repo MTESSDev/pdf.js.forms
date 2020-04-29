@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.128';
-var pdfjsBuild = '47f584b9';
+var pdfjsVersion = '2.4.129';
+var pdfjsBuild = 'e1d41e47';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.128',
+    apiVersion: '2.4.129',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.128';
+var version = '2.4.129';
 exports.version = version;
-var build = '47f584b9';
+var build = 'e1d41e47';
 exports.build = build;
 
 /***/ }),
@@ -20297,15 +20297,32 @@ function (_WidgetAnnotationElem2) {
         element.title = this.data.alternativeText;
         element.value = this.data.exportValue;
 
-        if (element.id.indexOf(_formOptions.checkBoxGroupSeparationChar) != -1) {
-          var groupId = element.id.substring(0, element.id.indexOf('_'));
+        if (element.id.includes(_formOptions.checkBoxGroupSeparationChar)) {
+          var groupId = element.id.substring(0, element.id.indexOf(_formOptions.checkBoxGroupSeparationChar));
           element.setAttribute('data-val-requiredgroup-id', groupId);
         }
 
         if (this.data.required) {
           if (_formOptions.checkBoxRequiredValidation) {
-            if (element.id.indexOf(_formOptions.checkBoxGroupSeparationChar) != -1) {
-              element.setAttribute('data-val-requiredgroup', 'Au moins un obligatoire.');
+            if (element.id.includes(_formOptions.checkBoxGroupSeparationChar)) {
+              var matches = _formOptions.checkboxGroupNamePattern.exec(this.data.alternativeText);
+
+              var msg = _formOptions.validationMessages.requiredgroup || 'At least one required : {0}';
+
+              if (matches && matches.length > 0) {
+                msg = msg.replace('{0}', matches[1]);
+              } else {
+                var matches2 = _formOptions.checkboxGroupNamePatternIdFallback.exec('correctedId' in this.data ? this.data.correctedId : this.data.id);
+
+                if (matches2 && matches2.length > 0) {
+                  msg = msg.replace('{0}', matches2[1]);
+                } else {
+                  msg = msg.replace('{0}', this.data.alternativeText || 'correctedId' in this.data ? this.data.correctedId : this.data.id);
+                }
+              }
+
+              element.setAttribute('data-val-requiredgroup', msg);
+              element.setAttribute('data-val', true);
             }
           }
         }
@@ -21495,6 +21512,8 @@ function () {
       options.validationMessages = options.validationMessages || [];
       options.validationMessages.pdfformat = options.validationMessages.pdfformat || [];
       options.checkBoxGroupSeparationChar = options.checkBoxGroupSeparationChar || '_';
+      options.checkboxGroupNamePattern = options.checkboxGroupNamePattern || /\(([^)]+)\)/;
+      options.checkboxGroupNamePatternIdFallback = options.checkboxGroupNamePatternIdFallback || /\-(\w*)\_/;
       options.checkBoxRequiredValidation = options.checkBoxRequiredValidation || true;
       _formOptions = options;
     }

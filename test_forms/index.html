@@ -30,6 +30,8 @@
         <div style="width: 100%; text-align: center;"><h1>Testing</h1></div>
         <center><div style="padding: 15px; background: lavender; border: 1px solid black; display: inline-block;">
            <form id="form1">
+            <div class="validation-summary-valid" data-valmsg-summary="true">
+                <ul><li style="display:none"></li></ul></div>
             <div style="border: 1px dashed darkviolet;" id="pdfTarget"></div>
         </form>
         </div></center>
@@ -41,7 +43,8 @@
    
 
     <script>
-  $.validator.addMethod("pdfformat", function (value, element) {
+ /* $.validator.addMethod("requiredgroup", function (value, element, params) {
+      debugger;
       if (value) {
         var removeEvent = false;
         if (!event) {
@@ -56,25 +59,93 @@
     } else {
           return true;
       }
-    });
+    }); */
 
 $.validator.setDefaults({
 ignore: [],
 onkeyup: false,
 });
 
-/*$.validator.unobtrusive.adapters.add("pdfformat", ['data'], function (options) {
-    options.rules["pdfformat"] = "#" + options.params.valid;
-    options.messages["pdfformat"] = options.message;
+/*function mynotequaltofunction(a,b,c)
+{
+    debugger;
+}
+
+$.validator.unobtrusive.adapters.addSingleVal("requiredgroup", "id", "mynotequaltofunction");
+
+*/
+
+/*$.validator.unobtrusive.adapters.add("required", function (options) {
+  // jQuery Validate equates "required" with "mandatory" for checkbox elements
+  debugger;
+  //if (options.element.tagName.toUpperCase() !== "INPUT") {
+    options.rules['required'] = true;
+        if (options.message) {
+            options.messages['required'] = options.message;
+        }
+  //}
 });*/
 
-$.validator.unobtrusive.adapters.addBool('pdfformat');
+$.validator.addMethod('requiredgroup',
+function (value, element, parameters) {
+//debugger;
+    var groupId = parameters['id'];
+
+    /*var props = parameters['props'];
+    props = (props == null ? '' : props).toString();
+
+    var propsarray = props.split('|');*/
+    var oneFilled = false;
+    $("input[data-val-requiredgroup-id='" + groupId + "']").each(function() {
+        var control = $( this ).get(0);
+        var controltype = control.type;
+
+        var actualvalue =
+            controltype === 'checkbox' ?
+                control.checked :
+                control.val();
+
+        if( controltype === 'checkbox' && actualvalue == true) {
+            oneFilled = true;
+        }else if(controltype !== 'checkbox' && actualvalue != ''){
+            oneFilled = true;
+        }
+    });
+
+    if(oneFilled) {
+        $("input[data-val-requiredgroup-id='" + groupId + "']").removeClass().addClass('valid');
+    } else{
+        $("input[data-val-requiredgroup-id='" + groupId + "']").removeClass().addClass('input-validation-error');
+    }
+
+    return oneFilled;
+}
+);
+
+$.validator.unobtrusive.adapters.add(
+'requiredgroup',
+['id'],
+function (options) {
+    options.rules['requiredgroup'] = {
+        id: options.params['id'],
+    };
+    options.messages['requiredgroup'] = options.message;
+});
+
+
+/* $.validator.unobtrusive.adapters.add("requiredgroup", ['id'], function (options) {
+    debugger;
+    //options.rules["id"] = '#' + options.params.id;
+    options.messages["requiredgroup"] = options.message;
+}); */
+
+//$.validator.unobtrusive.adapters.addBool('pdfformat');
      
 
    
         window.onload = function () {
             //$.validator.unobtrusive.adapters.addBool('pdfformatvalid');
-           // $.validator.unobtrusive.parse();
+           //$.validator.unobtrusive.parse();
 
             pdfjsLib.GlobalWorkerOptions.workerSrc = '../build/generic/build/pdf.worker.js';
 
@@ -134,6 +205,7 @@ $.validator.unobtrusive.adapters.addBool('pdfformat');
                     }
 
                     doc.getJavaScript().then(function (js){ 
+                        if (js)
                         for (var i = 0; i <= js.length; i++) {
                             if (js[i])
                             {

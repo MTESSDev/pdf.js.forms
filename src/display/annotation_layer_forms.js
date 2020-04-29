@@ -666,32 +666,37 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
             element.title = this.data.alternativeText;
             element.value = this.data.exportValue;
 
-            if (element.id.indexOf(_formOptions.checkBoxGroupSeparationChar) != -1) {
-                // annotation.correctedId = annotation.fullName.substring(0, annotation.fullName.indexOf('.`'));
-                const groupId = element.id.substring(0, element.id.indexOf('_'));// element.id.substring(element.id.indexOf('_') + 1);
+            if (element.id.includes(_formOptions.checkBoxGroupSeparationChar)) {
+                const groupId = element.id.substring(0, element.id.indexOf(_formOptions.checkBoxGroupSeparationChar));
                 element.setAttribute('data-val-requiredgroup-id', groupId);
             }
 
             // group name
            if (this.data.required) {
-                /* const msg = (_formOptions.validationMessages.required ||
-                                'Field {0} is required.').replace('{0}', data.alternativeText); 
-                // element.setAttribute('data-val-required', ""msg""); */
-
                 if (_formOptions.checkBoxRequiredValidation) {
-                    if (element.id.indexOf(_formOptions.checkBoxGroupSeparationChar) != -1) {
-                        // annotation.correctedId = annotation.fullName.substring(0, annotation.fullName.indexOf('.`'));
-                        // const groupId = element.id.substring(0, element.id.indexOf('_'));// element.id.substring(element.id.indexOf('_') + 1);
-                        element.setAttribute('data-val-requiredgroup', 'Au moins un obligatoire.');
+                    if (element.id.includes(_formOptions.checkBoxGroupSeparationChar)) {
+
+                        let matches = _formOptions.checkboxGroupNamePattern.exec(this.data.alternativeText);
+                        let msg = (_formOptions.validationMessages.requiredgroup || 'At least one required : {0}');
+
+                        if (matches && matches.length > 0) {
+                            msg = msg.replace('{0}', matches[1]);
+                        } else {
+                            let matches2 = _formOptions.checkboxGroupNamePatternIdFallback.exec('correctedId' in this.data ? this.data.correctedId : this.data.id);
+                          
+                            if (matches2 && matches2.length > 0) {
+                                msg = msg.replace('{0}', matches2[1]);
+                            } else {
+                                msg = msg.replace('{0}', this.data.alternativeText || 'correctedId' in this.data ? this.data.correctedId : this.data.id);
+                            }
+                        }
+
+                        element.setAttribute('data-val-requiredgroup', msg);
+                        element.setAttribute('data-val', true);
                     }
                 }
-               // element.setAttribute('data-val-requiredGroup', '');
-            } 
-            /* if (_formOptions.checkBoxRequiredValidation && this.data.checkBox) {
-                if (element.id.indexOf(_formOptions.checkBoxGroupSeparationChar) != -1) {
-                    element.setAttribute("data-val-group")
-                }
-            } */
+
+            }
 
             if (this.renderInteractiveForms) {
                 outDiv = AnnotationLayer.addJSActions(element, this.data, this.container, this.data.rect[3] - this.data.rect[1]);
@@ -1759,6 +1764,8 @@ class AnnotationLayer {
         options.validationMessages = options.validationMessages || [];
         options.validationMessages.pdfformat = options.validationMessages.pdfformat || [];
         options.checkBoxGroupSeparationChar = options.checkBoxGroupSeparationChar || '_';
+        options.checkboxGroupNamePattern = options.checkboxGroupNamePattern || /\(([^)]+)\)/;
+        options.checkboxGroupNamePatternIdFallback = options.checkboxGroupNamePatternIdFallback || /\-(\w*)\_/;
         options.checkBoxRequiredValidation = options.checkBoxRequiredValidation || true;
         _formOptions = options;
     }
