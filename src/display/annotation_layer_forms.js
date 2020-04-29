@@ -677,7 +677,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
 
                     if (element.id.includes(_formOptions.checkBoxGroupSeparationChar)) {
 
-                        let matches = _formOptions.checkboxGroupNamePattern.exec(this.data.alternativeText);
+                        let matches = _formOptions.checkboxGroupNamePattern.exec(this.data.alternativeText.trim().replace(/\.$/, ''));
                         let msg = (_formOptions.validationMessages.requiredgroup || 'At least one required : {0}');
 
                         if (matches && matches.length > 0) {
@@ -688,7 +688,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
                             if (matches2 && matches2.length > 0) {
                                 msg = msg.replace('{0}', matches2[1]);
                             } else {
-                                msg = msg.replace('{0}', this.data.alternativeText || 'correctedId' in this.data ? this.data.correctedId : this.data.id);
+                                msg = msg.replace('{0}', this.data.alternativeText.trim().replace(/\.$/, '') || 'correctedId' in this.data ? this.data.correctedId : this.data.id);
                             }
                         }
 
@@ -696,7 +696,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
                         element.setAttribute('data-val', true);
                     } else {
                         const msg = (_formOptions.validationMessages.required ||
-                            'Field {0} is required.').replace('{0}', this.data.alternativeText);
+                            'Field {0} is required.').replace('{0}', this.data.alternativeText.trim().replace(/\.$/, ''));
                         element.setAttribute('data-val-mandatory', msg);
                         element.setAttribute('required', '');
                         element.className = 'required';
@@ -1819,7 +1819,7 @@ class AnnotationLayer {
 
         if (data.required && data.checkBox !== true) {
             const msg = (_formOptions.validationMessages.required ||
-                            'Field {0} is required.').replace('{0}', data.alternativeText);
+                            'Field {0} is required.').replace('{0}', data.alternativeText.trim().replace(/\.$/, ''));
             element.setAttribute('data-val-required', msg);
             element.setAttribute('required', '');
 
@@ -1850,34 +1850,34 @@ class AnnotationLayer {
             if (jsdata.startsWith('AFNumber_')) {
                 formatType = 'number';
                 msgFormat = (_formOptions.validationMessages.pdfformat.number ||
-                    'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+                    'Invalid value for {0} field.').replace('{0}', data.alternativeText.trim().replace(/\.$/, ''));
 
             } else if (jsdata.startsWith('AFDate_')) {
                 formatType = 'date';
                 msgFormat = (_formOptions.validationMessages.pdfformat.date ||
-                    'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+                    'Invalid value for {0} field.').replace('{0}', data.alternativeText.trim().replace(/\.$/, ''));
 
             } else if (jsdata.startsWith('AFTime_')) {
                 formatType = 'time';
                 msgFormat = (_formOptions.validationMessages.pdfformat.time ||
-                    'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+                    'Invalid value for {0} field.').replace('{0}', data.alternativeText.trim().replace(/\.$/, ''));
 
             } else if (jsdata.startsWith('AFSpecial_')) {
                 formatType = 'special';
                 msgFormat = (_formOptions.validationMessages.pdfformat.special ||
-                    'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+                    'Invalid value for {0} field.').replace('{0}', data.alternativeText.trim().replace(/\.$/, ''));
 
             } else if (jsdata.startsWith('AFPercent_')) {
                 formatType = 'percent';
                 msgFormat = (_formOptions.validationMessages.pdfformat.percent ||
-                    'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+                    'Invalid value for {0} field.').replace('{0}', data.alternativeText.trim().replace(/\.$/, ''));
             } else {
                 if (data.action.JSKeypress && jsdata.startsWith('AF')) {
                     skip = true;
                 } else {
                     formatType = 'custom';
                     msgFormat = (_formOptions.validationMessages.pdfformat.custom ||
-                        'Invalid value for {0} field.').replace('{0}', data.alternativeText);
+                        'Invalid value for {0} field.').replace('{0}', data.alternativeText.trim().replace(/\.$/, ''));
   
                 }
             }
