@@ -1886,9 +1886,9 @@ class AnnotationLayer {
                 let matches = regexpFunction.exec(jsdata);
 
                 if (matches && matches.length > 0) {
-                    let format = matches[1].split(',').replace('>', '').trim();
+                    let format = matches[1].split(',')[0].replace('>', '').trim();
 
-                    msgFormat = msgFormat.replace('{1}', format[0]);
+                    msgFormat = msgFormat.replace('{1}', format);
                 } else {
                     msgFormat = msgFormat.replace('{1}', '');
                 }
