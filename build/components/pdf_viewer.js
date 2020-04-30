@@ -253,8 +253,8 @@ var _pdf_single_page_viewer = __w_pdfjs_require__(19);
 
 var _pdf_viewer = __w_pdfjs_require__(21);
 
-var pdfjsVersion = '2.4.133';
-var pdfjsBuild = '79c020b6';
+var pdfjsVersion = '2.4.134';
+var pdfjsBuild = 'e7ad39ea';
 (0, _ui_utils.getGlobalEventBus)(true);
 
 /***/ }),

@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.133';
-var pdfjsBuild = '79c020b6';
+var pdfjsVersion = '2.4.134';
+var pdfjsBuild = 'e7ad39ea';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.133',
+    apiVersion: '2.4.134',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.133';
+var version = '2.4.134';
 exports.version = version;
-var build = '79c020b6';
+var build = 'e7ad39ea';
 exports.build = build;
 
 /***/ }),
@@ -20324,7 +20324,7 @@ function (_WidgetAnnotationElem2) {
               element.setAttribute('data-val-requiredgroup', msg);
               element.setAttribute('data-val', true);
             } else {
-              var _msg = (_formOptions.validationMessages.required || 'Field {0} is required.').replace('{0}', this.data.alternativeText.trim().replace(/\.$/, ''));
+              var _msg = (_formOptions.validationMessages.mandatory || 'Field {0} is mandatory.').replace('{0}', this.data.alternativeText.trim().replace(/\.$/, ''));
 
               element.setAttribute('data-val-mandatory', _msg);
               element.setAttribute('required', '');
@@ -21620,16 +21620,17 @@ function () {
         }
 
         if (!skip) {
-          var regexpFormat = /\(([^)]+)\)/;
-          var matches = regexpFormat.exec(jsdata);
+          var regexpFunction = /\(([^)]+)\)/;
+          var matches = regexpFunction.exec(jsdata);
 
           if (matches && matches.length > 0) {
-            msgFormat = msgFormat.replace('{1}', matches[1]);
+            var format = matches[1].split(',').replace('>', '').trim();
+            msgFormat = msgFormat.replace('{1}', format[0]);
           } else {
             msgFormat = msgFormat.replace('{1}', '');
           }
 
-          element.setAttribute('data-val-pdfformat', msgFormat);
+          element.setAttribute('data-val-pdfformat', msgFormat.trim());
           element.setAttribute('data-val-pdfformat-type', formatType);
           element.setAttribute('data-val-pdfformat-data', btoa(jsdata));
           addDataVal = true;

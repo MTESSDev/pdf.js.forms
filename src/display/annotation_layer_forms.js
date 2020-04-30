@@ -695,8 +695,8 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
                         element.setAttribute('data-val-requiredgroup', msg);
                         element.setAttribute('data-val', true);
                     } else {
-                        const msg = (_formOptions.validationMessages.required ||
-                            'Field {0} is required.').replace('{0}', this.data.alternativeText.trim().replace(/\.$/, ''));
+                        const msg = (_formOptions.validationMessages.mandatory ||
+                            'Field {0} is mandatory.').replace('{0}', this.data.alternativeText.trim().replace(/\.$/, ''));
                         element.setAttribute('data-val-mandatory', msg);
                         element.setAttribute('required', '');
                         element.className = 'required';
@@ -1882,16 +1882,18 @@ class AnnotationLayer {
                 }
             }
             if (!skip) {
-                let regexpFormat = /\(([^)]+)\)/;
-                let matches = regexpFormat.exec(jsdata);
+                let regexpFunction = /\(([^)]+)\)/;
+                let matches = regexpFunction.exec(jsdata);
 
                 if (matches && matches.length > 0) {
-                    msgFormat = msgFormat.replace('{1}', matches[1]);
+                    let format = matches[1].split(',').replace('>', '').trim();
+
+                    msgFormat = msgFormat.replace('{1}', format[0]);
                 } else {
                     msgFormat = msgFormat.replace('{1}', '');
                 }
 
-                element.setAttribute('data-val-pdfformat', msgFormat);
+                element.setAttribute('data-val-pdfformat', msgFormat.trim());
                 element.setAttribute('data-val-pdfformat-type', formatType);
                 element.setAttribute('data-val-pdfformat-data', btoa(jsdata));
 
