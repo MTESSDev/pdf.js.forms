@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.137';
-var pdfjsBuild = '14499f10';
+var pdfjsVersion = '2.4.138';
+var pdfjsBuild = '96c020d1';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.137',
+    apiVersion: '2.4.138',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.137';
+var version = '2.4.138';
 exports.version = version;
-var build = '14499f10';
+var build = '96c020d1';
 exports.build = build;
 
 /***/ }),
@@ -21641,6 +21641,7 @@ function () {
         element.setAttribute('data-val', 'true');
         var errorDiv = document.createElement('div');
         errorDiv.className = 'field-validation-valid field-error-message';
+        errorDiv.setAttribute('id', element.id + '-error');
         errorDiv.setAttribute('data-valmsg-for', element.id);
         errorDiv.setAttribute('data-valmsg-replace', 'true');
         errorDiv.setAttribute('style', 'top:' + size + 'px');
