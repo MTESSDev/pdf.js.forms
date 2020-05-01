@@ -1529,7 +1529,6 @@ class AnnotationLayer {
       element.setAttribute('data-val', 'true');
       let errorDiv = document.createElement('div');
       errorDiv.className = 'field-validation-valid field-error-message';
-      errorDiv.setAttribute('id', element.id + '-error');
       errorDiv.setAttribute('data-valmsg-for', element.id);
       errorDiv.setAttribute('data-valmsg-replace', 'true');
       errorDiv.setAttribute('style', 'top:' + size + 'px');
