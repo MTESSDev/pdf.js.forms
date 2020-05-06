@@ -268,7 +268,18 @@ Field.prototype =
 	set value(_val)
 	{
 		if (this.field.type == 'checkbox') {
-			this.field.checked = (_val=='Off' ? false : true);
+		var boolVal = (_val=='Off' ? false : true);
+		
+			if(this.field.checked !== boolVal)
+			{
+				this.field.checked = (_val=='Off' ? false : true);
+				if ("createEvent" in document) {
+				    var evt = document.createEvent("HTMLEvents");
+				    evt.initEvent("change", false, true);
+				    this.field.dispatchEvent(evt);
+				}
+			}
+			
 		} else {
 			this.field.value = _val;
 		}
