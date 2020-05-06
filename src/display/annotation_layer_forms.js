@@ -1834,7 +1834,7 @@ class AnnotationLayer {
 
         if (data.action.JS) {
             element.setAttribute('data-js-actionjs', btoa(data.action.JS));
-            element.addEventListener('click', function(event) {
+            element.addEventListener('change', function(event) {
                 let data = event.target.getAttribute('data-js-actionjs');
                 // eslint-disable-next-line no-undef
                 pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
@@ -1886,14 +1886,14 @@ class AnnotationLayer {
                 let matches = regexpFunction.exec(jsdata);
 
                 if (matches && matches.length > 0) {
-                    let format = matches[1].split(',')[0].replace('>', '').trim();
+                    let format = matches[1].split(',').replace('>', '').trim();
 
                     msgFormat = msgFormat.replace('{1}', format);
                 } else {
                     msgFormat = msgFormat.replace('{1}', '');
                 }
 
-                element.setAttribute('data-val-pdfformat', msgFormat.trim());
+                element.setAttribute('data-val-pdfformat', msgFormat);
                 element.setAttribute('data-val-pdfformat-type', formatType);
                 element.setAttribute('data-val-pdfformat-data', btoa(jsdata));
 
@@ -1944,7 +1944,6 @@ class AnnotationLayer {
 
             let errorDiv = document.createElement('div');
             errorDiv.className = 'field-validation-valid field-error-message';
-            // errorDiv.setAttribute('id', element.id + '-error');
             errorDiv.setAttribute('data-valmsg-for', element.id);
             errorDiv.setAttribute('data-valmsg-replace', 'true');
             errorDiv.setAttribute('style', 'top:' + size + 'px');

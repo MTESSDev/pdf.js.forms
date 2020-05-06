@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.139';
-var pdfjsBuild = '9d767e26';
+var pdfjsVersion = '2.4.140';
+var pdfjsBuild = '8300e317';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.139',
+    apiVersion: '2.4.140',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.139';
+var version = '2.4.140';
 exports.version = version;
-var build = '9d767e26';
+var build = '8300e317';
 exports.build = build;
 
 /***/ }),
@@ -21583,7 +21583,7 @@ function () {
 
       if (data.action.JS) {
         element.setAttribute('data-js-actionjs', btoa(data.action.JS));
-        element.addEventListener('click', function (event) {
+        element.addEventListener('change', function (event) {
           var data = event.target.getAttribute('data-js-actionjs');
           pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
         });
@@ -21624,13 +21624,13 @@ function () {
           var matches = regexpFunction.exec(jsdata);
 
           if (matches && matches.length > 0) {
-            var format = matches[1].split(',')[0].replace('>', '').trim();
+            var format = matches[1].split(',').replace('>', '').trim();
             msgFormat = msgFormat.replace('{1}', format);
           } else {
             msgFormat = msgFormat.replace('{1}', '');
           }
 
-          element.setAttribute('data-val-pdfformat', msgFormat.trim());
+          element.setAttribute('data-val-pdfformat', msgFormat);
           element.setAttribute('data-val-pdfformat-type', formatType);
           element.setAttribute('data-val-pdfformat-data', btoa(jsdata));
           addDataVal = true;

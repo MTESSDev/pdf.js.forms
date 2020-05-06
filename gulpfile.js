@@ -836,16 +836,16 @@ gulp.task('minified-post', gulp.series('minified-pre', function (done) {
 
   /* fs.unlinkSync(MINIFIED_DIR + '/components/jsEmulator.js');
   fs.unlinkSync(MINIFIED_DIR + '/components/pdf_viewer.js'); */
-  /*fs.unlinkSync(MINIFIED_DIR + '/web/viewer.js');
+  fs.unlinkSync(MINIFIED_DIR + '/web/viewer.js');
   fs.unlinkSync(MINIFIED_DIR + '/web/debugger.js');
   fs.unlinkSync(MINIFIED_DIR + '/build/pdf.js');
   fs.unlinkSync(MINIFIED_DIR + '/build/pdf.worker.js');
   fs.renameSync(MINIFIED_DIR + '/build/pdf.min.js',
                 MINIFIED_DIR + '/build/pdf.js');
-  /*fs.renameSync(MINIFIED_DIR + '/build/pdf.worker.min.js',
+  fs.renameSync(MINIFIED_DIR + '/build/pdf.worker.min.js',
                 MINIFIED_DIR + '/build/pdf.worker.js');
   fs.renameSync(MINIFIED_DIR + '/image_decoders/pdf.image_decoders.min.js',
-                MINIFIED_DIR + '/image_decoders/pdf.image_decoders.js');*/
+                MINIFIED_DIR + '/image_decoders/pdf.image_decoders.js');
   done();
 }));
 
