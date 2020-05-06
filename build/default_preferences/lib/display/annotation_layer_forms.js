@@ -1512,13 +1512,13 @@ class AnnotationLayer {
         let matches = regexpFunction.exec(jsdata);
 
         if (matches && matches.length > 0) {
-          let format = matches[1].split(',').replace('>', '').trim();
+          let format = matches[1].split(',')[0].replace('>', '').trim();
           msgFormat = msgFormat.replace('{1}', format);
         } else {
           msgFormat = msgFormat.replace('{1}', '');
         }
 
-        element.setAttribute('data-val-pdfformat', msgFormat);
+        element.setAttribute('data-val-pdfformat', msgFormat.trim());
         element.setAttribute('data-val-pdfformat-type', formatType);
         element.setAttribute('data-val-pdfformat-data', btoa(jsdata));
         addDataVal = true;
