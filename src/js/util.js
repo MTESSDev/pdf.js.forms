@@ -543,10 +543,13 @@ function AFMakeDate(out, year, month, date, time)
 	if (year < 100)
 		year += 1900;
 	
+	if (month == -1)
+		month = "";
+	
 	// out.setFullYear(year, month, date);
 	out.setYear(year || 2020);
-	out.setDate(date || 01);
 	out.setMonth(month || 00);
+	out.setDate(date || 01);
 
 	if ((year != '' && out.getFullYear() != year) || (month != '' && out.getMonth() != month) || (date != '' && out.getDate() != date))
 		return null;
