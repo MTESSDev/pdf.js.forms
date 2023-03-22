@@ -48223,7 +48223,9 @@
      if (!isInt(data.fieldFlags) || data.fieldFlags < 0) {
       data.fieldFlags = 0;
      }
+     data.javaScript = Util.getInheritableProperty(dict, 'AA', true);
      data.readOnly = this.hasFieldFlag(AnnotationFieldFlag.READONLY);
+     data.noScroll = this.hasFieldFlag(AnnotationFieldFlag.NOSCROLL);
      if (data.fieldType === 'Sig') {
       this.setFlags(AnnotationFlag.HIDDEN);
      }

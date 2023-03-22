@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.101';
-var pdfjsBuild = 'd0c9f6a4';
+var pdfjsVersion = '2.4.141';
+var pdfjsBuild = '74cfc6ca';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.101',
+    apiVersion: '2.4.141',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.101';
+var version = '2.4.141';
 exports.version = version;
-var build = 'd0c9f6a4';
+var build = '74cfc6ca';
 exports.build = build;
 
 /***/ }),
@@ -19685,6 +19685,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 var _tabIndex = 1;
 var _formValues = [];
+var _formOptions = [];
 var _formFields = {
   'CHECK_BOX': {},
   'TEXT': {},
@@ -19857,7 +19858,6 @@ function () {
       var rect = _util.Util.normalizeRect([data.rect[0], page.view[3] - data.rect[1] + page.view[1], data.rect[2], page.view[3] - data.rect[3] + page.view[1]]);
 
       container.style.transform = "matrix(".concat(viewport.transform.join(','), ")");
-      container.style.transformOrigin = "-".concat(rect[0], "px -").concat(rect[1], "px");
 
       if (!ignoreBorder && data.borderStyle.width > 0) {
         container.style.borderWidth = "".concat(data.borderStyle.width, "px");
@@ -19901,12 +19901,17 @@ function () {
         }
 
         if (data.color) {
-          container.style.borderColor = _util.Util.makeCssRgb(data.color[0] | 0, data.color[1] | 0, data.color[2] | 0);
+          container.style.backgroundColor = _util.Util.makeCssRgb(data.color[0] | 0, data.color[1] | 0, data.color[2] | 0);
+        }
+
+        if (data.borderStyle.borderColor) {
+          container.style.borderColor = _util.Util.makeCssRgb(data.borderStyle.borderColor[0] | 0, data.borderStyle.borderColor[1] | 0, data.borderStyle.borderColor[2] | 0);
         } else {
           container.style.borderWidth = 0;
         }
       }
 
+      container.style.transformOrigin = "-".concat(rect[0], "px -").concat(rect[1], "px");
       container.style.left = "".concat(rect[0], "px");
       container.style.top = "".concat(rect[1], "px");
       container.style.width = "".concat(width, "px");
@@ -20108,11 +20113,12 @@ function (_WidgetAnnotationElem) {
       var TEXT_ALIGNMENT = ['left', 'center', 'right'];
       this.container.className = 'textWidgetAnnotation';
       var element = null;
+      var outDiv = null;
 
       if (this.renderInteractiveForms) {
         var creationRoutine = idClosureOverrides[this.data.correctedId] || genericClosureOverrides[fieldTypes.TEXT] || false;
 
-        if (creationRoutine != false) {
+        if (creationRoutine !== false) {
           element = creationRoutine(this);
         } else {
           var value = this.data.fieldValue;
@@ -20125,14 +20131,14 @@ function (_WidgetAnnotationElem) {
 
           this.data.value = value;
 
-          if (this.data.isGroupMember && this.data.groupingId != 0) {
+          if (this.data.isGroupMember && this.data.groupingId !== 0) {
             this.data.readOnly = true;
           }
 
           if (this.data.multiLine) {
             element = document.createElement('textarea');
             element.textContent = value;
-            element.style.resize = "none";
+            element.style.resize = 'none';
           } else {
             element = document.createElement('input');
 
@@ -20149,13 +20155,17 @@ function (_WidgetAnnotationElem) {
 
           if (this.data.isGroupMember) {
             element.setAttribute('data-group', this.data.correctedId);
-            element.setAttribute('data-group-slave', this.data.groupingId != "0" ? 1 : 0);
+            element.setAttribute('data-group-slave', this.data.groupingId !== '0' ? 1 : 0);
           }
 
           element.disabled = this.data.readOnly;
 
           if (this.data.readOnly) {
-            element.style.cursor = "not-allowed";
+            element.style.cursor = 'not-allowed';
+          }
+
+          if (this.data.doNotScroll) {
+            element.setAttribute('data-no-scroll', 'true');
           }
 
           if (this.data.maxLen !== null) {
@@ -20164,6 +20174,7 @@ function (_WidgetAnnotationElem) {
 
           element.id = !this.data.isGroupMember || this.data.groupingId == 0 ? this.data.correctedId : this.data.id;
           element.name = this.data.correctedId;
+          element.title = this.data.alternativeText;
 
           if (this.data.comb) {
             var fieldWidth = this.data.rect[2] - this.data.rect[0];
@@ -20172,8 +20183,10 @@ function (_WidgetAnnotationElem) {
             element.style.letterSpacing = "calc(".concat(combWidth, "px - 1ch)");
           }
 
+          outDiv = AnnotationLayer.addJSActions(element, this.data, this.container, this.data.rect[3] - this.data.rect[1]);
+
           if (_postCreationTweak) {
-            _postCreationTweak(fieldTypes.TEXT, this.data.correctedId, element);
+            _postCreationTweak(fieldTypes.TEXT, this.data, element);
           }
         }
       } else {
@@ -20195,6 +20208,15 @@ function (_WidgetAnnotationElem) {
       }
 
       this.container.appendChild(element);
+
+      if (outDiv.errorDiv) {
+        this.container.appendChild(outDiv.errorDiv);
+      }
+
+      if (outDiv.iconDiv) {
+        this.container.appendChild(outDiv.iconDiv);
+      }
+
       return this.container;
     }
   }, {
@@ -20227,7 +20249,7 @@ function (_WidgetAnnotationElem2) {
   function CheckboxWidgetAnnotationElement(parameters) {
     _classCallCheck(this, CheckboxWidgetAnnotationElement);
 
-    return _possibleConstructorReturn(this, _getPrototypeOf(CheckboxWidgetAnnotationElement).call(this, parameters, parameters.renderInteractiveForms));
+    return _possibleConstructorReturn(this, _getPrototypeOf(CheckboxWidgetAnnotationElement).call(this, parameters, parameters.renderInteractiveForms, parameters.ignoreBorder));
   }
 
   _createClass(CheckboxWidgetAnnotationElement, [{
@@ -20236,8 +20258,9 @@ function (_WidgetAnnotationElem2) {
       this.container.className = 'buttonWidgetAnnotation checkBox';
       var creationRoutine = idClosureOverrides[this.data.correctedId] || genericClosureOverrides[fieldTypes.TEXT] || false;
       var element = null;
+      var outDiv = null;
 
-      if (creationRoutine != false) {
+      if (creationRoutine !== false) {
         element = creationRoutine(this);
       } else {
         element = document.createElement('input');
@@ -20245,7 +20268,7 @@ function (_WidgetAnnotationElem2) {
         element.type = 'checkbox';
         var selected = false;
 
-        if (this.data.fieldValue && this.data.fieldValue !== 'Off') {
+        if (this.data.fieldValue && this.data.fieldValue === this.data.exportValue) {
           selected = true;
         }
 
@@ -20254,7 +20277,7 @@ function (_WidgetAnnotationElem2) {
         switch (_typeof(v)) {
           case 'string':
             {
-              selected = item.options.indexOf(v) > 0;
+              selected = v === this.data.exportValue;
               break;
             }
 
@@ -20271,14 +20294,65 @@ function (_WidgetAnnotationElem2) {
 
         element.id = 'correctedId' in this.data ? this.data.correctedId : this.data.id;
         element.name = 'correctedId' in this.data ? this.data.correctedId : this.data.id;
+        element.title = this.data.alternativeText;
         element.value = this.data.exportValue;
 
+        if (element.id.includes(_formOptions.checkBoxGroupSeparationChar)) {
+          var groupId = element.id.substring(0, element.id.indexOf(_formOptions.checkBoxGroupSeparationChar));
+          element.setAttribute('data-val-requiredgroup-id', groupId);
+        }
+
+        if (this.data.required) {
+          if (_formOptions.checkBoxRequiredValidation) {
+            if (element.id.includes(_formOptions.checkBoxGroupSeparationChar)) {
+              var matches = _formOptions.checkboxGroupNamePattern.exec(this.data.alternativeText.trim().replace(/\.$/, ''));
+
+              var msg = _formOptions.validationMessages.requiredgroup || 'At least one required : {0}';
+
+              if (matches && matches.length > 0) {
+                msg = msg.replace('{0}', matches[1]);
+              } else {
+                var matches2 = _formOptions.checkboxGroupNamePatternIdFallback.exec('correctedId' in this.data ? this.data.correctedId : this.data.id);
+
+                if (matches2 && matches2.length > 0) {
+                  msg = msg.replace('{0}', matches2[1]);
+                } else {
+                  msg = msg.replace('{0}', this.data.alternativeText.trim().replace(/\.$/, '') || 'correctedId' in this.data ? this.data.correctedId : this.data.id);
+                }
+              }
+
+              element.setAttribute('data-val-requiredgroup', msg);
+              element.setAttribute('data-val', true);
+            } else {
+              var _msg = (_formOptions.validationMessages.mandatory || 'Field {0} is mandatory.').replace('{0}', this.data.alternativeText.trim().replace(/\.$/, ''));
+
+              element.setAttribute('data-val-mandatory', _msg);
+              element.setAttribute('required', '');
+              element.className = 'required';
+              element.setAttribute('data-val', true);
+            }
+          }
+        }
+
+        if (this.renderInteractiveForms) {
+          outDiv = AnnotationLayer.addJSActions(element, this.data, this.container, this.data.rect[3] - this.data.rect[1]);
+        }
+
         if (_postCreationTweak) {
-          _postCreationTweak(fieldTypes.CHECK_BOX, this.data.correctedId, element);
+          _postCreationTweak(fieldTypes.CHECK_BOX, this.data, element);
         }
       }
 
       this.container.appendChild(element);
+
+      if (outDiv.errorDiv) {
+        this.container.appendChild(outDiv.errorDiv);
+      }
+
+      if (outDiv.iconDiv) {
+        this.container.appendChild(outDiv.iconDiv);
+      }
+
       return this.container;
     }
   }]);
@@ -20310,7 +20384,7 @@ function (_WidgetAnnotationElem3) {
         element = document.createElement('input');
         element.disabled = this.data.readOnly;
         element.type = 'radio';
-        element.id = this.data.correctedId + '.' + this.data.groupingId;
+        element.id = this.data.correctedId + '_' + this.data.fieldName;
         element.name = this.data.fieldName;
         element.value = this.data.buttonValue;
         var selected = false;
@@ -20334,7 +20408,7 @@ function (_WidgetAnnotationElem3) {
         }
 
         if (_postCreationTweak) {
-          _postCreationTweak(fieldTypes.RADIO_BUTTON, this.data.correctedId, element);
+          _postCreationTweak(fieldTypes.RADIO_BUTTON, this.data, element);
         }
       }
 
@@ -20456,7 +20530,7 @@ function (_WidgetAnnotationElem4) {
       }
 
       if (_postCreationTweak) {
-        _postCreationTweak(fieldTypes.DROP_DOWN, this.data.correctedId, selectElement);
+        _postCreationTweak(fieldTypes.DROP_DOWN, this.data, selectElement);
       }
 
       this.container.appendChild(selectElement);
@@ -21299,6 +21373,7 @@ function () {
             downloadManager: parameters.downloadManager,
             imageResourcesPath: parameters.imageResourcesPath || '',
             renderInteractiveForms: parameters.renderInteractiveForms || false,
+            ignoreBorder: parameters.ignoreBorder || true,
             svgFactory: new _display_utils.DOMSVGFactory()
           });
 
@@ -21310,7 +21385,7 @@ function () {
 
           switch (elementClass) {
             case 'CheckboxWidgetAnnotationElement':
-              if (groupingId == 0) {
+              if (groupingId === 0) {
                 _formFields[fieldTypes.CHECK_BOX][correctedId] = _element;
               }
 
@@ -21439,6 +21514,17 @@ function () {
       _formValues = values;
     }
   }, {
+    key: "setOptions",
+    value: function setOptions(options) {
+      options.validationMessages = options.validationMessages || [];
+      options.validationMessages.pdfformat = options.validationMessages.pdfformat || [];
+      options.checkBoxGroupSeparationChar = options.checkBoxGroupSeparationChar || '_';
+      options.checkboxGroupNamePattern = options.checkboxGroupNamePattern || /\(([^)]+)\)/;
+      options.checkboxGroupNamePatternIdFallback = options.checkboxGroupNamePatternIdFallback || /\-(\w*)\_/;
+      options.checkBoxRequiredValidation = options.checkBoxRequiredValidation || false;
+      _formOptions = options;
+    }
+  }, {
     key: "clearControlRendersById",
     value: function clearControlRendersById() {
       idClosureOverrides = {};
@@ -21473,6 +21559,95 @@ function () {
       } else {
         idClosureOverrides[id] = closure;
       }
+    }
+  }, {
+    key: "addJSActions",
+    value: function addJSActions(element, data, container, size) {
+      var addDataVal = false;
+      var outDiv = {
+        iconDiv: null,
+        errorDiv: null
+      };
+
+      if (data.required && data.checkBox !== true) {
+        var msg = (_formOptions.validationMessages.required || 'Field {0} is required.').replace('{0}', data.alternativeText.trim().replace(/\.$/, ''));
+        element.setAttribute('data-val-required', msg);
+        element.setAttribute('required', '');
+        var iconDiv = document.createElement('div');
+        iconDiv.className = 'required-field-icon';
+        iconDiv.setAttribute('aria-hidden', true);
+        iconDiv.textContent = '*';
+        outDiv.iconDiv = iconDiv;
+        addDataVal = true;
+      }
+
+      if (data.action.JS) {
+        element.setAttribute('data-js-actionjs', btoa(data.action.JS));
+        element.addEventListener('change', function (event) {
+          var data = event.target.getAttribute('data-js-actionjs');
+          pdfjsViewer.FormFunctionality.javascriptEvent(event, data);
+        });
+      }
+
+      if (data.action.JSFormat || data.action.JSKeypress) {
+        var jsdata = data.action.JSFormat || data.action.JSKeypress;
+        var formatType = 'custom';
+        var skip = false;
+        var msgFormat = '';
+
+        if (jsdata.startsWith('AFNumber_')) {
+          formatType = 'number';
+          msgFormat = (_formOptions.validationMessages.pdfformat.number || 'Invalid value for {0} field.').replace('{0}', data.alternativeText.trim().replace(/\.$/, ''));
+        } else if (jsdata.startsWith('AFDate_')) {
+          formatType = 'date';
+          msgFormat = (_formOptions.validationMessages.pdfformat.date || 'Invalid value for {0} field.').replace('{0}', data.alternativeText.trim().replace(/\.$/, ''));
+        } else if (jsdata.startsWith('AFTime_')) {
+          formatType = 'time';
+          msgFormat = (_formOptions.validationMessages.pdfformat.time || 'Invalid value for {0} field.').replace('{0}', data.alternativeText.trim().replace(/\.$/, ''));
+        } else if (jsdata.startsWith('AFSpecial_')) {
+          formatType = 'special';
+          msgFormat = (_formOptions.validationMessages.pdfformat.special || 'Invalid value for {0} field.').replace('{0}', data.alternativeText.trim().replace(/\.$/, ''));
+        } else if (jsdata.startsWith('AFPercent_')) {
+          formatType = 'percent';
+          msgFormat = (_formOptions.validationMessages.pdfformat.percent || 'Invalid value for {0} field.').replace('{0}', data.alternativeText.trim().replace(/\.$/, ''));
+        } else {
+          if (data.action.JSKeypress && jsdata.startsWith('AF')) {
+            skip = true;
+          } else {
+            formatType = 'custom';
+            msgFormat = (_formOptions.validationMessages.pdfformat.custom || 'Invalid value for {0} field.').replace('{0}', data.alternativeText.trim().replace(/\.$/, ''));
+          }
+        }
+
+        if (!skip) {
+          var regexpFunction = /\(([^)]+)\)/;
+          var matches = regexpFunction.exec(jsdata);
+
+          if (matches && matches.length > 0) {
+            var format = matches[1].split(',')[0].replace('>', '').trim();
+            msgFormat = msgFormat.replace('{1}', format);
+          } else {
+            msgFormat = msgFormat.replace('{1}', '');
+          }
+
+          element.setAttribute('data-val-pdfformat', msgFormat.trim());
+          element.setAttribute('data-val-pdfformat-type', formatType);
+          element.setAttribute('data-val-pdfformat-data', btoa(jsdata));
+          addDataVal = true;
+        }
+      }
+
+      if (addDataVal) {
+        element.setAttribute('data-val', 'true');
+        var errorDiv = document.createElement('div');
+        errorDiv.className = 'field-validation-valid field-error-message';
+        errorDiv.setAttribute('data-valmsg-for', element.id);
+        errorDiv.setAttribute('data-valmsg-replace', 'true');
+        errorDiv.setAttribute('style', 'top:' + size + 'px');
+        outDiv.errorDiv = errorDiv;
+      }
+
+      return outDiv;
     }
   }, {
     key: "setPostCreationTweak",

@@ -1,7 +1,8 @@
 import { AnnotationLayer } from 'pdfjs-lib';
 import { CSS_UNITS } from './ui_utils';
-import { PDFPageView } from './pdf_page_view';
 import { DefaultAnnotationLayerFactory } from './annotation_layer_builder.js';
+import { DefaultTextLayerFactory } from './text_layer_builder.js';
+import { PDFPageView } from './pdf_page_view';
 
 let _workingViewport = null;
 let _displayedFormElements = [];
@@ -60,7 +61,7 @@ function _assertValidControlTweak(closure) {
     }
 }
 
-var FormFunctionality = (function FormFunctionalityClosure() {
+let FormFunctionality = (function FormFunctionalityClosure() {
     function FormFunctionality() {}
 
     FormFunctionality.test = function () {
@@ -88,13 +89,103 @@ var FormFunctionality = (function FormFunctionalityClosure() {
     };
 
     FormFunctionality.setPostCreationTweak = function (postCallback) {
-        if (postCallback)
+        if (postCallback) {
             _assertValidControlTweak(postCallback);
+        }
         AnnotationLayer.setPostCreationTweak(postCallback);
     };
 
     FormFunctionality.getFormValues = function () {
         return AnnotationLayer.getValues();
+    };
+
+    FormFunctionality.javascriptEvent = function (element, eventData, typeCall) {
+        try {
+            let raw = 'var thisEmulator = new Field(document.getElementById(\'' + element.target.id + '\'));\r\n' + atob(eventData);
+
+            HTMLInputElement.prototype.borderStyle = element.target.style.borderStyle;
+            let val = element.target.value;
+
+            if ((element.target.tagName.toLowerCase() === 'input' &&
+                element.target.type.toLowerCase() === 'text') ||
+                element.target.tagName.toLowerCase() === 'textarea') {
+                    if (element.which !== undefined && element.which !== 0) {
+                        val += String.fromCharCode(element.which);
+                    }
+                    element.change = event.key;
+                    element.selStart = element.target.selectionStart;
+            }
+
+            element.value = val;
+            element.rc = true;
+            element.willCommit = false;
+
+            raw = raw.replace(/this\./g, 'thisEmulator.');
+
+            eval(raw);
+
+            if (typeCall === 'format') {
+                if (element.value.trim() === '' && val.trim() !== '') {
+                    return false;
+                }
+
+                let finalValue = val;
+                // Check values
+                if (element.value !== val) {
+
+                    if (element.value === val.toUpperCase()) {
+                        // Only case change
+                        element.target.value = finalValue.toUpperCase();
+                        return true;
+                    }
+                    if (element.target.getAttribute('data-val-pdfformat-type') === 'number' &&
+                        element.value.replace(/\.00$/, '') === val.toLowerCase().trim()) {
+                        // Validation added trailing numbers (currency)
+                        element.target.value = val + '.00';
+                        return true;
+                    }
+                    if (element.target.getAttribute('data-val-pdfformat-type') === 'number' &&
+                        element.value.replace('.', ',') === val.replace('.', ',')) {
+                        // Validation added trailing numbers (currency)
+                        return true;
+                    }
+                    if (element.value.trim() === val.trim()) {
+                        // Validation added trailing numbers (currency)
+                        // element.target.value = val + '.00';
+                        return true;
+                    }
+
+                    return false;
+
+                }
+            }
+                /* if (element.value.toLowerCase() !== val.toLowerCase() &&
+                    (element.target.getAttribute('data-val-pdfformat-type') === 'number' &&
+                    element.value.replace(/\.00$/, '') !== val.toLowerCase().trim())) {
+                    return false;
+                } else {
+                    /*if (element.which !== 0) { */
+                       // element.target.value = element.value.trimEnd();
+                   /* }
+                }
+                return true;
+                // element.target.setAttribute('data-val-pdfformatvalid-valid', true);
+            } */
+
+            if (element.rc) {
+                element.target.style.borderStyle = element.target.borderStyle;
+                return true;
+            }
+
+            // element.preventDefault();
+            // return false;
+
+        } catch (error) {
+            if (console) {
+                console.info('Validating PDF field ' + element.target.name + ' failed.');
+            }
+            return true;
+        }
     };
 
     FormFunctionality.render = function (width, height, page, target, values, options) {
@@ -106,27 +197,29 @@ var FormFunctionality = (function FormFunctionalityClosure() {
             options = {};
         }
         if (typeof width != 'number' && typeof height != 'number') {
-            throw "at least one parameter must be specified as a number: width, height";
+            throw 'at least one parameter must be specified as a number: width, height';
         }
         let viewport = _createViewport(width, height, page, 1.0);
         let pageHolder = document.createElement('div');
         pageHolder.style.width = viewport.width + 'px';
         pageHolder.style.height = viewport.height + 'px';
-        //if (postCreationTweak)
+        // if (postCreationTweak)
         //    postCreationTweak("PAGE", "page", pageHolder);
         target.appendChild(pageHolder);
 
         let targetScale = viewport.scale;
 
         AnnotationLayer.setValues(values);
+        AnnotationLayer.setOptions(options);
 
         let pdfPageView = new PDFPageView({
+            id: page.pageNumber,
             container: pageHolder,
             scale: targetScale / CSS_UNITS,
             defaultViewport: viewport,
-            annotationLayerFactory:
-                new DefaultAnnotationLayerFactory(),
-            renderInteractiveForms: true,
+            textLayerFactory: new DefaultTextLayerFactory(),
+            annotationLayerFactory: new DefaultAnnotationLayerFactory(),
+            renderInteractiveForms: (options.renderInteractiveForms || true),
         });
 
         // Associate the actual page with the view and draw it.

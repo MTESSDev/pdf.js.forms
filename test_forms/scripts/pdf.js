@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.101';
-var pdfjsBuild = 'd0c9f6a4';
+var pdfjsVersion = '2.4.105';
+var pdfjsBuild = 'c0688d11';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -10066,7 +10066,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId: docId,
-    apiVersion: '2.4.101',
+    apiVersion: '2.4.105',
     source: {
       data: source.data,
       url: source.url,
@@ -12339,9 +12339,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-var version = '2.4.101';
+var version = '2.4.105';
 exports.version = version;
-var build = 'd0c9f6a4';
+var build = 'c0688d11';
 exports.build = build;
 
 /***/ }),
@@ -19655,7 +19655,7 @@ exports.renderTextLayer = renderTextLayer;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.AnnotationLayer = void 0;
+exports.AnnotationLayer = exports.PDFjsThisEmulator = void 0;
 
 var _display_utils = __w_pdfjs_require__(183);
 
@@ -19857,7 +19857,6 @@ function () {
       var rect = _util.Util.normalizeRect([data.rect[0], page.view[3] - data.rect[1] + page.view[1], data.rect[2], page.view[3] - data.rect[3] + page.view[1]]);
 
       container.style.transform = "matrix(".concat(viewport.transform.join(','), ")");
-      container.style.transformOrigin = "-".concat(rect[0], "px -").concat(rect[1], "px");
 
       if (!ignoreBorder && data.borderStyle.width > 0) {
         container.style.borderWidth = "".concat(data.borderStyle.width, "px");
@@ -19901,12 +19900,17 @@ function () {
         }
 
         if (data.color) {
-          container.style.borderColor = _util.Util.makeCssRgb(data.color[0] | 0, data.color[1] | 0, data.color[2] | 0);
+          container.style.backgroundColor = _util.Util.makeCssRgb(data.color[0] | 0, data.color[1] | 0, data.color[2] | 0);
+        }
+
+        if (data.borderStyle.borderColor) {
+          container.style.borderColor = _util.Util.makeCssRgb(data.borderStyle.borderColor[0] | 0, data.borderStyle.borderColor[1] | 0, data.borderStyle.borderColor[2] | 0);
         } else {
           container.style.borderWidth = 0;
         }
       }
 
+      container.style.transformOrigin = "-".concat(rect[0], "px -").concat(rect[1], "px");
       container.style.left = "".concat(rect[0], "px");
       container.style.top = "".concat(rect[1], "px");
       container.style.width = "".concat(width, "px");
@@ -20112,7 +20116,7 @@ function (_WidgetAnnotationElem) {
       if (this.renderInteractiveForms) {
         var creationRoutine = idClosureOverrides[this.data.correctedId] || genericClosureOverrides[fieldTypes.TEXT] || false;
 
-        if (creationRoutine != false) {
+        if (creationRoutine !== false) {
           element = creationRoutine(this);
         } else {
           var value = this.data.fieldValue;
@@ -20125,14 +20129,14 @@ function (_WidgetAnnotationElem) {
 
           this.data.value = value;
 
-          if (this.data.isGroupMember && this.data.groupingId != 0) {
+          if (this.data.isGroupMember && this.data.groupingId !== 0) {
             this.data.readOnly = true;
           }
 
           if (this.data.multiLine) {
             element = document.createElement('textarea');
             element.textContent = value;
-            element.style.resize = "none";
+            element.style.resize = 'none';
           } else {
             element = document.createElement('input');
 
@@ -20149,13 +20153,13 @@ function (_WidgetAnnotationElem) {
 
           if (this.data.isGroupMember) {
             element.setAttribute('data-group', this.data.correctedId);
-            element.setAttribute('data-group-slave', this.data.groupingId != "0" ? 1 : 0);
+            element.setAttribute('data-group-slave', this.data.groupingId !== '0' ? 1 : 0);
           }
 
           element.disabled = this.data.readOnly;
 
           if (this.data.readOnly) {
-            element.style.cursor = "not-allowed";
+            element.style.cursor = 'not-allowed';
           }
 
           if (this.data.maxLen !== null) {
@@ -20173,7 +20177,7 @@ function (_WidgetAnnotationElem) {
           }
 
           if (_postCreationTweak) {
-            _postCreationTweak(fieldTypes.TEXT, this.data.correctedId, element);
+            _postCreationTweak(fieldTypes.TEXT, this.data, element);
           }
         }
       } else {
@@ -20227,7 +20231,7 @@ function (_WidgetAnnotationElem2) {
   function CheckboxWidgetAnnotationElement(parameters) {
     _classCallCheck(this, CheckboxWidgetAnnotationElement);
 
-    return _possibleConstructorReturn(this, _getPrototypeOf(CheckboxWidgetAnnotationElement).call(this, parameters, parameters.renderInteractiveForms));
+    return _possibleConstructorReturn(this, _getPrototypeOf(CheckboxWidgetAnnotationElement).call(this, parameters, parameters.renderInteractiveForms, parameters.ignoreBorder));
   }
 
   _createClass(CheckboxWidgetAnnotationElement, [{
@@ -20237,7 +20241,7 @@ function (_WidgetAnnotationElem2) {
       var creationRoutine = idClosureOverrides[this.data.correctedId] || genericClosureOverrides[fieldTypes.TEXT] || false;
       var element = null;
 
-      if (creationRoutine != false) {
+      if (creationRoutine !== false) {
         element = creationRoutine(this);
       } else {
         element = document.createElement('input');
@@ -20245,7 +20249,7 @@ function (_WidgetAnnotationElem2) {
         element.type = 'checkbox';
         var selected = false;
 
-        if (this.data.fieldValue && this.data.fieldValue !== 'Off') {
+        if (this.data.fieldValue && this.data.fieldValue === this.data.exportValue) {
           selected = true;
         }
 
@@ -20254,7 +20258,7 @@ function (_WidgetAnnotationElem2) {
         switch (_typeof(v)) {
           case 'string':
             {
-              selected = item.options.indexOf(v) > 0;
+              selected = v === this.data.exportValue;
               break;
             }
 
@@ -20269,12 +20273,22 @@ function (_WidgetAnnotationElem2) {
           element.setAttribute('checked', true);
         }
 
+        if (this.renderInteractiveForms) {
+          if (this.data.action && this.data.action.JS) {
+            element.setAttribute('data-val-actionjs', btoa(this.data.action.JS));
+
+            element.onclick = function (event) {
+              jsCleanup(event, 'click');
+            };
+          }
+        }
+
         element.id = 'correctedId' in this.data ? this.data.correctedId : this.data.id;
         element.name = 'correctedId' in this.data ? this.data.correctedId : this.data.id;
         element.value = this.data.exportValue;
 
         if (_postCreationTweak) {
-          _postCreationTweak(fieldTypes.CHECK_BOX, this.data.correctedId, element);
+          _postCreationTweak(fieldTypes.CHECK_BOX, this.data, element);
         }
       }
 
@@ -20334,7 +20348,7 @@ function (_WidgetAnnotationElem3) {
         }
 
         if (_postCreationTweak) {
-          _postCreationTweak(fieldTypes.RADIO_BUTTON, this.data.correctedId, element);
+          _postCreationTweak(fieldTypes.RADIO_BUTTON, this.data, element);
         }
       }
 
@@ -20456,7 +20470,7 @@ function (_WidgetAnnotationElem4) {
       }
 
       if (_postCreationTweak) {
-        _postCreationTweak(fieldTypes.DROP_DOWN, this.data.correctedId, selectElement);
+        _postCreationTweak(fieldTypes.DROP_DOWN, this.data, selectElement);
       }
 
       this.container.appendChild(selectElement);
@@ -21299,6 +21313,7 @@ function () {
             downloadManager: parameters.downloadManager,
             imageResourcesPath: parameters.imageResourcesPath || '',
             renderInteractiveForms: parameters.renderInteractiveForms || false,
+            ignoreBorder: parameters.ignoreBorder || true,
             svgFactory: new _display_utils.DOMSVGFactory()
           });
 
@@ -21310,7 +21325,7 @@ function () {
 
           switch (elementClass) {
             case 'CheckboxWidgetAnnotationElement':
-              if (groupingId == 0) {
+              if (groupingId === 0) {
                 _formFields[fieldTypes.CHECK_BOX][correctedId] = _element;
               }
 
@@ -21485,6 +21500,47 @@ function () {
 }();
 
 exports.AnnotationLayer = AnnotationLayer;
+
+var GetFieldEmulator =
+/*#__PURE__*/
+function () {
+  function GetFieldEmulator(element) {
+    _classCallCheck(this, GetFieldEmulator);
+
+    this.element = element;
+  }
+
+  _createClass(GetFieldEmulator, [{
+    key: "value",
+    get: function get() {
+      return document.getElementById(this.element).checked ? 'On' : 'Off';
+    },
+    set: function set(val) {
+      document.getElementById(this.element).checked = val === 'Off' ? false : true;
+    }
+  }]);
+
+  return GetFieldEmulator;
+}();
+
+var PDFjsThisEmulator =
+/*#__PURE__*/
+function () {
+  function PDFjsThisEmulator() {
+    _classCallCheck(this, PDFjsThisEmulator);
+  }
+
+  _createClass(PDFjsThisEmulator, null, [{
+    key: "getField",
+    value: function getField(name) {
+      return new GetFieldEmulator(name);
+    }
+  }]);
+
+  return PDFjsThisEmulator;
+}();
+
+exports.PDFjsThisEmulator = PDFjsThisEmulator;
 
 /***/ }),
 /* 196 */

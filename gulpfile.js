@@ -40,6 +40,7 @@ var webpack2 = require('webpack');
 var webpackStream = require('webpack-stream');
 var Vinyl = require('vinyl');
 var vfs = require('vinyl-fs');
+var concat = require('gulp-concat');
 
 var BUILD_DIR = 'build/';
 var L10N_DIR = 'l10n/';
@@ -74,7 +75,7 @@ var config = JSON.parse(fs.readFileSync(CONFIG_FILE).toString());
 
 // Default Autoprefixer config used for generic, components, minified-pre
 var AUTOPREFIXER_CONFIG = {
-  browsers: [
+  overrideBrowserslist: [
     'last 2 versions',
     'Chrome >= 49', // Last supported on Windows XP
     'Firefox >= 52', // Last supported on Windows XP
@@ -323,6 +324,7 @@ function createComponentsBundle(defines) {
     libraryTarget: 'umd',
     umdNamedDefine: true,
   });
+
   return gulp.src('./web/pdf_viewer.component.js')
     .pipe(webpack2Stream(componentsFileConfig))
     .pipe(replaceWebpackRequire())
@@ -745,6 +747,9 @@ gulp.task('components', gulp.series('buildnumber', function () {
     preprocessCSS('web/pdf_forms.css', 'components', defines, true)
         .pipe(postcss([autoprefixer(AUTOPREFIXER_CONFIG)]))
         .pipe(gulp.dest(COMPONENTS_DIR)),
+        gulp.src('./src/js/*.js')
+          .pipe(concat('jsEmulator.js'))
+          .pipe(gulp.dest(COMPONENTS_DIR))
   ]);
 }));
 
@@ -772,6 +777,8 @@ gulp.task('minified-pre', gulp.series('buildnumber', 'default_preferences',
         .pipe(gulp.dest(MINIFIED_DIR + 'image_decoders')),
     gulp.src(COMMON_WEB_FILES, { base: 'web/', })
         .pipe(gulp.dest(MINIFIED_DIR + 'web')),
+    gulp.src(COMPONENTS_DIR + '*.js')
+          .pipe(gulp.dest(MINIFIED_DIR + 'components')),
     gulp.src([
       'web/locale/*/viewer.properties',
       'web/locale/locale.properties'
@@ -793,6 +800,8 @@ gulp.task('minified-pre', gulp.series('buildnumber', 'default_preferences',
 
 gulp.task('minified-post', gulp.series('minified-pre', function (done) {
   var pdfFile = fs.readFileSync(MINIFIED_DIR + '/build/pdf.js').toString();
+  var jsEmulator = fs.readFileSync(MINIFIED_DIR + '/components/jsEmulator.js').toString();
+  var pdf_viewer = fs.readFileSync(MINIFIED_DIR + '/components/pdf_viewer.js').toString();
   var pdfWorkerFile =
     fs.readFileSync(MINIFIED_DIR + '/build/pdf.worker.js').toString();
   var pdfImageDecodersFile = fs.readFileSync(MINIFIED_DIR +
@@ -809,6 +818,10 @@ gulp.task('minified-post', gulp.series('minified-pre', function (done) {
   // V8 chokes on very long sequences. Works around that.
   var optsForHugeFile = { compress: { sequences: false, }, };
 
+  fs.writeFileSync(MINIFIED_DIR + '/components/jsEmulator.js',
+                   Terser.minify(jsEmulator).code);
+  fs.writeFileSync(MINIFIED_DIR + '/components/pdf_viewer.js',
+                   Terser.minify(pdf_viewer).code);
   fs.writeFileSync(MINIFIED_DIR + '/web/pdf.viewer.js',
                    Terser.minify(viewerFiles).code);
   fs.writeFileSync(MINIFIED_DIR + '/build/pdf.min.js',
@@ -821,6 +834,8 @@ gulp.task('minified-post', gulp.series('minified-pre', function (done) {
   console.log();
   console.log('### Cleaning js files');
 
+  /* fs.unlinkSync(MINIFIED_DIR + '/components/jsEmulator.js');
+  fs.unlinkSync(MINIFIED_DIR + '/components/pdf_viewer.js'); */
   fs.unlinkSync(MINIFIED_DIR + '/web/viewer.js');
   fs.unlinkSync(MINIFIED_DIR + '/web/debugger.js');
   fs.unlinkSync(MINIFIED_DIR + '/build/pdf.js');

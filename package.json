@@ -49,7 +49,7 @@
     "vinyl": "^2.2.0",
     "vinyl-fs": "^3.0.3",
     "web-streams-polyfill": "^2.0.4",
-    "webpack": "^4.40.2",
+    "webpack": "^4.42.1",
     "webpack-stream": "^4.0.3",
     "wintersmith": "^2.5.0",
     "yargs": "^11.1.0"
@@ -63,6 +63,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "gulp-concat": "^2.6.1",
     "pdfjs-dist": "file:build/dist"
   }
 }
